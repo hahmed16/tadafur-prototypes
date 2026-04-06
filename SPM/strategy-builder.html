@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPM — Strategy Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+  <style>
+    [x-cloak] {
+      display: none !important
+    }
+
+    #cy {
+      width: 100%;
+      height: 100%
+    }
+
+    .sb {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+      white-space: nowrap
+    }
+
+    .s-draft {
+      background: #f3f4f6;
+      color: #6b7280
+    }
+
+    .s-active {
+      background: #dcfce7;
+      color: #16a34a
+    }
+
+    .s-on_hold {
+      background: #fef9c3;
+      color: #ca8a04
+    }
+
+    .s-completed {
+      background: #dbeafe;
+      color: #2563eb
+    }
+
+    .s-deactivated {
+      background: #fee2e2;
+      color: #dc2626
+    }
+
+    .s-deprecated {
+      background: #f5f3ff;
+      color: #7c3aed
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden" x-data="app()">
+
+  <!-- NAV -->
+  <nav class="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between flex-shrink-0 z-30">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="index.html" class="text-gray-400 hover:text-indigo-600 flex-shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </a>
+      <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-semibold text-gray-900 text-sm truncate" x-text="strategy.name"></span>
+          <span class="sb" :class="'s-' + strategy.status.toLowerCase()" x-text="strategy.status"></span>
+        </div>
+        <div class="text-xs text-gray-400 hidden sm:block" x-text="strategyStats"></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+      <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+        <button @click="switchToTree()" :class="view==='tree'?'bg-white shadow text-indigo-600':'text-gray-500'"
+          class="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h7" />
+          </svg>
+          Tree
+        </button>
+        <button @click="openGraphPage()" :class="view==='graph'?'bg-white shadow text-indigo-600':'text-gray-500'"
+          class="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="5" cy="12" r="2" stroke-width="2" />
+            <circle cx="19" cy="5" r="2" stroke-width="2" />
+            <circle cx="19" cy="19" r="2" stroke-width="2" />
+            <path stroke-linecap="round" stroke-width="2" d="M7 12h5m2-4.5l2 2m-2 9l2-2" />
+          </svg>
+          Graph
+        </button>
+        <button @click="openTypesPage()" :class="view==='types'?'bg-white shadow text-indigo-600':'text-gray-500'"
+          class="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          By Type
+        </button>
+      </div>
+      <button @click="openConfigModal()"
+        class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-indigo-300 text-gray-700 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9.75 3a1.5 1.5 0 00-1.423 1.026L8.03 5H6.5a2 2 0 00-2 2v1.53l-.974.297A1.5 1.5 0 003 10.25v3.5a1.5 1.5 0 001.026 1.423l.474.145V17a2 2 0 002 2h1.53l.297.974A1.5 1.5 0 009.75 21h4.5a1.5 1.5 0 001.423-1.026L15.97 19H17.5a2 2 0 002-2v-1.53l.974-.297A1.5 1.5 0 0021 13.75v-3.5a1.5 1.5 0 00-1.026-1.423l-.474-.145V7a2 2 0 00-2-2h-1.53l-.297-.974A1.5 1.5 0 0014.25 3h-4.5z" />
+        </svg>
+        Configuration
+      </button>
+      <button @click="resetAllBuilderStorage(true)"
+        class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-rose-200 rounded-lg hover:border-rose-300 text-rose-700 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m14.356-2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0A8.003 8.003 0 015.582 15m13.837 0H15" />
+        </svg>
+        Reset Data
+      </button>
+      <button @click="libraryOpen=true"
+        class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-indigo-300 text-gray-700 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4z" />
+        </svg>
+        Library
+      </button>
+      <button @click="openAddModal(0, null)"
+        class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Root
+      </button>
+      <div
+        class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xs">AH
+      </div>
+    </div>
+  </nav>
+
+  <!-- BODY -->
+  <div class="flex flex-1 min-h-0 overflow-hidden">
+
+    <!-- ===== TREE VIEW (horizontal lanes) ===== -->
+    <div x-show="view==='tree'" class="flex flex-1 flex-col overflow-hidden min-w-0">
+
+      <div class="bg-white border-b border-gray-200 px-3 py-2 flex items-center gap-2 flex-shrink-0">
+        <span class="text-xs text-gray-500">Start Navigation From:</span>
+        <select x-model="navStartType" @change="onNavStartTypeChange()"
+          class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+          <option value="">Configured Roots</option>
+          <template x-for="t in elementTypes" :key="t.name">
+            <option :value="t.name" x-text="t.name"></option>
+          </template>
+        </select>
+        <button @click="selections=[]; selectedElement=null; detailOpen=false"
+          class="text-xs text-indigo-600 hover:underline">Reset Path</button>
+      </div>
+
+      <div class="flex-1 flex min-h-0 overflow-hidden">
+        <!-- Lanes wrapper - horizontal scroll -->
+        <div class="flex-1 flex overflow-x-auto min-w-0">
+
+          <!-- Breadcrumb path bar -->
+          <div class="absolute top-0 left-0 right-0 h-8 pointer-events-none" style="display:none"></div>
+
+          <!-- Dynamic lanes via x-for -->
+          <template x-for="depth in visibleLanes" :key="depth">
+            <div class="flex flex-col border-r border-gray-200 bg-white flex-shrink-0"
+              :style="detailOpen ? 'width:260px' : 'width:300px'">
+
+              <!-- Lane header -->
+              <div class="px-3 py-2.5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                      <template x-if="depth === 0">
+                        <span>Root Elements</span>
+                      </template>
+                      <template x-if="depth > 0">
+                        <span class="flex items-center gap-1">
+                          <span x-text="laneParentName(depth)" class="text-gray-500 truncate max-w-24"></span>
+                          <svg class="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                          <span>Children</span>
+                        </span>
+                      </template>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-0.5" x-text="laneItems(depth).length + ' items'"></div>
+                  </div>
+                  <button @click="openAddModal(depth, depth > 0 ? selections[depth-1] : null)"
+                    class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                    title="Add element">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Cards scroll area -->
+              <div class="flex-1 overflow-y-auto p-2 space-y-1.5">
+
+                <template x-for="el in laneItems(depth)" :key="el.id">
+                  <div @click="selectAt(depth, el)" :class="selectedElement?.id === el.id
+                     ? 'border-indigo-400 bg-indigo-50 ring-1 ring-indigo-200'
+                     : selections[depth] === el.id
+                       ? 'border-indigo-200 bg-indigo-50/50'
+                       : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'"
+                    class="border rounded-xl p-2.5 cursor-pointer transition-all">
+
+                    <!-- Top row: icon + name + arrow -->
+                    <div class="flex items-start gap-2">
+                      <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
+                        :style="`background:${getTypeColor(el.type)}22; color:${getTypeColor(el.type)}`"
+                        x-text="getTypeIcon(el.type)"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900 leading-snug" x-text="el.name"
+                          style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
+                        </div>
+                      </div>
+                      <svg x-show="hasChildren(el.id)"
+                        :class="selections[depth] === el.id ? 'text-indigo-500' : 'text-gray-300'"
+                        class="w-4 h-4 flex-shrink-0 mt-0.5 transition-colors" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+
+                    <!-- Status + shared -->
+                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <span class="sb" :class="'s-' + el.status.toLowerCase()" x-text="el.status"></span>
+                      <span x-show="el.isShared" class="sb" style="background:#f5f3ff;color:#7c3aed">Shared</span>
+                    </div>
+
+                    <!-- Progress bar (if trackable) -->
+                    <template x-if="el.progress !== undefined">
+                      <div class="mt-2">
+                        <div class="flex justify-between text-xs mb-0.5">
+                          <span class="text-gray-400">Progress</span>
+                          <span class="font-medium text-gray-600" x-text="el.progress + '%'"></span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-1.5">
+                          <div class="h-1.5 rounded-full transition-all"
+                            :style="`width:${el.progress}%; background:${getTypeColor(el.type)}`"></div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- Meta row -->
+                    <div class="flex items-center justify-between mt-1.5 text-xs text-gray-400">
+                      <span x-text="el.type"></span>
+                      <span x-show="childCount(el.id) > 0" x-text="childCount(el.id) + ' sub-items'"></span>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Empty lane -->
+                <div x-show="laneItems(depth).length === 0" class="py-8 flex flex-col items-center text-center">
+                  <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2 text-gray-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <p class="text-xs text-gray-400 font-medium">No elements</p>
+                  <button @click="openAddModal(depth, depth > 0 ? selections[depth-1] : null)"
+                    class="mt-2 text-xs text-indigo-600 hover:underline">Add one</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+        </div>
+
+        <!-- Detail panel -->
+        <div x-show="detailOpen && selectedElement" x-cloak
+          class="w-[34rem] flex-shrink-0 bg-white border-l border-gray-200 flex flex-col overflow-hidden">
+
+          <!-- Panel header -->
+          <div class="p-3.5 border-b border-gray-100 flex items-center gap-2 flex-shrink-0">
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0"
+              :style="`background:${getTypeColor(selectedElement?.type)}22; color:${getTypeColor(selectedElement?.type)}`"
+              x-text="getTypeIcon(selectedElement?.type)"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs text-gray-400" x-text="selectedElement?.type"></div>
+              <div class="text-sm font-semibold text-gray-900 truncate" x-text="selectedElement?.name"></div>
+            </div>
+            <a :href="'element-detail.html'" title="Open full page"
+              class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+            <button @click="detailOpen=false; selectedElement=null"
+              class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex border-b border-gray-100 flex-shrink-0 overflow-x-auto">
+            <template x-for="t in ['Details','Progress','Budget','KPIs','Quarterly','Risks','Team','Links']" :key="t">
+              <button @click="detailTab=t"
+                :class="detailTab===t ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-400 hover:text-gray-600'"
+                class="px-3 py-2.5 text-xs font-medium whitespace-nowrap transition flex-shrink-0" x-text="t"></button>
+            </template>
+          </div>
+
+          <!-- Tab: Details -->
+          <div x-show="detailTab==='Details'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1">Status</label>
+              <select
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
+                <option>DRAFT</option>
+                <option selected>ACTIVE</option>
+                <option>ON_HOLD</option>
+                <option>COMPLETED</option>
+                <option>DEACTIVATED</option>
+                <option>DEPRECATED</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1">Name</label>
+              <input :value="selectedElement?.name"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1">Description</label>
+              <textarea rows="3" :value="selectedElement?.description"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+            </div>
+            <!-- Capabilities quick overview -->
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-2">Capabilities</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <div class="text-center p-2 bg-emerald-50 rounded-lg">
+                  <div class="text-base">💰</div>
+                  <div class="text-xs text-emerald-700 font-medium mt-0.5">Budget</div>
+                </div>
+                <div class="text-center p-2 bg-violet-50 rounded-lg">
+                  <div class="text-base">📊</div>
+                  <div class="text-xs text-violet-700 font-medium mt-0.5">Trackable</div>
+                </div>
+                <div class="text-center p-2 bg-gray-50 rounded-lg opacity-40">
+                  <div class="text-base">🎯</div>
+                  <div class="text-xs text-gray-500 font-medium mt-0.5">Vision</div>
+                </div>
+              </div>
+            </div>
+            <!-- Team -->
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-2">Team</label>
+              <div class="flex -space-x-1.5">
+                <template x-for="m in ['AH','SK','MR']" :key="m">
+                  <div
+                    class="w-7 h-7 rounded-full bg-indigo-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                    x-text="m"></div>
+                </template>
+                <button
+                  class="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-gray-500 text-xs hover:bg-gray-200 transition">+</button>
+              </div>
+            </div>
+            <button
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-xl transition">Save</button>
+          </div>
+
+          <!-- Tab: Progress -->
+          <div x-show="detailTab==='Progress'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-indigo-700">62%</div>
+                <div class="text-xs text-indigo-600 font-medium mt-0.5">Manual</div>
+              </div>
+              <div class="bg-violet-50 border border-violet-200 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-violet-700">48%</div>
+                <div class="text-xs text-violet-600 font-medium mt-0.5">Calculated</div>
+              </div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-800 flex gap-2">
+              <span class="flex-shrink-0 mt-0.5">⚠️</span>
+              <span>14% discrepancy — above the 5% threshold</span>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-2">Log Update</label>
+              <div class="flex items-center gap-2 mb-2">
+                <input type="range" min="0" max="100" value="62" class="flex-1 accent-indigo-600" />
+                <span class="text-sm font-bold text-gray-700 w-10 text-right">62%</span>
+              </div>
+              <textarea rows="2" placeholder="Note about this update..."
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 resize-none mb-2"></textarea>
+              <button
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-xl transition">Log
+                Update</button>
+            </div>
+            <div class="space-y-2">
+              <template x-for="log in progressLogs" :key="log.date">
+                <div class="flex gap-2 text-xs">
+                  <div class="w-1.5 h-1.5 bg-indigo-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                  <div class="flex-1">
+                    <div class="flex justify-between">
+                      <span class="font-semibold text-gray-700" x-text="log.value + '%'"></span>
+                      <span class="text-gray-400" x-text="log.date"></span>
+                    </div>
+                    <span class="text-gray-500" x-text="log.note"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Tab: Budget -->
+          <div x-show="detailTab==='Budget'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                <div class="text-xs text-emerald-600 font-medium">Planned</div>
+                <div class="font-bold text-emerald-700 text-sm mt-0.5">OMR 12.4M</div>
+              </div>
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                <div class="text-xs text-blue-600 font-medium">Allocated</div>
+                <div class="font-bold text-blue-700 text-sm mt-0.5">OMR 9.1M</div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1 text-gray-500"><span>Utilization</span><span
+                  class="font-bold text-gray-700">73%</span></div>
+              <div class="w-full bg-gray-100 rounded-full h-2">
+                <div class="bg-emerald-500 h-2 rounded-full" style="width:73%"></div>
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <template x-for="p in payments" :key="p.id">
+                <div class="flex items-center justify-between text-xs p-2 bg-gray-50 rounded-lg">
+                  <div>
+                    <div class="font-medium text-gray-700" x-text="p.desc"></div>
+                    <div class="text-gray-400" x-text="p.date"></div>
+                  </div>
+                  <span class="font-semibold text-gray-800" x-text="'OMR ' + p.amount"></span>
+                </div>
+              </template>
+            </div>
+            <button @click="openPaymentModal()"
+              class="w-full border border-dashed border-gray-300 hover:border-indigo-400 text-sm text-gray-500 hover:text-indigo-600 py-2 rounded-xl transition">+
+              Add Payment</button>
+          </div>
+
+          <!-- Tab: Links -->
+          <div x-show="detailTab==='Links'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <!-- Parent -->
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1.5">Parent in this Strategy</label>
+              <div class="border border-gray-200 rounded-xl p-2.5 flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">
+                  🏛️</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-gray-700 truncate">Digital Infrastructure Pillar</div>
+                  <div class="text-xs text-gray-400">Pillar</div>
+                </div>
+              </div>
+            </div>
+            <!-- Weight -->
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1.5">Edge Weight <span
+                  class="font-normal">(Impact Score 1–10)</span></label>
+              <div class="flex items-center gap-3">
+                <input type="range" min="1" max="10" value="7" class="flex-1 accent-indigo-600" />
+                <div class="bg-indigo-50 text-indigo-700 font-bold rounded-xl px-3 py-1 text-sm w-10 text-center">7
+                </div>
+              </div>
+            </div>
+            <!-- Children -->
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1.5">Children (<span
+                  x-text="childCount(selectedElement?.id || 0)"></span>)</label>
+              <div class="space-y-1">
+                <template x-for="c in getChildren(selectedElement?.id || 0)" :key="c.id">
+                  <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-xs">
+                    <div class="w-5 h-5 rounded flex items-center justify-center text-xs"
+                      :style="`background:${getTypeColor(c.type)}22; color:${getTypeColor(c.type)}`"
+                      x-text="getTypeIcon(c.type)"></div>
+                    <span class="flex-1 text-gray-700 truncate" x-text="c.name"></span>
+                    <span class="sb" :class="'s-' + c.status.toLowerCase()" x-text="c.status"></span>
+                  </div>
+                </template>
+              </div>
+              <button @click="openAddModal(0, selectedElement?.id)"
+                class="w-full mt-2 border border-dashed border-gray-300 hover:border-indigo-400 text-xs text-gray-500 hover:text-indigo-600 py-2 rounded-xl transition">
+                + Add Child Element
+              </button>
+            </div>
+            <!-- Cross-strategy -->
+            <div>
+              <label class="text-xs font-medium text-gray-500 block mb-1.5">Appears in Strategies</label>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 p-2 bg-purple-50 rounded-lg text-xs border border-purple-100">
+                  <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                  <span class="flex-1 text-purple-700 font-medium">National Digital Transformation</span>
+                  <span class="text-purple-400">current</span>
+                </div>
+                <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-xs">
+                  <div class="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
+                  <span class="flex-1 text-gray-600">Healthcare Infrastructure</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: KPIs -->
+          <div x-show="detailTab==='KPIs'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <template x-if="typeAllowsKPIs(selectedElement?.type)">
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Linked KPIs</div>
+                  <a href="indicators.html" class="text-xs text-indigo-600 hover:underline font-medium">Manage</a>
+                </div>
+                <div class="space-y-2">
+                  <template x-for="ind in linkedKPIsForSelected()" :key="ind.id">
+                    <div class="border border-gray-200 rounded-lg px-3 py-2">
+                      <div class="text-sm font-medium text-gray-800" x-text="ind.name"></div>
+                      <div class="text-xs text-gray-400 mt-0.5" x-text="ind.current"></div>
+                      <div class="text-xs text-indigo-600 mt-0.5 font-medium" x-text="kpiContributionText(ind)">
+                      </div>
+                    </div>
+                  </template>
+                  <div x-show="linkedKPIsForSelected().length===0" class="text-xs text-gray-500 italic">No
+                    KPIs linked yet.</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button @click="openIndicatorLinkModal('existing')"
+                    class="text-xs border border-gray-300 rounded-lg py-2 hover:bg-gray-50">+ Link Existing KPI</button>
+                  <button @click="openIndicatorLinkModal('new')"
+                    class="text-xs bg-indigo-600 text-white rounded-lg py-2 hover:bg-indigo-700">+ Create New KPI</button>
+                </div>
+              </div>
+            </template>
+            <template x-if="!typeAllowsKPIs(selectedElement?.type)">
+              <div class="text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-lg px-3 py-2">
+                KPIs are disabled for this element type in strategy configuration.
+              </div>
+            </template>
+          </div>
+
+          <!-- Tab: Quarterly -->
+          <div x-show="detailTab==='Quarterly'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <template x-if="typeAllowsQuarterly(selectedElement?.type)">
+              <div class="space-y-3">
+                <div class="text-xs text-gray-600 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+                  Quarterly measurable is enabled. Add yearly plans with baseline and Q1-Q4 target/actual values.
+                </div>
+                <div class="border border-gray-200 rounded-xl p-3 space-y-2">
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add Year Plan</div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <input x-model.number="quarterlyDraft.year" type="number" min="2000" max="2100"
+                      class="border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"
+                      placeholder="Year" />
+                    <input x-model="quarterlyDraft.baseline" type="text"
+                      class="border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"
+                      placeholder="Baseline value" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <select x-model="quarterlyDraft.direction"
+                      class="border border-gray-200 rounded-lg px-2.5 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+                      <option value="HIGHER_BETTER">Higher is better</option>
+                      <option value="LOWER_BETTER">Lower is better</option>
+                    </select>
+                    <button @click="addQuarterlyYear()"
+                      class="text-xs bg-indigo-600 text-white rounded-lg px-3 py-2 hover:bg-indigo-700">+ Add Year</button>
+                  </div>
+                </div>
+
+                <template x-for="entry in quarterlyEntriesForSelected()" :key="entry.year">
+                  <div class="border border-gray-200 rounded-xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <div class="text-sm font-semibold text-gray-800" x-text="'Year ' + entry.year"></div>
+                      <button @click="removeQuarterlyYear(entry.year)"
+                        class="text-xs text-rose-600 hover:text-rose-700 font-medium">Remove</button>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      Baseline: <span class="font-medium text-gray-700" x-text="entry.baseline || '-'"></span>
+                      <span class="mx-1">•</span>
+                      Direction: <span class="font-medium text-gray-700"
+                        x-text="entry.direction==='LOWER_BETTER' ? 'Lower is better' : 'Higher is better'"></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <template x-for="q in ['Q1','Q2','Q3','Q4']" :key="q">
+                        <div class="border rounded-lg p-2" :class="quarterlyAlert(entry, q) ? 'border-amber-300 bg-amber-50/60' : 'border-gray-200'">
+                          <div class="text-xs font-semibold text-gray-600 mb-1" x-text="q"></div>
+                          <div class="space-y-1.5">
+                            <div>
+                              <label class="text-[11px] text-gray-500 block mb-0.5">Target</label>
+                              <input x-model.number="entry[q].target" @change="persistState()" type="number" step="0.01"
+                                class="w-full border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-300 outline-none" />
+                            </div>
+                            <div>
+                              <label class="text-[11px] text-gray-500 block mb-0.5">Actual</label>
+                              <input x-model.number="entry[q].actual" @change="persistState()" type="number" step="0.01"
+                                class="w-full border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-300 outline-none" />
+                            </div>
+                            <div x-show="quarterlyAlert(entry, q)" class="text-[11px] text-amber-700 font-medium">
+                              Threshold alert
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+                <div x-show="quarterlyEntriesForSelected().length===0" class="text-xs text-gray-500 italic">
+                  No quarterly plans added yet.
+                </div>
+              </div>
+            </template>
+            <template x-if="!typeAllowsQuarterly(selectedElement?.type)">
+              <div class="text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-lg px-3 py-2">
+                Quarterly measurable is disabled for this element type in strategy configuration.
+              </div>
+            </template>
+          </div>
+
+          <!-- Tab: Risks -->
+          <div x-show="detailTab==='Risks'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+            <template x-if="typeAllowsRisks(selectedElement?.type)">
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Linked Risks</div>
+                  <a href="risks.html" class="text-xs text-indigo-600 hover:underline font-medium">Manage</a>
+                </div>
+                <div class="space-y-2">
+                  <template x-for="r in linkedRisksForSelected()" :key="r.id">
+                    <div class="border border-gray-200 rounded-lg px-3 py-2">
+                      <div class="text-sm font-medium text-gray-800" x-text="r.name"></div>
+                      <div class="text-xs text-gray-400 mt-0.5" x-text="r.level + ' risk'"></div>
+                    </div>
+                  </template>
+                  <div x-show="linkedRisksForSelected().length===0" class="text-xs text-gray-500 italic">No risks linked
+                    yet.</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="text-xs border border-gray-300 rounded-lg py-2 hover:bg-gray-50">+ Link
+                    Existing</button>
+                  <button class="text-xs bg-indigo-600 text-white rounded-lg py-2 hover:bg-indigo-700">+ Create
+                    New</button>
+                </div>
+              </div>
+            </template>
+            <template x-if="!typeAllowsRisks(selectedElement?.type)">
+              <div class="text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-lg px-3 py-2">
+                Risks are disabled for this element type in strategy configuration.
+              </div>
+            </template>
+          </div>
+
+          <!-- Tab: Team -->
+          <div x-show="detailTab==='Team'" class="flex-1 overflow-y-auto p-3.5 space-y-2">
+            <template x-for="m in ['Ahmed Hassan','Sarah Khalil','Mohammed Raji']" :key="m">
+              <div class="text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2" x-text="m"></div>
+            </template>
+            <button
+              class="w-full border border-dashed border-gray-300 hover:border-indigo-400 text-xs text-gray-600 py-2 rounded-lg">+
+              Add Existing Member</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GRAPH VIEW ===== -->
+      <template x-if="view==='graph' && graphPanelVisible">
+        <template x-for="k in [graphRenderKey]" :key="k">
+          <div x-cloak class="flex-1 relative bg-gray-50 min-w-0">
+            <div id="cy" class="absolute inset-0"></div>
+            <div x-show="graphMessage"
+              class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+              <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 shadow-sm"
+                x-text="graphMessage"></div>
+            </div>
+            <!-- Legend -->
+            <div class="absolute top-4 left-4 bg-white rounded-xl border border-gray-200 shadow-sm p-3 z-10">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Types</p>
+              <div class="space-y-1.5">
+                <template x-for="t in elementTypes" :key="t.id">
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" :style="`background:${t.color}`"></div>
+                    <span class="text-xs text-gray-600" x-text="t.name"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- Controls -->
+            <div class="absolute bottom-4 left-4 flex flex-col gap-1 z-10">
+              <button @click="graphFit()"
+                class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 shadow-sm text-xs"
+                title="Fit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </button>
+              <button @click="graphZoom(1.2)"
+                class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 shadow-sm font-bold">+</button>
+              <button @click="graphZoom(0.8)"
+                class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 shadow-sm font-bold">−</button>
+            </div>
+            <div
+              class="absolute bottom-4 right-4 text-xs text-gray-400 bg-white/90 rounded-lg px-3 py-2 border border-gray-100">
+              Click node to view · Click edge to configure weight
+            </div>
+          </div>
+        </template>
+      </template>
+
+      <!-- ===== TYPE EXPLORER ===== -->
+      <template x-if="view==='types' && typesPanelVisible">
+        <template x-for="k in [typesRenderKey]" :key="k">
+          <div x-cloak class="flex-1 overflow-y-auto p-4 bg-gray-50 min-w-0">
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-4">
+              <div class="text-sm font-semibold text-gray-900">Navigation Paths</div>
+              <p class="text-xs text-gray-500 mt-1">Configured structure and alternate exploration paths.</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100"
+                  x-text="'Configured: ' + configuredPathText"></span>
+                <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  Alternate: Perspective → Initiative → KPI
+                </span>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <div class="text-sm font-semibold text-gray-900">Expected Navigation Options</div>
+                  <p class="text-xs text-gray-500 mt-0.5">Auto-derived from configured types and KPI-enabled
+                    types.</p>
+                </div>
+                <span class="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100"
+                  x-text="generatedNavigationProfiles().length + ' options'"></span>
+              </div>
+
+              <div class="flex flex-wrap gap-2 mb-4">
+                <template x-for="p in generatedNavigationProfiles()" :key="p.id">
+                  <button @click="selectNavProfile(p.id)"
+                    :class="selectedNavProfileId===p.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'"
+                    class="text-xs border rounded-lg px-2.5 py-1.5 transition">
+                    <span x-text="p.label"></span>
+                  </button>
+                </template>
+              </div>
+
+              <div x-show="activeNavProfile()" class="overflow-x-auto">
+                <div class="flex gap-3 min-w-max">
+                  <template x-for="(level, idx) in activeNavProfile()?.levels || []" :key="idx">
+                    <div class="w-56 border border-gray-200 rounded-xl">
+                      <div class="px-3 py-2 border-b border-gray-100 bg-gray-50">
+                        <div class="text-xs font-semibold text-gray-600" x-text="level"></div>
+                        <div class="text-[11px] text-gray-400 mt-0.5" x-text="navLaneItems(idx).length + ' items'">
+                        </div>
+                      </div>
+                      <div class="p-2 space-y-1.5 max-h-64 overflow-y-auto">
+                        <template x-for="item in navLaneItems(idx)" :key="item.key">
+                          <button @click="selectNavItem(idx, item)"
+                            :class="navSelectedAt(idx)?.key === item.key ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-indigo-200'"
+                            class="w-full text-left border rounded-lg px-2.5 py-2 transition">
+                            <div class="text-xs font-medium text-gray-800 truncate" x-text="item.label"></div>
+                            <div class="text-[11px] text-gray-400 mt-0.5" x-text="item.meta"></div>
+                          </button>
+                        </template>
+                        <div x-show="navLaneItems(idx).length===0" class="text-[11px] text-gray-400 italic px-1">No data
+                          at this level yet.</div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <template x-for="t in elementTypes" :key="t.name">
+                <div class="bg-white border border-gray-200 rounded-xl p-3">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
+                        :style="`background:${t.color}22; color:${t.color}`" x-text="t.icon"></div>
+                      <div>
+                        <div class="text-sm font-semibold text-gray-900" x-text="t.name"></div>
+                        <div class="text-xs text-gray-400" x-text="elementsByType(t.name).length + ' elements'"></div>
+                      </div>
+                    </div>
+                    <div x-show="t.name==='Initiative'" class="flex items-center gap-1">
+                      <a href="indicators.html"
+                        class="text-[11px] px-2 py-1 rounded border border-emerald-200 text-emerald-700 hover:bg-emerald-50">KPIs</a>
+                      <a href="risks.html"
+                        class="text-[11px] px-2 py-1 rounded border border-amber-200 text-amber-700 hover:bg-amber-50">Risks</a>
+                    </div>
+                  </div>
+                  <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                    <template x-for="el in elementsByType(t.name)" :key="el.id">
+                      <button @click="selectedElement=el; detailOpen=true; detailTab='Details'; view='tree'"
+                        class="w-full text-left border border-gray-200 hover:border-indigo-300 rounded-lg px-2.5 py-2 transition">
+                        <div class="text-xs font-medium text-gray-800 truncate" x-text="el.name"></div>
+                        <div class="text-[11px] text-gray-400 mt-0.5"
+                          x-text="parentOf(el.id) ? 'Child in map' : 'Root in map'"></div>
+                      </button>
+                    </template>
+                    <div x-show="elementsByType(t.name).length === 0" class="text-xs text-gray-400 italic">No elements
+                      of this type yet.</div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div x-show="elements.length===0"
+              class="mt-4 text-sm text-gray-500 bg-white border border-dashed border-gray-300 rounded-xl px-4 py-3">
+              No elements linked in this strategy yet. Add roots from Library or Add Root to populate Graph and By Type
+              views.
+            </div>
+          </div>
+    </div>
+    </template>
+    </template>
+
+  </div>
+
+  <!-- ===== INDICATOR LINK MODAL ===== -->
+  <div x-show="indicatorModal.open" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+    @click.self="closeIndicatorLinkModal()">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-semibold text-gray-900"
+          x-text="indicatorModal.mode==='existing' ? 'Link Existing KPI' : 'Create and Link KPI'"></h3>
+        <button @click="closeIndicatorLinkModal()"
+          class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div x-show="indicatorModal.mode==='existing'" class="space-y-2.5">
+        <input x-model="indicatorModal.search" placeholder="Search existing KPIs..."
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        <div class="max-h-44 overflow-y-auto space-y-1.5">
+          <template x-for="ind in filteredIndicatorLinkCandidates()" :key="ind.id">
+            <button @click="indicatorModal.selectedId=ind.id"
+              :class="indicatorModal.selectedId===ind.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'"
+              class="w-full border rounded-xl px-3 py-2 text-left transition hover:border-indigo-300">
+              <div class="text-sm font-medium text-gray-800" x-text="ind.name"></div>
+              <div class="text-xs text-gray-400 mt-0.5" x-text="ind.current || ''"></div>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="indicatorModal.mode==='new'" class="space-y-2.5">
+        <input x-model="indicatorModal.form.name" placeholder="KPI name"
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        <input x-model="indicatorModal.form.current" placeholder="Current value (e.g., 67%)"
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      </div>
+
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">Contribution Type</label>
+          <select x-model="indicatorModal.form.contributionType"
+            class="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+            <option value="IMPACT">Impact (1-10)</option>
+            <option value="PERCENT">Contribution %</option>
+            <option value="BUSINESS_VALUE">Business Value (auto)</option>
+            <option value="BUDGETABLE">Planned Budget (auto)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">Value</label>
+          <input x-model.number="indicatorModal.form.contributionValue"
+            :min="indicatorModal.form.contributionType==='PERCENT' ? 0 : 1"
+            :max="indicatorModal.form.contributionType==='PERCENT' ? 100 : 10" type="number" step="1"
+            :disabled="indicatorModal.form.contributionType==='BUSINESS_VALUE' || indicatorModal.form.contributionType==='BUDGETABLE'"
+            class="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+      </div>
+
+      <div x-show="indicatorModal.message"
+        class="mt-3 text-xs rounded-lg px-3 py-2 border bg-red-50 border-red-200 text-red-700"
+        x-text="indicatorModal.message"></div>
+
+      <div class="mt-4 flex justify-end gap-3">
+        <button @click="closeIndicatorLinkModal()"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
+        <button @click="submitIndicatorLinkModal()"
+          class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Save Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAYMENT MODAL ===== -->
+  <div x-show="paymentModal.open" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+    @click.self="closePaymentModal()">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-semibold text-gray-900">Add Payment</h3>
+        <button @click="closePaymentModal()"
+          class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="space-y-2.5">
+        <input x-model="paymentModal.form.desc" placeholder="Payment description"
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        <div class="grid grid-cols-2 gap-2">
+          <input x-model="paymentModal.form.date" type="date"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+          <input x-model.number="paymentModal.form.amount" type="number" min="1" step="1" placeholder="Amount (OMR)"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+      </div>
+      <div x-show="paymentModal.message"
+        class="mt-3 text-xs rounded-lg px-3 py-2 border bg-red-50 border-red-200 text-red-700"
+        x-text="paymentModal.message"></div>
+      <div class="mt-4 flex justify-end gap-3">
+        <button @click="closePaymentModal()"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
+        <button @click="submitPayment()"
+          class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Add Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONFIGURATION MODAL ===== -->
+  <div x-show="configOpen" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+    @click.self="configOpen=false">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-semibold text-gray-900">Strategy Configuration</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Edit hierarchy rules, max levels, and edge weight method by type
+            pair.
+          </p>
+        </div>
+        <button @click="configOpen=false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="text-xs font-medium text-gray-500 block mb-1">Default Weight Method</label>
+            <select x-model="configDraft.defaultWeightType"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+              <option value="IMPACT">IMPACT (1-10)</option>
+              <option value="PERCENT">PERCENT (0-100%)</option>
+              <option value="EQUAL">EQUAL (auto)</option>
+              <option value="BUSINESS_VALUE">BUSINESS_VALUE (auto)</option>
+              <option value="BUDGETABLE">BUDGETABLE (auto)</option>
+            </select>
+          </div>
+          <div class="md:col-span-2 flex items-end">
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" x-model="configDraft.strictHierarchy"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+              Enforce strict hierarchy and levels during strategy build
+            </label>
+          </div>
+        </div>
+
+        <div class="border border-gray-200 rounded-xl p-4">
+          <div class="text-sm font-semibold text-gray-800 mb-3">Type Rules</div>
+          <div class="space-y-3">
+            <template x-for="t in configDraft.types" :key="t.name">
+              <div class="border border-gray-100 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-medium text-gray-900 text-sm" x-text="t.name"></div>
+                  <div class="flex items-center gap-3">
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.hasIndicators"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      KPIs
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.hasRisks"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      Risks
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.isQuarterlyMeasurable"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      Quarterly
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.canBeRoot"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      Root
+                    </label>
+                  </div>
+                </div>
+                <div class="text-xs text-gray-500 mb-1.5">Can be placed under:</div>
+                <div class="flex flex-wrap gap-1.5">
+                  <template x-for="p in configDraft.types.filter(x => x.name !== t.name)" :key="p.name">
+                    <button @click="toggleDraftParentRule(t.name, p.name)"
+                      :class="t.allowedParentTypeNames.includes(p.name) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'"
+                      class="text-xs px-2.5 py-1 rounded-lg border transition" x-text="p.name"></button>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="border border-gray-200 rounded-xl p-4">
+          <div class="text-sm font-semibold text-gray-800 mb-3">Edge Weight Method Per Type Pair</div>
+          <div class="space-y-2">
+            <template x-for="pair in configDraftEdgePairs()" :key="pair.key">
+              <div class="grid grid-cols-12 items-center gap-2">
+                <div class="col-span-7 text-sm text-gray-800">
+                  <span class="font-medium" x-text="pair.parent"></span>
+                  <span class="text-gray-300 mx-1.5">→</span>
+                  <span class="font-medium" x-text="pair.child"></span>
+                </div>
+                <div class="col-span-5">
+                  <select :value="configDraft.edgeMethods[pair.key] || configDraft.defaultWeightType"
+                    @change="configDraft.edgeMethods[pair.key] = $event.target.value"
+                    class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+                    <option value="IMPACT">IMPACT</option>
+                    <option value="PERCENT">PERCENT</option>
+                    <option value="EQUAL">EQUAL</option>
+                    <option value="BUSINESS_VALUE">BUSINESS_VALUE</option>
+                    <option value="BUDGETABLE">BUDGETABLE</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
+        <div class="text-xs text-gray-500" x-text="'Calculated max levels: ' + previewMaxLevels()"></div>
+        <div class="flex items-center gap-3">
+          <button @click="configOpen=false"
+            class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+          <button @click="saveConfig()"
+            class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium">Save
+            Configuration</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADD ELEMENT MODAL ===== -->
+  <div x-show="addModal.open" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+    @click.self="addModal.open=false">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+      x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-gray-900">
+          <span x-show="addModal.parentId">Add Child Element</span>
+          <span x-show="!addModal.parentId">Add Root Element</span>
+        </h2>
+        <div class="flex rounded-lg overflow-hidden border border-gray-200">
+          <button @click="addModal.mode='new'"
+            :class="addModal.mode==='new'?'bg-indigo-600 text-white':'text-gray-500 hover:bg-gray-50'"
+            class="px-3 py-1.5 text-xs font-medium transition">New</button>
+          <button @click="addModal.mode='library'"
+            :class="addModal.mode==='library'?'bg-indigo-600 text-white':'text-gray-500 hover:bg-gray-50'"
+            class="px-3 py-1.5 text-xs font-medium transition">From Library</button>
+        </div>
+      </div>
+
+      <div x-show="addModal.mode==='new'" class="space-y-4">
+        <div x-show="addModal.parentId !== null"
+          class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl px-3 py-2">
+          Parent: <strong x-text="parentName(addModal.parentId)"></strong>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Element Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <template x-for="t in filteredAddTypeOptions" :key="t.id">
+              <button @click="addModal.form.typeId=t.id"
+                :class="addModal.form.typeId===t.id?'border-indigo-500 ring-2 ring-indigo-200':'border-gray-200'"
+                class="border rounded-xl p-2.5 flex items-center gap-2 transition hover:border-indigo-300">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
+                  :style="`background:${t.color}22; color:${t.color}`" x-text="t.icon"></div>
+                <span class="text-sm font-medium text-gray-700" x-text="t.name"></span>
+              </button>
+            </template>
+          </div>
+          <div x-show="filteredAddTypeOptions.length===0" class="text-xs text-gray-500 italic mt-2">
+            No allowed child types for this level based on strategy configuration.
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Name</label>
+          <input x-model="addModal.form.name" placeholder="Element name..."
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+        <div x-show="addModal.parentId !== null">
+          <label class="text-sm font-medium text-gray-700 block mb-1"
+            x-text="'Edge Weight (' + currentAddWeightMethodLabel() + ')'"></label>
+          <div x-show="currentAddWeightMethod() === 'IMPACT' || currentAddWeightMethod() === 'PERCENT'" class="flex items-center gap-3">
+            <input type="range" :min="currentAddWeightRange().min" :max="currentAddWeightRange().max"
+              x-model.number="addModal.form.weight" class="flex-1 accent-indigo-600" />
+            <span class="bg-indigo-50 text-indigo-700 font-bold px-3 py-1.5 rounded-xl text-sm w-10 text-center"
+              x-text="addModal.form.weight"></span>
+          </div>
+          <div x-show="currentAddWeightMethod() === 'EQUAL' || currentAddWeightMethod() === 'BUSINESS_VALUE' || currentAddWeightMethod() === 'BUDGETABLE'"
+            class="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+            Weight is auto-calculated by selected method (Equal / Business Value / Planned Budget).
+          </div>
+        </div>
+      </div>
+
+      <div x-show="addModal.mode==='library'" class="space-y-3">
+        <div x-show="addModal.parentId !== null"
+          class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl px-3 py-2">
+          Parent: <strong x-text="parentName(addModal.parentId)"></strong>
+        </div>
+        <input x-model="addModal.search" placeholder="Search elements..."
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        <div class="max-h-48 overflow-y-auto space-y-1.5">
+          <template x-for="el in filteredLibraryModal" :key="el.id">
+            <button @click="addModal.selectedLibId=el.id"
+              :class="addModal.selectedLibId===el.id?'border-indigo-500 bg-indigo-50':'border-gray-200'"
+              class="w-full border rounded-xl p-2.5 flex items-center gap-2 text-left transition hover:border-indigo-300">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                :style="`background:${getTypeColor(el.type)}22; color:${getTypeColor(el.type)}`"
+                x-text="getTypeIcon(el.type)"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-800 truncate" x-text="el.name"></div>
+                <div class="text-xs text-gray-400" x-text="el.type + ' · ' + el.status"></div>
+              </div>
+              <span x-show="el.isShared"
+                class="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full">Shared</span>
+            </button>
+          </template>
+          <div x-show="filteredLibraryModal.length===0" class="text-xs text-gray-500 italic px-1">
+            No library elements match the allowed types for this level.
+          </div>
+        </div>
+      </div>
+
+      <div x-show="addModal.message" class="mt-3 text-xs rounded-lg px-3 py-2"
+        :class="addModal.messageType === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-amber-50 text-amber-700 border border-amber-100'"
+        x-text="addModal.message"></div>
+
+      <div class="flex justify-end gap-3 mt-5">
+        <button @click="addModal.open=false"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+        <button @click="submitAddModal()"
+          class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium">
+          Add to Strategy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LIBRARY SLIDE-OVER ===== -->
+  <div x-show="libraryOpen" x-cloak class="fixed inset-0 z-50 flex">
+    <div class="flex-1 bg-black/30" @click="libraryOpen=false"></div>
+    <div class="w-[460px] bg-white h-full flex flex-col shadow-2xl"
+      x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full"
+      x-transition:enter-end="translate-x-0">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+        <div>
+          <h2 class="font-semibold text-gray-900">Element Library</h2>
+          <p class="text-xs text-gray-400 mt-0.5">All org elements. Link existing ones to this strategy.</p>
+        </div>
+        <button @click="libraryOpen=false" class="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-3 border-b border-gray-100 flex-shrink-0 space-y-2">
+        <input x-model="librarySearch" placeholder="Search..."
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        <div class="flex gap-1.5 flex-wrap">
+          <button @click="libraryTypeFilter=''"
+            :class="libraryTypeFilter===''?'bg-indigo-600 text-white':'bg-gray-100 text-gray-600'"
+            class="px-2.5 py-1 rounded-full text-xs font-medium transition">All</button>
+          <template x-for="t in elementTypes" :key="t.id">
+            <button @click="libraryTypeFilter=t.name"
+              :style="libraryTypeFilter===t.name?`background:${t.color};color:#fff`:''"
+              :class="libraryTypeFilter!==t.name?'bg-gray-100 text-gray-600':''"
+              class="px-2.5 py-1 rounded-full text-xs font-medium transition" x-text="t.name"></button>
+          </template>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-3 space-y-2">
+        <template x-for="el in filteredLibraryFull" :key="el.id">
+          <div class="border border-gray-200 rounded-xl p-3 hover:border-indigo-300 transition">
+            <div class="flex items-start gap-2.5">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm flex-shrink-0"
+                :style="`background:${getTypeColor(el.type)}22; color:${getTypeColor(el.type)}`"
+                x-text="getTypeIcon(el.type)"></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-medium text-gray-900 text-sm" x-text="el.name"></span>
+                  <span class="sb" :class="'s-' + el.status.toLowerCase()" x-text="el.status"></span>
+                  <span x-show="el.isShared" class="sb" style="background:#f5f3ff;color:#7c3aed">Shared</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5" x-text="el.type"></div>
+                <div class="text-xs text-gray-500 mt-1 line-clamp-1" x-text="el.description"></div>
+                <div x-show="isElementInStrategy(el.id)" class="text-[11px] mt-1 text-indigo-600 font-medium">Already
+                  in
+                  this strategy</div>
+              </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-2.5">
+              <button @click="selectedElement=el; detailOpen=true; detailTab='Details'; libraryOpen=false"
+                class="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">View</button>
+              <button @click="linkFromLibrary(el)"
+                class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition font-medium"
+                x-text="isElementInStrategy(el.id) ? 'Keep as Root' : 'Link to Strategy'"></button>
+            </div>
+          </div>
+        </template>
+      </div>
+      <div class="p-3 border-t border-gray-100 flex-shrink-0">
+        <button @click="openAddModal(0, null); addModal.mode='new'; libraryOpen=false"
+          class="w-full border-2 border-dashed border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-sm font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create New Element
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div x-show="notice.text" x-cloak class="fixed right-4 top-16 z-[60] max-w-sm">
+    <div class="rounded-xl px-4 py-3 text-sm border shadow-sm"
+      :class="notice.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : notice.type === 'warning' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'"
+      x-text="notice.text"></div>
+  </div>
+
+  <script>
+    let cy;
+
+    function app() {
+      const defaultTypes = [
+        { id: 1, name: 'Pillar', icon: '🏛️', color: '#6366f1', canBeRoot: true, parentTypeIds: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false },
+        { id: 2, name: 'Goal', icon: '🎯', color: '#10b981', canBeRoot: false, parentTypeIds: [1], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
+        { id: 3, name: 'Initiative', icon: '⚡', color: '#f59e0b', canBeRoot: false, parentTypeIds: [2], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
+        { id: 4, name: 'Program', icon: '📦', color: '#8b5cf6', canBeRoot: false, parentTypeIds: [2], hasIndicators: false, hasRisks: true, isQuarterlyMeasurable: false },
+        { id: 5, name: 'Milestone', icon: '🚩', color: '#ec4899', canBeRoot: false, parentTypeIds: [3], hasIndicators: false, hasRisks: false, isQuarterlyMeasurable: false },
+      ];
+
+      const defaultElements = [
+        { id: 1, name: 'Digital Infrastructure', type: 'Pillar', status: 'ACTIVE', progress: 41, description: 'Build the backbone digital infrastructure.', isShared: false },
+        { id: 2, name: 'Digital Services & Experience', type: 'Pillar', status: 'ACTIVE', progress: 58, description: 'Transform how citizens access government services.', isShared: false },
+        { id: 3, name: 'Data & AI Governance', type: 'Pillar', status: 'ACTIVE', progress: 22, description: 'Establish data governance frameworks.', isShared: false },
+        { id: 4, name: 'Nationwide Fiber Coverage', type: 'Goal', status: 'ACTIVE', progress: 55, weight: 8, description: 'Achieve 95% fiber connectivity nationwide.', isShared: false },
+        { id: 5, name: 'Cloud Migration', type: 'Goal', status: 'ON_HOLD', progress: 30, weight: 6, description: 'Migrate core systems to sovereign cloud.', isShared: true },
+        { id: 6, name: 'Cybersecurity Baseline', type: 'Goal', status: 'ACTIVE', progress: 44, weight: 9, description: 'Security standards across digital systems.', isShared: false },
+        { id: 7, name: 'Citizen Portal (Single Sign-On)', type: 'Goal', status: 'ACTIVE', progress: 72, weight: 10, description: 'Unified citizen identity and services portal.', isShared: false },
+        { id: 8, name: 'Mobile-First Services', type: 'Goal', status: 'ACTIVE', progress: 65, weight: 8, description: 'Top 50 citizen services digitized for mobile.', isShared: true },
+        { id: 9, name: 'National Data Catalog', type: 'Goal', status: 'DRAFT', progress: 8, weight: 7, description: 'Unified data asset catalog across all ministries.', isShared: false },
+        { id: 10, name: 'AI Ethics Framework', type: 'Goal', status: 'DRAFT', progress: 0, weight: 5, description: 'AI governance standards for public sector.', isShared: false },
+        { id: 11, name: 'Phase 1 – Northern Region', type: 'Initiative', status: 'COMPLETED', progress: 100, weight: 7, description: 'Fiber deployment Northern Region.', isShared: false },
+        { id: 12, name: 'Phase 2 – Central Region', type: 'Initiative', status: 'ACTIVE', progress: 62, weight: 8, description: 'Fiber to Central Region, 1.2M premises.', isShared: false },
+        { id: 13, name: 'Phase 3 – Southern Region', type: 'Initiative', status: 'DRAFT', progress: 0, weight: 6, description: 'Plan and commence Southern Region rollout.', isShared: false },
+        { id: 14, name: 'Identity Platform Build', type: 'Initiative', status: 'ACTIVE', progress: 80, weight: 10, description: 'Core identity and authentication platform.', isShared: false },
+        { id: 15, name: 'API Gateway & Integration', type: 'Initiative', status: 'ACTIVE', progress: 65, weight: 8, description: 'Central API gateway connecting all ministries.', isShared: true },
+        { id: 16, name: 'Telecom Partnership Program', type: 'Program', status: 'ACTIVE', progress: 50, weight: 5, description: 'Coordinate with Telecom operators.', isShared: true },
+      ];
+
+      const defaultLinks = [
+        { parent: 1, child: 4, weight: 8, weightType: 'IMPACT' }, { parent: 1, child: 5, weight: 6, weightType: 'IMPACT' }, { parent: 1, child: 6, weight: 9, weightType: 'IMPACT' },
+        { parent: 2, child: 7, weight: 10, weightType: 'IMPACT' }, { parent: 2, child: 8, weight: 8, weightType: 'IMPACT' },
+        { parent: 3, child: 9, weight: 7, weightType: 'IMPACT' }, { parent: 3, child: 10, weight: 5, weightType: 'IMPACT' },
+        { parent: 4, child: 11, weight: 7, weightType: 'PERCENT' }, { parent: 4, child: 12, weight: 8, weightType: 'PERCENT' }, { parent: 4, child: 13, weight: 6, weightType: 'PERCENT' },
+        { parent: 7, child: 14, weight: 10, weightType: 'PERCENT' }, { parent: 7, child: 15, weight: 8, weightType: 'PERCENT' },
+        { parent: 4, child: 16, weight: 5, weightType: 'IMPACT' },
+      ];
+
+      const extraLibrary = [
+        { id: 101, name: 'National Open Data Platform', type: 'Goal', status: 'DRAFT', progress: 0, weight: 5, description: 'Publish high-value open datasets with APIs.', isShared: false },
+        { id: 102, name: 'Government Design System', type: 'Initiative', status: 'DRAFT', progress: 0, weight: 5, description: 'Reusable UI patterns and accessibility standards.', isShared: false },
+        { id: 103, name: 'Smart City Partnerships', type: 'Program', status: 'ACTIVE', progress: 38, weight: 6, description: 'Partnership model for city-level pilots.', isShared: true },
+      ];
+
+      const clone = (v) => JSON.parse(JSON.stringify(v));
+
+      return {
+        strategy: {
+          id: 'default-strategy',
+          name: 'National Digital Transformation 2025–2030',
+          status: 'ACTIVE',
+          weightType: 'IMPACT',
+          discrepancyThreshold: 5,
+          strictHierarchy: true,
+          maxLevels: 4,
+          edgeMethods: {},
+        },
+        lastUpdatedLabel: 'just now',
+        view: 'tree',
+        navStartType: '',
+        selectedNavProfileId: '',
+        navSelections: {},
+        graphMessage: '',
+        graphPanelVisible: false,
+        typesPanelVisible: false,
+        graphRenderKey: 0,
+        typesRenderKey: 0,
+        selections: [],
+        selectedElement: null,
+        detailOpen: false,
+        detailTab: 'Details',
+        libraryOpen: false,
+        librarySearch: '',
+        libraryTypeFilter: '',
+        configOpen: false,
+        configDraft: { types: [], edgeMethods: {}, defaultWeightType: 'IMPACT', strictHierarchy: true },
+        configStructureBaseline: '',
+        indicatorModal: {
+          open: false,
+          mode: 'existing',
+          search: '',
+          selectedId: null,
+          message: '',
+          form: { name: '', current: '', contributionType: 'IMPACT', contributionValue: 5 },
+        },
+        paymentModal: { open: false, message: '', form: { desc: '', date: '', amount: null } },
+        addModal: { open: false, parentId: null, mode: 'new', search: '', selectedLibId: null, message: '', messageType: 'error', form: { typeId: null, name: '', weight: 5 } },
+        notice: { text: '', type: 'success' },
+        elementTypes: clone(defaultTypes),
+        typeRulesByChildName: {},
+        elements: clone(defaultElements),
+        links: clone(defaultLinks),
+        libraryElements: [...clone(defaultElements), ...clone(extraLibrary)],
+
+        progressLogs: [
+          { value: 62, date: '2026-03-28', note: 'Q1 review — targets on track.' },
+          { value: 55, date: '2026-02-15', note: 'Mid-quarter checkpoint.' },
+          { value: 40, date: '2026-01-10', note: 'Initial progress logged.' },
+        ],
+        payments: [
+          { id: 1, desc: 'Equipment – Phase 2', date: '2026-03-20', amount: '2.1M' },
+          { id: 2, desc: 'Consultant Fees Q1', date: '2026-02-28', amount: '450K' },
+        ],
+        indicatorCatalog: [
+          { id: 1, elementId: 4, name: 'Fiber Penetration Rate', current: '67%', contributionType: 'IMPACT', contributionValue: 8 },
+          { id: 2, elementId: 7, name: 'Portal Adoption', current: '72%', contributionType: 'PERCENT', contributionValue: 45 },
+          { id: 3, elementId: 12, name: 'Phase Delivery Rate', current: '62%', contributionType: 'PERCENT', contributionValue: 30 },
+        ],
+        indicatorLibrary: [
+          { id: 101, name: 'Network Uptime', current: '99.1%' },
+          { id: 102, name: 'Household Fiber Coverage', current: '67%' },
+          { id: 103, name: 'Digital Services Usage', current: '72%' },
+          { id: 104, name: 'Service Resolution Time', current: '18h' },
+        ],
+        quarterlyCatalog: [],
+        quarterlyDraft: { baseline: '', direction: 'HIGHER_BETTER', year: new Date().getFullYear() },
+        riskCatalog: [
+          { id: 1, elementId: 4, name: 'Telecom Operator Delays', level: 'HIGH' },
+          { id: 2, elementId: 12, name: 'Regulatory Bottleneck', level: 'MEDIUM' },
+        ],
+
+        // ── Computed ──────────────────────────────────────
+        get strategyStats() {
+          return `${this.elements.length} elements · ${this.laneItems(0).length} roots · Last updated ${this.lastUpdatedLabel}`;
+        },
+        configuredTypeOrder() {
+          const namesFromElements = [...this.elementTypes].map(t => t.name);
+          const names = namesFromElements.length > 0 ? namesFromElements : Object.keys(this.typeRulesByChildName || {});
+          return [...names].sort((a, b) => this.typeDepth(a) - this.typeDepth(b));
+        },
+        generatedNavigationProfiles() {
+          const ordered = this.configuredTypeOrder();
+          const profiles = [];
+          if (ordered.length > 0) {
+            profiles.push({
+              id: 'direct',
+              label: `Direct: ${ordered.join(' → ')}`,
+              levels: [...ordered],
+            });
+          }
+          for (let i = 0; i < ordered.length - 1; i++) {
+            const parent = ordered[i];
+            const child = ordered[i + 1];
+            if (this.typeAllowsIndicators(child)) {
+              profiles.push({
+                id: `indirect-${parent}-${child}`,
+                label: `Indirect: ${parent} → ${child} KPIs → ${child}`,
+                levels: [parent, `${child} KPIs`, child],
+              });
+            }
+          }
+          ordered.forEach(typeName => {
+            if (this.typeAllowsIndicators(typeName)) {
+              profiles.push({
+                id: `reverse-${typeName}`,
+                label: `Reverse: ${typeName} KPIs → ${typeName}`,
+                levels: [`${typeName} KPIs`, typeName],
+              });
+            }
+          });
+          return profiles;
+        },
+        activeNavProfile() {
+          const list = this.generatedNavigationProfiles();
+          if (list.length === 0) return null;
+          const found = list.find(p => p.id === this.selectedNavProfileId);
+          return found || list[0];
+        },
+        selectNavProfile(profileId) {
+          this.selectedNavProfileId = profileId;
+          this.navSelections = {};
+        },
+        parseNavLevel(levelLabel) {
+          const suffix = ' KPIs';
+          if (levelLabel.endsWith(suffix)) {
+            return { kind: 'indicator', typeName: levelLabel.slice(0, -suffix.length) };
+          }
+          return { kind: 'type', typeName: levelLabel };
+        },
+        navSelectedAt(idx) {
+          return this.navSelections[idx] || null;
+        },
+        selectNavItem(idx, item) {
+          this.navSelections[idx] = item;
+          Object.keys(this.navSelections)
+            .map(Number)
+            .filter(k => k > idx)
+            .forEach(k => delete this.navSelections[k]);
+        },
+        navLaneItems(idx) {
+          const profile = this.activeNavProfile();
+          if (!profile) return [];
+          const level = this.parseNavLevel(profile.levels[idx]);
+          const prevLevel = idx > 0 ? this.parseNavLevel(profile.levels[idx - 1]) : null;
+          const prevSelected = idx > 0 ? this.navSelectedAt(idx - 1) : null;
+          if (idx > 0 && !prevSelected) return [];
+
+          if (level.kind === 'type' && idx === 0) {
+            return this.elements
+              .filter(e => e.type === level.typeName)
+              .map(e => ({ key: `e-${e.id}`, id: e.id, kind: 'element', label: e.name, meta: e.status }));
+          }
+          if (level.kind === 'indicator' && idx === 0) {
+            return this.indicatorCatalog
+              .filter(ind => {
+                const el = this.elements.find(e => e.id === ind.elementId);
+                return el && el.type === level.typeName;
+              })
+              .map(ind => ({ key: `i-${ind.id}`, id: ind.id, kind: 'indicator', label: ind.name, meta: this.indicatorContributionText(ind), elementId: ind.elementId }));
+          }
+
+          if (level.kind === 'type' && prevLevel?.kind === 'type') {
+            return this.links
+              .filter(l => l.parent === prevSelected.id)
+              .map(l => this.elements.find(e => e.id === l.child))
+              .filter(Boolean)
+              .filter(e => e.type === level.typeName)
+              .map(e => ({ key: `e-${e.id}`, id: e.id, kind: 'element', label: e.name, meta: e.status }));
+          }
+
+          if (level.kind === 'indicator' && prevLevel?.kind === 'type') {
+            if (prevLevel.typeName === level.typeName) {
+              return this.indicatorCatalog
+                .filter(ind => ind.elementId === prevSelected.id)
+                .map(ind => ({ key: `i-${ind.id}`, id: ind.id, kind: 'indicator', label: ind.name, meta: this.indicatorContributionText(ind), elementId: ind.elementId }));
+            }
+            const childIds = this.links
+              .filter(l => l.parent === prevSelected.id)
+              .map(l => l.child)
+              .filter(cid => this.elements.find(e => e.id === cid)?.type === level.typeName);
+            return this.indicatorCatalog
+              .filter(ind => childIds.includes(ind.elementId))
+              .map(ind => ({ key: `i-${ind.id}`, id: ind.id, kind: 'indicator', label: ind.name, meta: this.indicatorContributionText(ind), elementId: ind.elementId }));
+          }
+
+          if (level.kind === 'type' && prevLevel?.kind === 'indicator') {
+            const owner = this.elements.find(e => e.id === prevSelected.elementId);
+            if (!owner || owner.type !== level.typeName) return [];
+            return [{ key: `e-${owner.id}`, id: owner.id, kind: 'element', label: owner.name, meta: owner.status }];
+          }
+
+          return [];
+        },
+        get configuredPathText() {
+          const order = this.elementTypes
+            .filter(t => this.typeRulesByChildName[t.name]?.canBeRoot || (this.typeRulesByChildName[t.name]?.allowedParentTypeNames || []).length > 0)
+            .sort((a, b) => this.typeDepth(a.name) - this.typeDepth(b.name))
+            .map(t => t.name);
+          return order.length > 0 ? order.join(' → ') : 'Not configured';
+        },
+
+        get visibleLanes() {
+          const lanes = [0];
+          for (let depth = 0; depth < this.selections.length; depth++) {
+            const selectedId = this.selections[depth];
+            if (!selectedId) break;
+            const hasActualChildren = this.hasChildren(selectedId);
+            const canHaveConfiguredChildren = this.allowedTypeNamesForContext(selectedId).length > 0;
+            if (hasActualChildren || canHaveConfiguredChildren) {
+              lanes.push(depth + 1);
+            } else {
+              break;
+            }
+          }
+          return lanes;
+        },
+
+        laneItems(depth) {
+          if (depth === 0) {
+            const childSet = new Set(this.links.map(l => l.child));
+            const roots = this.elements.filter(e => !childSet.has(e.id));
+            if (!this.navStartType) return roots;
+            return this.elements.filter(e => e.type === this.navStartType);
+          }
+          const parentId = this.selections[depth - 1];
+          if (!parentId) return [];
+          const childIds = this.links.filter(l => l.parent === parentId).map(l => l.child);
+          return this.elements.filter(e => childIds.includes(e.id));
+        },
+
+        laneParentName(depth) {
+          if (depth === 0) return '';
+          const parentId = this.selections[depth - 1];
+          return this.elements.find(e => e.id === parentId)?.name || '';
+        },
+
+        selectAt(depth, element) {
+          this.selectedElement = element;
+          this.detailOpen = true;
+          this.detailTab = 'Details';
+          // Rebuild selection path
+          this.selections = [...this.selections.slice(0, depth), element.id];
+        },
+        onNavStartTypeChange() {
+          this.selections = [];
+          this.selectedElement = null;
+          this.detailOpen = false;
+        },
+
+        hasChildren(id) { return this.links.some(l => l.parent === id); },
+        childCount(id) { return this.links.filter(l => l.parent === id).length; },
+        getChildren(id) {
+          const childIds = this.links.filter(l => l.parent === id).map(l => l.child);
+          return this.elements.filter(e => childIds.includes(e.id));
+        },
+        getTypeColor(name) { return this.elementTypes.find(t => t.name === name)?.color || '#94a3b8'; },
+        getTypeIcon(name) { return this.elementTypes.find(t => t.name === name)?.icon || '◆'; },
+        elementsByType(typeName) { return this.elements.filter(e => e.type === typeName); },
+        linkedIndicatorsForSelected() {
+          const id = this.selectedElement?.id;
+          if (!id) return [];
+          return this.indicatorCatalog.filter(x => x.elementId === id);
+        },
+        linkedKPIsForSelected() { return this.linkedIndicatorsForSelected(); },
+        indicatorContributionText(indicator) {
+          if (indicator.contributionType === 'PERCENT') return `Contribution: ${indicator.contributionValue ?? 0}%`;
+          if (indicator.contributionType === 'BUSINESS_VALUE') return `Business Value: ${indicator.contributionValue ?? 0}`;
+          if (indicator.contributionType === 'BUDGETABLE') return `Planned Budget: OMR ${indicator.contributionValue ?? 0}`;
+          return `Impact: ${indicator.contributionValue ?? 0}/10`;
+        },
+        kpiContributionText(indicator) { return this.indicatorContributionText(indicator); },
+        linkedRisksForSelected() {
+          const id = this.selectedElement?.id;
+          if (!id) return [];
+          return this.riskCatalog.filter(x => x.elementId === id);
+        },
+        quarterlyEntriesForSelected() {
+          const id = this.selectedElement?.id;
+          if (!id) return [];
+          return this.quarterlyCatalog.filter(x => x.elementId === id);
+        },
+        addQuarterlyYear() {
+          const id = this.selectedElement?.id;
+          const y = Number(this.quarterlyDraft.year);
+          if (!id || !Number.isFinite(y)) return;
+          if (this.quarterlyCatalog.some(x => x.elementId === id && x.year === y)) return;
+          this.quarterlyCatalog.push({
+            elementId: id,
+            baseline: this.quarterlyDraft.baseline,
+            direction: this.quarterlyDraft.direction || 'HIGHER_BETTER',
+            year: y,
+            Q1: { target: 0, actual: 0 },
+            Q2: { target: 0, actual: 0 },
+            Q3: { target: 0, actual: 0 },
+            Q4: { target: 0, actual: 0 },
+          });
+          this.persistState();
+        },
+        removeQuarterlyYear(year) {
+          const id = this.selectedElement?.id;
+          if (!id) return;
+          this.quarterlyCatalog = this.quarterlyCatalog.filter(x => !(x.elementId === id && x.year === year));
+          this.persistState();
+        },
+        quarterlyAlert(entry, quarter) {
+          const q = entry?.[quarter];
+          if (!q) return false;
+          const target = Number(q.target);
+          const actual = Number(q.actual);
+          if (!Number.isFinite(target) || !Number.isFinite(actual)) return false;
+          const threshold = Number(this.strategy?.discrepancyThreshold ?? 5);
+          if (entry.direction === 'LOWER_BETTER') {
+            if (target === 0) return actual > 0;
+            return ((actual - target) / Math.abs(target)) * 100 > threshold;
+          }
+          if (target === 0) return actual < 0;
+          return ((target - actual) / Math.abs(target)) * 100 > threshold;
+        },
+        parentName(id) { return this.elements.find(e => e.id === id)?.name || 'Unknown parent'; },
+        parentOf(childId) {
+          const edge = this.links.find(l => l.child === childId);
+          return edge ? edge.parent : null;
+        },
+        depthOf(elementId) {
+          let depth = 0;
+          let current = elementId;
+          let guard = 0;
+          while (this.parentOf(current) !== null && guard < 200) {
+            depth += 1;
+            current = this.parentOf(current);
+            guard += 1;
+          }
+          return depth;
+        },
+        subtreeHeight(elementId) {
+          const children = this.links.filter(l => l.parent === elementId).map(l => l.child);
+          if (children.length === 0) return 0;
+          return 1 + Math.max(...children.map(c => this.subtreeHeight(c)));
+        },
+        typeDepth(typeName, stack = new Set()) {
+          if (stack.has(typeName)) return 999;
+          const rule = this.typeRulesByChildName[typeName];
+          if (!rule) return 0;
+          if (rule.canBeRoot || !rule.allowedParentTypeNames || rule.allowedParentTypeNames.length === 0) return 0;
+          stack.add(typeName);
+          const d = 1 + Math.min(...rule.allowedParentTypeNames.map(p => this.typeDepth(p, stack)));
+          stack.delete(typeName);
+          return d;
+        },
+
+        openAddModal(depth, parentId) {
+          this.addModal = {
+            open: true, parentId, mode: 'new', search: '', selectedLibId: null,
+            message: '', messageType: 'error', form: { typeId: null, name: '', weight: this.strategy.weightType === 'PERCENT' ? 25 : 5 }
+          };
+          const firstAllowed = this.filteredAddTypeOptions[0];
+          if (firstAllowed) this.addModal.form.typeId = firstAllowed.id;
+        },
+
+        setModalMessage(text, type = 'error') {
+          this.addModal.message = text;
+          this.addModal.messageType = type;
+        },
+
+        showNotice(text, type = 'success') {
+          this.notice = { text, type };
+          setTimeout(() => {
+            if (this.notice.text === text) this.notice.text = '';
+          }, 2600);
+        },
+        openIndicatorLinkModal(mode) {
+          if (!this.selectedElement) {
+            this.showNotice('Select an element first.', 'error');
+            return;
+          }
+          if (!this.typeAllowsIndicators(this.selectedElement.type)) {
+            this.showNotice('KPIs are disabled for this element type in current strategy config.', 'error');
+            return;
+          }
+          this.indicatorModal = {
+            open: true,
+            mode,
+            search: '',
+            selectedId: null,
+            message: '',
+            form: { name: '', current: '', contributionType: 'IMPACT', contributionValue: 5 },
+          };
+        },
+        closeIndicatorLinkModal() {
+          this.indicatorModal.open = false;
+        },
+        filteredIndicatorLinkCandidates() {
+          const q = this.indicatorModal.search.toLowerCase().trim();
+          const selectedId = this.selectedElement?.id;
+          return this.indicatorLibrary
+            .filter(x => !this.indicatorCatalog.some(link => link.elementId === selectedId && link.name === x.name))
+            .filter(x => !q || x.name.toLowerCase().includes(q));
+        },
+        submitIndicatorLinkModal() {
+          const selectedId = this.selectedElement?.id;
+          if (!selectedId) {
+            this.indicatorModal.message = 'No selected element.';
+            return;
+          }
+          const type = this.indicatorModal.form.contributionType;
+          let value = Number(this.indicatorModal.form.contributionValue);
+          if ((type === 'PERCENT' || type === 'IMPACT') && !Number.isFinite(value)) {
+            this.indicatorModal.message = 'Contribution value is required.';
+            return;
+          }
+          if (type === 'PERCENT') value = Math.max(0, Math.min(100, value));
+          if (type === 'IMPACT') value = Math.max(1, Math.min(10, value));
+          if (type === 'BUSINESS_VALUE') value = Math.max(0, Number(this.selectedElement?.businessValue || 0));
+          if (type === 'BUDGETABLE') value = Math.max(0, Number(this.selectedElement?.plannedBudget || 0));
+
+          if (this.indicatorModal.mode === 'existing') {
+            const existing = this.indicatorLibrary.find(x => x.id === this.indicatorModal.selectedId);
+            if (!existing) {
+              this.indicatorModal.message = 'Please select a KPI.';
+              return;
+            }
+            this.indicatorCatalog.push({
+              id: Date.now(),
+              elementId: selectedId,
+              name: existing.name,
+              current: existing.current || '',
+              contributionType: type,
+              contributionValue: value,
+            });
+          } else {
+            if (!this.indicatorModal.form.name.trim()) {
+              this.indicatorModal.message = 'KPI name is required.';
+              return;
+            }
+            this.indicatorCatalog.push({
+              id: Date.now(),
+              elementId: selectedId,
+              name: this.indicatorModal.form.name.trim(),
+              current: this.indicatorModal.form.current.trim(),
+              contributionType: type,
+              contributionValue: value,
+            });
+          }
+
+          this.persistState();
+          this.closeIndicatorLinkModal();
+          this.showNotice('KPI linked with contribution settings.', 'success');
+        },
+        openPaymentModal() {
+          this.paymentModal = {
+            open: true,
+            message: '',
+            form: {
+              desc: '',
+              date: new Date().toISOString().slice(0, 10),
+              amount: null,
+            },
+          };
+        },
+        closePaymentModal() {
+          this.paymentModal.open = false;
+        },
+        formatMoneyShort(amount) {
+          if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+          if (amount >= 1000) return `${Math.round(amount / 1000)}K`;
+          return String(amount);
+        },
+        submitPayment() {
+          const f = this.paymentModal.form;
+          const amount = Number(f.amount);
+          if (!f.desc.trim()) { this.paymentModal.message = 'Description is required.'; return; }
+          if (!f.date) { this.paymentModal.message = 'Date is required.'; return; }
+          if (!Number.isFinite(amount) || amount <= 0) { this.paymentModal.message = 'Amount must be greater than 0.'; return; }
+
+          this.payments.unshift({
+            id: Date.now(),
+            desc: f.desc.trim(),
+            date: f.date,
+            amount: this.formatMoneyShort(amount),
+          });
+          this.persistState();
+          this.closePaymentModal();
+          this.showNotice('Payment added successfully.', 'success');
+        },
+
+        isElementInStrategy(elementId) {
+          return this.elements.some(e => e.id === elementId);
+        },
+
+        nextElementId() {
+          return Math.max(0, ...this.libraryElements.map(e => e.id), ...this.elements.map(e => e.id)) + 1;
+        },
+
+        canTypeBeRoot(typeName) {
+          const rule = this.typeRulesByChildName[typeName];
+          if (!rule) return true;
+          return !!rule.canBeRoot;
+        },
+        isConfiguredType(typeName) {
+          return this.elementTypes.some(t => t.name === typeName);
+        },
+        typeAllowsIndicators(typeName) {
+          const rule = this.typeRulesByChildName[typeName];
+          return rule ? rule.hasIndicators !== false : true;
+        },
+        typeAllowsKPIs(typeName) { return this.typeAllowsIndicators(typeName); },
+        typeAllowsQuarterly(typeName) {
+          const rule = this.typeRulesByChildName[typeName];
+          return rule ? rule.isQuarterlyMeasurable === true : false;
+        },
+        typeAllowsRisks(typeName) {
+          const rule = this.typeRulesByChildName[typeName];
+          return rule ? rule.hasRisks !== false : true;
+        },
+        allowedTypeNamesForContext(parentId) {
+          if (parentId === null || parentId === undefined) {
+            return this.elementTypes.filter(t => this.canTypeBeRoot(t.name)).map(t => t.name);
+          }
+          const parentType = this.elements.find(e => e.id === parentId)?.type;
+          if (!parentType) return [];
+          return this.elementTypes.filter(t => this.isHierarchyConform(parentType, t.name)).map(t => t.name);
+        },
+        isTypeAllowedForContext(typeName, parentId) {
+          return this.allowedTypeNamesForContext(parentId).includes(typeName);
+        },
+        get filteredAddTypeOptions() {
+          const allowed = new Set(this.allowedTypeNamesForContext(this.addModal.parentId));
+          return this.elementTypes.filter(t => allowed.has(t.name));
+        },
+        resolveEdgeWeightMethod(parentTypeName, childTypeName) {
+          return this.strategy.edgeMethods?.[`${parentTypeName}>${childTypeName}`] || this.strategy.weightType || 'IMPACT';
+        },
+        currentAddChildTypeName() {
+          if (this.addModal.mode === 'new') {
+            const t = this.elementTypes.find(x => x.id === Number(this.addModal.form.typeId));
+            return t?.name || null;
+          }
+          if (this.addModal.mode === 'library') {
+            return this.libraryElements.find(e => e.id === this.addModal.selectedLibId)?.type || null;
+          }
+          return null;
+        },
+        currentAddWeightMethod() {
+          if (!this.addModal.parentId) return this.strategy.weightType || 'IMPACT';
+          const parentType = this.elements.find(e => e.id === this.addModal.parentId)?.type;
+          const childType = this.currentAddChildTypeName();
+          if (!parentType || !childType) return this.strategy.weightType || 'IMPACT';
+          return this.resolveEdgeWeightMethod(parentType, childType);
+        },
+        currentAddWeightMethodLabel() {
+          const m = this.currentAddWeightMethod();
+          if (m === 'PERCENT') return 'Percent 0-100%';
+          if (m === 'EQUAL') return 'Equal Distribution';
+          if (m === 'BUSINESS_VALUE') return 'Auto by Business Value';
+          if (m === 'BUDGETABLE') return 'Auto by Planned Budget';
+          return 'Impact 1-10';
+        },
+        currentAddWeightRange() {
+          const m = this.currentAddWeightMethod();
+          if (m === 'PERCENT') return { min: 0, max: 100 };
+          if (m === 'BUSINESS_VALUE' || m === 'BUDGETABLE') return { min: 0, max: 0 };
+          return { min: 1, max: 10 };
+        },
+        edgeLabelFor(link) {
+          const method = link.weightType || 'IMPACT';
+          if (method === 'PERCENT') return `${link.weight ?? 0}%`;
+          if (method === 'EQUAL') return 'Equal';
+          if (method === 'BUSINESS_VALUE') return `BV ${link.weight ?? 0}`;
+          if (method === 'BUDGETABLE') return `Budget ${link.weight ?? 0}`;
+          return `${link.weight ?? 0}`;
+        },
+
+        isHierarchyConform(parentTypeName, childTypeName) {
+          const rule = this.typeRulesByChildName[childTypeName];
+          if (!rule) return false;
+          if (!Array.isArray(rule.allowedParentTypeNames)) return false;
+          if (rule.allowedParentTypeNames.length === 0) return false;
+          return rule.allowedParentTypeNames.includes(parentTypeName);
+        },
+
+        wouldCreateCycle(parentId, childId) {
+          if (parentId === childId) return true;
+          const stack = [childId];
+          const seen = new Set();
+          while (stack.length > 0) {
+            const current = stack.pop();
+            if (current === parentId) return true;
+            if (seen.has(current)) continue;
+            seen.add(current);
+            this.links
+              .filter(l => l.parent === current)
+              .forEach(l => stack.push(l.child));
+          }
+          return false;
+        },
+
+        createAndStoreElement(typeId, name) {
+          const type = this.elementTypes.find(t => t.id === Number(typeId));
+          if (!type) return null;
+          const newElement = {
+            id: this.nextElementId(),
+            name: name.trim(),
+            type: type.name,
+            status: 'DRAFT',
+            progress: 0,
+            weight: this.strategy.weightType === 'PERCENT' ? 25 : 5,
+            description: '',
+            isShared: false,
+          };
+          this.libraryElements.unshift(newElement);
+          return newElement;
+        },
+
+        addElementToStrategy(elementId, parentId, weight) {
+          const libraryElement = this.libraryElements.find(e => e.id === elementId);
+          if (!libraryElement) return { ok: false, error: 'Selected element was not found in the library.' };
+          if (!this.isConfiguredType(libraryElement.type)) {
+            return { ok: false, error: `Type "${libraryElement.type}" is not configured in this strategy.` };
+          }
+
+          const inStrategy = this.isElementInStrategy(elementId);
+
+          if (parentId === null) {
+            const existingParent = this.parentOf(elementId);
+            if (existingParent !== null) {
+              return { ok: false, error: 'This element is already linked under a parent in this strategy.' };
+            }
+            if (!this.canTypeBeRoot(libraryElement.type)) {
+              return { ok: false, error: `${libraryElement.type} cannot be added as root in this strategy configuration.` };
+            }
+            const rootLevel = 1 + this.subtreeHeight(elementId);
+            if (this.strategy.strictHierarchy && this.strategy.maxLevels > 0 && rootLevel > this.strategy.maxLevels) {
+              return { ok: false, error: `Adding this root exceeds configured max levels (${this.strategy.maxLevels}).` };
+            }
+            if (!inStrategy) {
+              this.elements.push(clone(libraryElement));
+            }
+            return { ok: true };
+          }
+
+          const parentElement = this.elements.find(e => e.id === parentId);
+          if (!parentElement) return { ok: false, error: 'Parent element was not found in this strategy.' };
+          if (parentId === elementId) return { ok: false, error: 'An element cannot be linked to itself.' };
+          if (this.wouldCreateCycle(parentId, elementId)) {
+            return { ok: false, error: 'This link would create a cycle in the strategy graph.' };
+          }
+
+          const existingParent = this.parentOf(elementId);
+          if (existingParent !== null && existingParent !== parentId) {
+            return { ok: false, error: 'This element already has a parent in this strategy. Remove existing link first.' };
+          }
+          if (existingParent === parentId) {
+            return { ok: false, error: 'This link already exists.' };
+          }
+
+          if (!this.isHierarchyConform(parentElement.type, libraryElement.type)) {
+            return { ok: false, error: `${libraryElement.type} cannot be linked under ${parentElement.type} based on strategy configuration.` };
+          }
+
+          const prospectiveDepth = this.depthOf(parentId) + 1;
+          const prospectiveMaxLevel = prospectiveDepth + 1 + this.subtreeHeight(elementId);
+          if (this.strategy.strictHierarchy && this.strategy.maxLevels > 0 && prospectiveMaxLevel > this.strategy.maxLevels) {
+            return { ok: false, error: `This link exceeds configured max levels (${this.strategy.maxLevels}).` };
+          }
+
+          if (!inStrategy) {
+            this.elements.push(clone(libraryElement));
+          }
+
+          const weightType = this.resolveEdgeWeightMethod(parentElement.type, libraryElement.type);
+          let finalWeight = Number(weight || 0);
+          if (weightType === 'EQUAL') finalWeight = 0;
+          if (weightType === 'IMPACT') {
+            finalWeight = Math.max(1, Math.min(10, finalWeight || 5));
+          }
+          if (weightType === 'PERCENT') {
+            finalWeight = Math.max(0, Math.min(100, finalWeight || 25));
+          }
+          if (weightType === 'BUSINESS_VALUE') {
+            finalWeight = Math.max(0, Number(libraryElement.businessValue || 0));
+          }
+          if (weightType === 'BUDGETABLE') {
+            finalWeight = Math.max(0, Number(libraryElement.plannedBudget || 0));
+          }
+
+          this.links.push({ parent: parentId, child: elementId, weight: finalWeight, weightType });
+          const strategyElement = this.elements.find(e => e.id === elementId);
+          if (strategyElement) strategyElement.weight = finalWeight;
+          return { ok: true };
+        },
+
+        submitAddModal() {
+          this.setModalMessage('');
+          const { mode, parentId } = this.addModal;
+
+          if (mode === 'new') {
+            if (!this.addModal.form.typeId) return this.setModalMessage('Please select an element type.');
+            if (!this.addModal.form.name.trim()) return this.setModalMessage('Please provide an element name.');
+
+            const created = this.createAndStoreElement(this.addModal.form.typeId, this.addModal.form.name);
+            if (!created) return this.setModalMessage('Could not create element with the selected type.');
+            const result = this.addElementToStrategy(created.id, parentId, this.addModal.form.weight);
+            if (!result.ok) return this.setModalMessage(result.error);
+
+            this.persistState();
+            this.addModal.open = false;
+            this.showNotice(result.warning || 'Element added to strategy successfully.', result.warning ? 'warning' : 'success');
+            if (this.view === 'graph') this.$nextTick(() => this.initGraph());
+            return;
+          }
+
+          if (!this.addModal.selectedLibId) return this.setModalMessage('Please select an element from the library.');
+          const result = this.addElementToStrategy(this.addModal.selectedLibId, parentId, this.addModal.form.weight);
+          if (!result.ok) return this.setModalMessage(result.error);
+
+          this.persistState();
+          this.addModal.open = false;
+          this.showNotice(result.warning || 'Element linked to strategy successfully.', result.warning ? 'warning' : 'success');
+          if (this.view === 'graph') this.$nextTick(() => this.initGraph());
+        },
+
+        linkFromLibrary(el) {
+          const result = this.addElementToStrategy(el.id, null, 5);
+          if (!result.ok) {
+            this.showNotice(result.error, 'error');
+            return;
+          }
+          this.persistState();
+          this.showNotice(result.warning || 'Element linked as a root in this strategy.', result.warning ? 'warning' : 'success');
+          if (this.view === 'graph') this.$nextTick(() => this.initGraph());
+        },
+        openConfigModal() {
+          this.configDraft = {
+            defaultWeightType: this.strategy.weightType || 'IMPACT',
+            strictHierarchy: this.strategy.strictHierarchy !== false,
+            edgeMethods: { ...(this.strategy.edgeMethods || {}) },
+            types: this.elementTypes.map(t => {
+              const r = this.typeRulesByChildName[t.name] || { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false };
+              return {
+                name: t.name,
+                canBeRoot: !!r.canBeRoot,
+                allowedParentTypeNames: [...(r.allowedParentTypeNames || [])],
+                hasIndicators: r.hasIndicators !== false,
+                hasRisks: r.hasRisks !== false,
+                isQuarterlyMeasurable: r.isQuarterlyMeasurable === true,
+              };
+            }),
+          };
+          this.configStructureBaseline = this.structureSignatureForDraft(this.configDraft.types, this.configDraft.strictHierarchy);
+          this.configOpen = true;
+        },
+        toggleDraftParentRule(childName, parentName) {
+          const row = this.configDraft.types.find(t => t.name === childName);
+          if (!row) return;
+          if (row.allowedParentTypeNames.includes(parentName)) {
+            row.allowedParentTypeNames = row.allowedParentTypeNames.filter(x => x !== parentName);
+            delete this.configDraft.edgeMethods[`${parentName}>${childName}`];
+          } else {
+            row.allowedParentTypeNames.push(parentName);
+            this.configDraft.edgeMethods[`${parentName}>${childName}`] = this.configDraft.defaultWeightType;
+          }
+        },
+        configDraftEdgePairs() {
+          const pairs = [];
+          this.configDraft.types.forEach(child => {
+            (child.allowedParentTypeNames || []).forEach(parent => {
+              pairs.push({ key: `${parent}>${child.name}`, parent, child: child.name });
+            });
+          });
+          return pairs;
+        },
+        hasDraftTypeCycle() {
+          const childrenByParent = {};
+          this.configDraft.types.forEach(t => { childrenByParent[t.name] = []; });
+          this.configDraft.types.forEach(child => {
+            (child.allowedParentTypeNames || []).forEach(parent => {
+              if (!childrenByParent[parent]) childrenByParent[parent] = [];
+              childrenByParent[parent].push(child.name);
+            });
+          });
+          const visited = new Set();
+          const inStack = new Set();
+          const dfs = (name) => {
+            if (inStack.has(name)) return true;
+            if (visited.has(name)) return false;
+            visited.add(name);
+            inStack.add(name);
+            for (const c of (childrenByParent[name] || [])) {
+              if (dfs(c)) return true;
+            }
+            inStack.delete(name);
+            return false;
+          };
+          return this.configDraft.types.some(t => dfs(t.name));
+        },
+        hasDraftMultipleTypesPerLevel() {
+          const depthOfDraftType = (typeName, stack = new Set()) => {
+            if (stack.has(typeName)) return 999;
+            const row = this.configDraft.types.find(t => t.name === typeName);
+            if (!row) return 0;
+            const parents = row.allowedParentTypeNames || [];
+            if (row.canBeRoot || parents.length === 0) return 0;
+            stack.add(typeName);
+            const d = 1 + Math.min(...parents.map(p => depthOfDraftType(p, stack)));
+            stack.delete(typeName);
+            return d;
+          };
+          const buckets = {};
+          this.configDraft.types.forEach(t => {
+            const d = depthOfDraftType(t.name);
+            if (!buckets[d]) buckets[d] = [];
+            buckets[d].push(t.name);
+          });
+          return Object.values(buckets).some(arr => arr.length > 1);
+        },
+        previewMaxLevels() {
+          const roots = this.configDraft.types.filter(t => t.canBeRoot).map(t => t.name);
+          if (roots.length === 0) return 0;
+          const childrenByParent = {};
+          this.configDraft.types.forEach(t => { childrenByParent[t.name] = []; });
+          this.configDraft.types.forEach(child => {
+            (child.allowedParentTypeNames || []).forEach(parent => {
+              if (!childrenByParent[parent]) childrenByParent[parent] = [];
+              childrenByParent[parent].push(child.name);
+            });
+          });
+          const memo = {};
+          const depthFrom = (name, stack = new Set()) => {
+            if (memo[name]) return memo[name];
+            if (stack.has(name)) return 0;
+            stack.add(name);
+            const children = childrenByParent[name] || [];
+            let maxChild = 0;
+            children.forEach(c => { maxChild = Math.max(maxChild, depthFrom(c, stack)); });
+            stack.delete(name);
+            memo[name] = 1 + maxChild;
+            return memo[name];
+          };
+          return Math.max(...roots.map(r => depthFrom(r)));
+        },
+        structureSignatureForDraft(types, strictHierarchy) {
+          const normalized = (types || [])
+            .map(t => ({
+              name: t.name,
+              canBeRoot: !!t.canBeRoot,
+              allowedParentTypeNames: [...(t.allowedParentTypeNames || [])].sort(),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+          return JSON.stringify({ strictHierarchy: !!strictHierarchy, types: normalized });
+        },
+        isStructureChangedInDraft() {
+          const currentSig = this.structureSignatureForDraft(this.configDraft.types, this.configDraft.strictHierarchy);
+          return currentSig !== this.configStructureBaseline;
+        },
+        saveConfig() {
+          if (this.configDraft.strictHierarchy) {
+            if (this.configDraft.types.filter(t => t.canBeRoot).length === 0) {
+              this.showNotice('Configuration must define at least one root type.', 'error');
+              return;
+            }
+            const unplaceable = this.configDraft.types.find(t => !t.canBeRoot && (t.allowedParentTypeNames || []).length === 0);
+            if (unplaceable) {
+              this.showNotice(`Type "${unplaceable.name}" has no parent and cannot be root.`, 'error');
+              return;
+            }
+            if (this.hasDraftTypeCycle()) {
+              this.showNotice('Type hierarchy contains a cycle. Please remove cyclic parent-child rules.', 'error');
+              return;
+            }
+            if (this.hasDraftMultipleTypesPerLevel()) {
+              this.showNotice('One level, one type rule violated. Each level must contain exactly one type.', 'error');
+              return;
+            }
+          }
+
+          const nextRules = {};
+          this.configDraft.types.forEach(t => {
+            nextRules[t.name] = {
+              canBeRoot: !!t.canBeRoot,
+              allowedParentTypeNames: [...(t.allowedParentTypeNames || [])],
+              hasIndicators: t.hasIndicators !== false,
+              hasRisks: t.hasRisks !== false,
+              isQuarterlyMeasurable: t.isQuarterlyMeasurable === true,
+            };
+          });
+          const nextMaxLevels = this.previewMaxLevels();
+          const structureChanged = this.isStructureChangedInDraft();
+
+          if (this.configDraft.strictHierarchy && structureChanged) {
+            for (const e of this.elements) {
+              if (!nextRules[e.type]) {
+                this.showNotice(`Existing element type "${e.type}" is no longer configured.`, 'error');
+                return;
+              }
+              const parentId = this.parentOf(e.id);
+              if (parentId === null && !nextRules[e.type].canBeRoot) {
+                this.showNotice(`"${e.name}" is root but "${e.type}" is not allowed as root in new config.`, 'error');
+                return;
+              }
+              if (parentId !== null) {
+                const parentType = this.elements.find(x => x.id === parentId)?.type;
+                if (!nextRules[e.type].allowedParentTypeNames.includes(parentType)) {
+                  this.showNotice(`Existing link ${parentType} → ${e.type} violates new config.`, 'error');
+                  return;
+                }
+              }
+              const level = this.depthOf(e.id) + 1;
+              if (nextMaxLevels > 0 && level > nextMaxLevels) {
+                this.showNotice('Existing map exceeds max levels for the new configuration.', 'error');
+                return;
+              }
+            }
+          }
+
+          this.typeRulesByChildName = nextRules;
+          this.elementTypes = this.elementTypes.map(t => {
+            const draftType = this.configDraft.types.find(x => x.name === t.name);
+            if (!draftType) return t;
+            return {
+              ...t,
+              canBeRoot: !!draftType.canBeRoot,
+              hasIndicators: draftType.hasIndicators !== false,
+              hasRisks: draftType.hasRisks !== false,
+              isQuarterlyMeasurable: draftType.isQuarterlyMeasurable === true,
+            };
+          });
+          this.strategy.weightType = this.configDraft.defaultWeightType;
+          this.strategy.strictHierarchy = !!this.configDraft.strictHierarchy;
+          this.strategy.edgeMethods = { ...this.configDraft.edgeMethods };
+          this.strategy.maxLevels = nextMaxLevels;
+          this.configStructureBaseline = this.structureSignatureForDraft(this.configDraft.types, this.configDraft.strictHierarchy);
+          this.configOpen = false;
+          this.persistState();
+          this.showNotice('Strategy configuration saved.', 'success');
+        },
+
+        get filteredLibraryModal() {
+          const q = this.addModal.search.toLowerCase();
+          const allowed = new Set(this.allowedTypeNamesForContext(this.addModal.parentId));
+          return this.libraryElements
+            .filter(e => allowed.has(e.type))
+            .filter(e => !q || e.name.toLowerCase().includes(q))
+            .slice(0, 20);
+        },
+
+        get filteredLibraryFull() {
+          return this.libraryElements.filter(e => {
+            const q = !this.librarySearch || e.name.toLowerCase().includes(this.librarySearch.toLowerCase());
+            const t = !this.libraryTypeFilter || e.type === this.libraryTypeFilter;
+            return q && t;
+          });
+        },
+
+        resetAllBuilderStorage(reload = false) {
+          try {
+            const keysToDelete = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (!key) continue;
+              if (key.startsWith('spm_builder_state_') || key === 'spm_active_strategy') {
+                keysToDelete.push(key);
+              }
+            }
+            keysToDelete.forEach(k => localStorage.removeItem(k));
+          } catch (e) {
+            this.showNotice('Could not clear local storage in this environment.', 'error');
+            return;
+          }
+          if (reload && typeof window !== 'undefined' && window.location) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('reset');
+            window.location.replace(url.toString());
+            return;
+          }
+          this.showNotice('Builder data reset successfully.', 'success');
+        },
+
+        persistState() {
+          this.lastUpdatedLabel = 'just now';
+          const key = `spm_builder_state_${this.strategy.id}`;
+          localStorage.setItem(key, JSON.stringify({
+            strategy: this.strategy,
+            elementTypes: this.elementTypes,
+            typeRulesByChildName: this.typeRulesByChildName,
+            elements: this.elements,
+            links: this.links,
+            libraryElements: this.libraryElements,
+            payments: this.payments,
+            indicatorCatalog: this.indicatorCatalog,
+            quarterlyCatalog: this.quarterlyCatalog,
+          }));
+        },
+        normalizeLinks() {
+          this.links = this.links.map(l => {
+            const parentType = this.elements.find(e => e.id === l.parent)?.type;
+            const childType = this.elements.find(e => e.id === l.child)?.type;
+            const weightType = l.weightType || (parentType && childType ? this.resolveEdgeWeightMethod(parentType, childType) : this.strategy.weightType || 'IMPACT');
+            let weight = Number(l.weight ?? 0);
+            if (weightType === 'EQUAL') weight = 0;
+            if (weightType === 'IMPACT') weight = Math.max(1, Math.min(10, weight || 5));
+            if (weightType === 'PERCENT') weight = Math.max(0, Math.min(100, weight || 25));
+            if (weightType === 'BUSINESS_VALUE') weight = Math.max(0, weight || 0);
+            if (weightType === 'BUDGETABLE') weight = Math.max(0, weight || 0);
+            return { ...l, weightType, weight };
+          });
+        },
+
+        hydrateFromDraftOrDefaults() {
+          const strategyMetaById = {
+            '1': { name: 'National Digital Transformation 2025–2030', status: 'ACTIVE' },
+            '2': { name: 'Healthcare Infrastructure Improvement', status: 'ACTIVE' },
+            '3': { name: 'Education Excellence Plan', status: 'DRAFT' },
+            '4': { name: 'Sustainable Energy Transition', status: 'ON_HOLD' },
+            '5': { name: 'Smart City Pilot — Al Riyadh', status: 'COMPLETED' },
+          };
+          const urlStrategyId = (() => {
+            if (typeof window === 'undefined' || !window.location) return null;
+            const params = new URLSearchParams(window.location.search || '');
+            const id = params.get('id');
+            return id ? String(id) : null;
+          })();
+          const draftRaw = localStorage.getItem('spm_active_strategy');
+          let draft = null;
+          if (draftRaw) {
+            try { draft = JSON.parse(draftRaw); }
+            catch (e) { localStorage.removeItem('spm_active_strategy'); draft = null; }
+          }
+          const hasUsableDraft = !!(draft && Array.isArray(draft.typeConfig) && draft.typeConfig.length > 0);
+          const useDraft = !urlStrategyId && hasUsableDraft;
+
+          if (useDraft) {
+            this.strategy = {
+              id: draft.id || `strategy-${Date.now()}`,
+              name: draft.name || 'New Strategy',
+              status: draft.status || 'DRAFT',
+              weightType: draft.weightType || 'IMPACT',
+              discrepancyThreshold: draft.discrepancyThreshold || 5,
+              strictHierarchy: draft.strictHierarchy !== false,
+              maxLevels: draft.maxLevels || 0,
+              edgeMethods: {},
+            };
+          } else if (urlStrategyId) {
+            const meta = strategyMetaById[urlStrategyId] || {};
+            this.strategy = {
+              ...this.strategy,
+              id: urlStrategyId,
+              name: meta.name || this.strategy.name,
+              status: meta.status || this.strategy.status,
+            };
+          }
+
+          if (useDraft && Array.isArray(draft.typeConfig) && draft.typeConfig.length > 0) {
+            this.elementTypes = draft.typeConfig.map((t, idx) => ({
+              id: t.id || (idx + 1),
+              name: t.name,
+              icon: t.icon || '◆',
+              color: t.color || '#64748b',
+              canBeRoot: !!t.canBeRoot,
+              hasIndicators: t.hasIndicators !== false,
+              hasRisks: t.hasRisks !== false,
+              isQuarterlyMeasurable: t.isQuarterlyMeasurable === true,
+            }));
+
+            const byId = Object.fromEntries(this.elementTypes.map(t => [t.id, t]));
+            this.typeRulesByChildName = {};
+            this.elementTypes.forEach(t => {
+              const allowedParentTypeNames = ((draft.parentRules && draft.parentRules[t.id]) || [])
+                .map(parentId => byId[parentId]?.name)
+                .filter(Boolean);
+              this.typeRulesByChildName[t.name] = {
+                canBeRoot: !!t.canBeRoot,
+                allowedParentTypeNames,
+                hasIndicators: t.hasIndicators !== false,
+                hasRisks: t.hasRisks !== false,
+                isQuarterlyMeasurable: t.isQuarterlyMeasurable === true,
+              };
+            });
+            this.strategy.edgeMethods = {};
+            Object.entries(draft.edgeMethods || {}).forEach(([key, method]) => {
+              const [parentId, childId] = key.split('>').map(Number);
+              const parentName = byId[parentId]?.name;
+              const childName = byId[childId]?.name;
+              if (parentName && childName) {
+                this.strategy.edgeMethods[`${parentName}>${childName}`] = method;
+              }
+            });
+            if (this.strategy.maxLevels === 0) {
+              this.strategy.maxLevels = Math.max(1, ...this.elementTypes.map(t => this.typeDepth(t.name) + 1));
+            }
+          } else {
+            this.elementTypes = clone(defaultTypes);
+            this.typeRulesByChildName = {
+              Pillar: { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false },
+              Goal: { canBeRoot: false, allowedParentTypeNames: ['Pillar'], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
+              Initiative: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
+              Program: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: false, hasRisks: true, isQuarterlyMeasurable: false },
+              Milestone: { canBeRoot: false, allowedParentTypeNames: ['Initiative'], hasIndicators: false, hasRisks: false, isQuarterlyMeasurable: false },
+            };
+            this.strategy.edgeMethods = {
+              'Pillar>Goal': 'IMPACT',
+              'Goal>Initiative': 'PERCENT',
+              'Goal>Program': 'IMPACT',
+              'Initiative>Milestone': 'PERCENT',
+            };
+            this.strategy.maxLevels = 4;
+          }
+
+          const key = `spm_builder_state_${this.strategy.id}`;
+          const savedRaw = localStorage.getItem(key);
+          if (savedRaw) {
+            let saved = null;
+            try {
+              saved = JSON.parse(savedRaw);
+            } catch (e) {
+              localStorage.removeItem(key);
+              saved = null;
+            }
+            if (saved && typeof saved === 'object') {
+              this.strategy = saved.strategy || this.strategy;
+              this.strategy.strictHierarchy = this.strategy.strictHierarchy !== false;
+              this.strategy.edgeMethods = this.strategy.edgeMethods || {};
+              this.elementTypes = Array.isArray(saved.elementTypes) ? saved.elementTypes : this.elementTypes;
+              this.strategy.maxLevels = this.strategy.maxLevels || Math.max(1, ...this.elementTypes.map(t => this.typeDepth(t.name) + 1));
+              this.typeRulesByChildName = saved.typeRulesByChildName || this.typeRulesByChildName;
+              this.elements = Array.isArray(saved.elements) ? saved.elements : [];
+              this.links = Array.isArray(saved.links) ? saved.links : [];
+              this.libraryElements = Array.isArray(saved.libraryElements) ? saved.libraryElements : [];
+              this.payments = Array.isArray(saved.payments) ? saved.payments : this.payments;
+              this.indicatorCatalog = Array.isArray(saved.indicatorCatalog) ? saved.indicatorCatalog : this.indicatorCatalog;
+              this.quarterlyCatalog = Array.isArray(saved.quarterlyCatalog) ? saved.quarterlyCatalog : this.quarterlyCatalog;
+
+              if (!this.elementTypes || this.elementTypes.length === 0) {
+                this.elementTypes = Object.keys(this.typeRulesByChildName || {}).map((name, idx) => ({
+                  id: idx + 1,
+                  name,
+                  icon: '◆',
+                  color: '#64748b',
+                  canBeRoot: this.typeRulesByChildName[name]?.canBeRoot !== false,
+                  hasIndicators: this.typeRulesByChildName[name]?.hasIndicators !== false,
+                  hasRisks: this.typeRulesByChildName[name]?.hasRisks !== false,
+                  isQuarterlyMeasurable: this.typeRulesByChildName[name]?.isQuarterlyMeasurable === true,
+                }));
+              }
+
+              const invalidNonDraftState = !useDraft && this.elements.length === 0;
+              if (invalidNonDraftState) {
+                localStorage.removeItem(key);
+              } else {
+                this.normalizeLinks();
+                return;
+              }
+            }
+          }
+
+          if (useDraft) {
+            this.elements = [];
+            this.links = [];
+            const allowedTypes = new Set(this.elementTypes.map(t => t.name));
+            this.libraryElements = [...clone(defaultElements), ...clone(extraLibrary)].filter(e => allowedTypes.has(e.type));
+          } else {
+            this.elements = clone(defaultElements);
+            this.links = clone(defaultLinks);
+            this.libraryElements = [...clone(defaultElements), ...clone(extraLibrary)];
+          }
+          this.normalizeLinks();
+        },
+
+        // ── Graph ─────────────────────────────────────────
+        switchToTree() {
+          this.view = 'tree';
+          this.graphPanelVisible = false;
+          this.typesPanelVisible = false;
+        },
+        openGraphPage() {
+          const id = this.strategy?.id ? encodeURIComponent(String(this.strategy.id)) : '';
+          const q = id ? `?id=${id}` : '';
+          window.location.href = `strategy-graph.html${q}`;
+        },
+        openTypesPage() {
+          const id = this.strategy?.id ? encodeURIComponent(String(this.strategy.id)) : '';
+          const q = id ? `?id=${id}` : '';
+          window.location.href = `strategy-by-type.html${q}`;
+        },
+        switchToGraph() {
+          this.view = 'graph';
+          this.graphMessage = '';
+          this.typesPanelVisible = false;
+          this.graphPanelVisible = false;
+          this.graphRenderKey += 1;
+          const mountAndInit = () => {
+            this.graphPanelVisible = true;
+            const doInit = () => {
+              if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => this.initGraph());
+              else setTimeout(() => this.initGraph(), 0);
+            };
+            if (typeof this.$nextTick === 'function') this.$nextTick(doInit);
+            else doInit();
+          };
+          if (typeof this.$nextTick === 'function') this.$nextTick(mountAndInit);
+          else setTimeout(mountAndInit, 0);
+        },
+        switchToTypes() {
+          this.view = 'types';
+          this.graphPanelVisible = false;
+          this.typesPanelVisible = false;
+          this.typesRenderKey += 1;
+          const profiles = this.generatedNavigationProfiles();
+          if (!profiles.some(p => p.id === this.selectedNavProfileId)) {
+            this.selectedNavProfileId = profiles.length > 0 ? profiles[0].id : '';
+            this.navSelections = {};
+          }
+          const mountTypes = () => { this.typesPanelVisible = true; };
+          if (typeof this.$nextTick === 'function') this.$nextTick(mountTypes);
+          else setTimeout(mountTypes, 0);
+        },
+        graphFit() {
+          if (cy) cy.fit();
+        },
+        graphZoom(multiplier) {
+          if (!cy) return;
+          cy.zoom(cy.zoom() * multiplier);
+        },
+
+        initGraph() {
+          const self = this;
+          try {
+            if (typeof cytoscape !== 'function') {
+              this.graphMessage = 'Graph engine unavailable in this environment.';
+              return;
+            }
+            const container = document.getElementById('cy');
+            if (!container) {
+              this.graphMessage = 'Graph container not ready. Please retry.';
+              return;
+            }
+            if (this.elements.length === 0) {
+              this.graphMessage = 'No elements linked yet. Add roots/children to visualize the graph.';
+              if (cy) { cy.destroy(); cy = null; }
+              return;
+            }
+            if (cy) { cy.destroy(); }
+            const nodes = this.elements.map(e => ({
+              data: { id: String(e.id), label: e.name, color: self.getTypeColor(e.type), shared: e.isShared, status: e.status }
+            }));
+            const edges = this.links.map((l, i) => ({
+              data: {
+                id: 'e' + i, source: String(l.parent), target: String(l.child),
+                weight: self.edgeLabelFor(l)
+              }
+            }));
+            cy = cytoscape({
+              container,
+              elements: { nodes, edges },
+              style: [
+                {
+                  selector: 'node', style: {
+                    'background-color': 'data(color)', 'label': 'data(label)', 'color': '#1f2937',
+                    'font-size': '11px', 'text-valign': 'bottom', 'text-margin-y': '5px',
+                    'width': 40, 'height': 40, 'border-width': 2, 'border-color': '#fff',
+                    'text-wrap': 'wrap', 'text-max-width': '90px'
+                  }
+                },
+                { selector: 'node[?shared]', style: { 'border-color': '#a855f7', 'border-width': 3, 'border-style': 'dashed' } },
+                { selector: 'node[status="DRAFT"]', style: { 'opacity': 0.65 } },
+                { selector: 'node[status="COMPLETED"]', style: { 'border-color': '#3b82f6', 'border-width': 3 } },
+                {
+                  selector: 'edge', style: {
+                    'width': 2, 'line-color': '#cbd5e1', 'target-arrow-color': '#cbd5e1',
+                    'target-arrow-shape': 'triangle', 'curve-style': 'bezier',
+                    'label': 'data(weight)', 'font-size': '10px', 'color': '#64748b',
+                    'text-background-color': '#f8fafc', 'text-background-opacity': 1
+                  }
+                },
+                { selector: ':selected', style: { 'border-color': '#4f46e5', 'border-width': 3, 'line-color': '#4f46e5', 'target-arrow-color': '#4f46e5' } }
+              ],
+              layout: { name: 'breadthfirst', directed: true, padding: 40, spacingFactor: 1.4, avoidOverlap: true },
+              userZoomingEnabled: true, userPanningEnabled: true,
+            });
+            this.graphMessage = '';
+            cy.on('tap', 'node', evt => {
+              const el = self.elements.find(e => e.id === parseInt(evt.target.data('id')));
+              if (el) { self.selectedElement = el; self.detailOpen = true; self.detailTab = 'Details'; }
+            });
+            cy.on('tap', evt => { if (evt.target === cy) { self.detailOpen = false; } });
+          } catch (e) {
+            this.graphMessage = 'Graph failed to render. Please refresh and retry.';
+          }
+        },
+
+        init() {
+          try {
+            const params = new URLSearchParams((window.location && window.location.search) || '');
+            if (params.get('reset') === '1') {
+              this.resetAllBuilderStorage(false);
+            }
+          } catch (e) {}
+          this.hydrateFromDraftOrDefaults();
+          const profiles = this.generatedNavigationProfiles();
+          if (profiles.length > 0) this.selectedNavProfileId = profiles[0].id;
+          // Pre-select first root to show first two lanes on load
+          const roots = this.laneItems(0);
+          if (roots.length > 0) {
+            this.selectAt(0, roots[0]);
+            this.detailOpen = false; // don't open detail on initial load
+          }
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

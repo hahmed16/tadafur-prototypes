@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPM — Strategy By Type</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .bg-mesh {
+      background-image:
+        radial-gradient(at 20% 20%, rgba(99,102,241,0.18) 0px, transparent 45%),
+        radial-gradient(at 80% 0%, rgba(16,185,129,0.15) 0px, transparent 40%),
+        radial-gradient(at 80% 80%, rgba(245,158,11,0.14) 0px, transparent 45%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+    .sb{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:600;white-space:nowrap}
+    .s-draft{background:#f3f4f6;color:#6b7280}
+    .s-active{background:#dcfce7;color:#16a34a}
+    .s-on_hold{background:#fef9c3;color:#ca8a04}
+    .s-completed{background:#dbeafe;color:#2563eb}
+    .s-deactivated{background:#fee2e2;color:#dc2626}
+    .s-deprecated{background:#f5f3ff;color:#7c3aed}
+  </style>
+</head>
+<body class="bg-mesh min-h-screen text-gray-900">
+  <div class="max-w-[1450px] mx-auto p-4 md:p-5 space-y-4">
+    <div class="relative overflow-hidden rounded-2xl border border-indigo-100 bg-white/90 backdrop-blur shadow-sm">
+      <div class="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-indigo-100/60 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-12 -left-10 w-56 h-56 rounded-full bg-emerald-100/60 blur-3xl pointer-events-none"></div>
+      <div class="relative px-4 py-4 md:px-5 md:py-5 flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <div class="text-xs uppercase tracking-wider text-indigo-500 font-semibold">SPM Navigation Studio</div>
+          <div class="mt-1 text-lg md:text-xl font-semibold" id="strategyName">Strategy By Type</div>
+          <div class="text-xs text-gray-500 mt-1" id="strategyMeta"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="resetState" class="px-3 py-2 text-xs font-medium border border-rose-200 rounded-lg text-rose-700 hover:bg-rose-50">Reset Local Data</button>
+          <a id="backBuilder" href="strategy-builder.html" class="px-3 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">Back To Builder</a>
+          <a id="openGraph" href="strategy-graph.html" class="px-3 py-2 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Graph</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="notice" class="hidden rounded-xl px-4 py-3 text-sm border"></div>
+
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div class="text-sm font-semibold">Expected Navigation Options</div>
+          <div class="text-xs text-gray-500">Derived from strategy type configuration and KPI-enabled types.</div>
+        </div>
+        <div class="text-xs text-gray-500">Debug: <span id="dbg"></span></div>
+      </div>
+
+      <div id="profileButtons" class="mt-3 flex flex-wrap gap-2"></div>
+      <div id="profileLanes" class="mt-4 overflow-x-auto pb-1"></div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <div class="text-sm font-semibold">Elements By Type</div>
+          <div class="text-xs text-gray-500">Quick browse and add root-capable elements.</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" id="byTypeCards"></div>
+    </div>
+  </div>
+
+  <div id="addModal" class="hidden fixed inset-0 z-50 bg-black/45 p-4 flex items-center justify-center">
+    <div class="w-full max-w-lg bg-white rounded-2xl border border-gray-200 shadow-xl">
+      <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold">Add Strategy Element</div>
+          <div class="text-xs text-gray-500" id="addModalContext"></div>
+        </div>
+        <button id="closeAddModal" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+          <button id="modeNew" class="px-3 py-1.5 text-xs rounded-lg bg-white text-indigo-700 border border-indigo-200">New</button>
+          <button id="modeExisting" class="px-3 py-1.5 text-xs rounded-lg text-gray-600">Existing From Library</button>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Element Type</label>
+          <select id="addType" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300"></select>
+        </div>
+        <div id="addNewWrap">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Element Name</label>
+          <input id="addName" type="text" placeholder="Enter element name" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+        </div>
+        <div id="addExistingWrap" class="hidden space-y-2">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Search Library</label>
+            <input id="librarySearch" type="text" placeholder="Search existing elements..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Select Existing Element</label>
+            <select id="librarySelect" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300"></select>
+          </div>
+        </div>
+        <div id="addWeightWrap" class="hidden">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Link Weight</label>
+          <input id="addWeight" type="number" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+          <div id="addWeightHint" class="text-[11px] text-gray-500 mt-1"></div>
+        </div>
+        <div id="addModalMsg" class="hidden text-xs rounded-lg px-3 py-2"></div>
+      </div>
+
+      <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-end gap-2">
+        <button id="cancelAddModal" class="px-3 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+        <button id="submitAddModal" class="px-3 py-2 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Element</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewPanel" class="hidden fixed inset-0 z-40">
+    <div class="absolute inset-0 bg-black/30" id="closeViewPanelBg"></div>
+    <aside class="absolute right-0 top-0 h-full w-[36rem] max-w-[96vw] bg-white border-l border-gray-200 shadow-2xl flex flex-col">
+      <div class="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div id="viewPanelType" class="text-xs text-gray-500"></div>
+          <div id="viewPanelTitle" class="text-sm font-semibold text-gray-900 truncate"></div>
+        </div>
+        <button id="closeViewPanelBtn" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">✕</button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Status</div>
+            <div id="vpStatus" class="font-semibold text-gray-800 mt-1">-</div>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Type</div>
+            <div id="vpType" class="font-semibold text-gray-800 mt-1">-</div>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Parent</div>
+            <div id="vpParent" class="font-semibold text-gray-800 mt-1">-</div>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Children</div>
+            <div id="vpChildrenCount" class="font-semibold text-gray-800 mt-1">0</div>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Children</div>
+          <div id="vpChildrenList" class="space-y-1.5"></div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">KPIs</div>
+          <div id="vpIndicatorsList" class="space-y-1.5"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+(function(){
+  const defaultTypes = [
+    { id: 1, name: 'Pillar', icon: '🏛️', color: '#6366f1', hasIndicators: true },
+    { id: 2, name: 'Goal', icon: '🎯', color: '#10b981', hasIndicators: true },
+    { id: 3, name: 'Initiative', icon: '⚡', color: '#f59e0b', hasIndicators: true },
+    { id: 4, name: 'Program', icon: '📦', color: '#8b5cf6', hasIndicators: false },
+    { id: 5, name: 'Milestone', icon: '🚩', color: '#ec4899', hasIndicators: false }
+  ];
+  const defaultElements = [
+    { id: 1, name: 'Digital Infrastructure', type: 'Pillar', status: 'ACTIVE' },
+    { id: 2, name: 'Digital Services & Experience', type: 'Pillar', status: 'ACTIVE' },
+    { id: 3, name: 'Data & AI Governance', type: 'Pillar', status: 'ACTIVE' },
+    { id: 4, name: 'Nationwide Fiber Coverage', type: 'Goal', status: 'ACTIVE' },
+    { id: 5, name: 'Cloud Migration', type: 'Goal', status: 'ON_HOLD' },
+    { id: 6, name: 'Cybersecurity Baseline', type: 'Goal', status: 'ACTIVE' },
+    { id: 7, name: 'Citizen Portal (Single Sign-On)', type: 'Goal', status: 'ACTIVE' },
+    { id: 8, name: 'Mobile-First Services', type: 'Goal', status: 'ACTIVE' },
+    { id: 9, name: 'National Data Catalog', type: 'Goal', status: 'DRAFT' },
+    { id: 10, name: 'AI Ethics Framework', type: 'Goal', status: 'DRAFT' },
+    { id: 11, name: 'Phase 1 – Northern Region', type: 'Initiative', status: 'COMPLETED' },
+    { id: 12, name: 'Phase 2 – Central Region', type: 'Initiative', status: 'ACTIVE' },
+    { id: 13, name: 'Phase 3 – Southern Region', type: 'Initiative', status: 'DRAFT' },
+    { id: 14, name: 'Identity Platform Build', type: 'Initiative', status: 'ACTIVE' },
+    { id: 15, name: 'API Gateway & Integration', type: 'Initiative', status: 'ACTIVE' },
+    { id: 16, name: 'Telecom Partnership Program', type: 'Program', status: 'ACTIVE' }
+  ];
+  const defaultLinks = [
+    { parent:1,child:4,weight:8,weightType:'IMPACT' },{ parent:1,child:5,weight:6,weightType:'IMPACT' },{ parent:1,child:6,weight:9,weightType:'IMPACT' },
+    { parent:2,child:7,weight:10,weightType:'IMPACT' },{ parent:2,child:8,weight:8,weightType:'IMPACT' },
+    { parent:3,child:9,weight:7,weightType:'IMPACT' },{ parent:3,child:10,weight:5,weightType:'IMPACT' },
+    { parent:4,child:11,weight:7,weightType:'PERCENT' },{ parent:4,child:12,weight:8,weightType:'PERCENT' },{ parent:4,child:13,weight:6,weightType:'PERCENT' },
+    { parent:7,child:14,weight:10,weightType:'PERCENT' },{ parent:7,child:15,weight:8,weightType:'PERCENT' },
+    { parent:4,child:16,weight:5,weightType:'IMPACT' }
+  ];
+  const defaultIndicators = [
+    { id:1, elementId:4, name:'Fiber Penetration Rate', contributionType:'IMPACT', contributionValue:8 },
+    { id:2, elementId:7, name:'Portal Adoption', contributionType:'PERCENT', contributionValue:45 },
+    { id:3, elementId:12, name:'Phase Delivery Rate', contributionType:'PERCENT', contributionValue:30 }
+  ];
+  const extraLibrary = [
+    { id:101, name:'National Open Data Platform', type:'Goal', status:'DRAFT' },
+    { id:102, name:'Government Design System', type:'Initiative', status:'DRAFT' },
+    { id:103, name:'Smart City Partnerships', type:'Program', status:'ACTIVE' }
+  ];
+
+  const strategyMetaById = {
+    '1': { name: 'National Digital Transformation 2025–2030', status: 'ACTIVE' },
+    '2': { name: 'Healthcare Infrastructure Improvement', status: 'ACTIVE' },
+    '3': { name: 'Education Excellence Plan', status: 'DRAFT' },
+    '4': { name: 'Sustainable Energy Transition', status: 'ON_HOLD' },
+    '5': { name: 'Smart City Pilot — Al Riyadh', status: 'COMPLETED' }
+  };
+
+  const app = {
+    state: null,
+    profiles: [],
+    selected: {},
+    activeProfileId: '',
+    addCtx: null,
+    addMode: 'new',
+    viewTarget: null,
+  };
+
+  function qs(name){
+    const p = new URLSearchParams(window.location.search || '');
+    return p.get(name);
+  }
+
+  function statusClass(status){
+    return 's-' + String(status || 'DRAFT').toLowerCase();
+  }
+
+  function showNotice(text, type){
+    const el = document.getElementById('notice');
+    el.className = 'rounded-xl px-4 py-3 text-sm border';
+    if (type === 'error') el.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+    else if (type === 'warning') el.classList.add('bg-amber-50', 'text-amber-800', 'border-amber-200');
+    else el.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+    el.textContent = text;
+    el.classList.remove('hidden');
+    clearTimeout(showNotice._t);
+    showNotice._t = setTimeout(() => el.classList.add('hidden'), 2600);
+  }
+
+  function loadState() {
+    const id = String(qs('id') || 'default-strategy');
+    const key = 'spm_builder_state_' + id;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { saved = null; }
+
+    const strategy = saved?.strategy || {
+      id,
+      name: strategyMetaById[id]?.name || 'Strategy',
+      status: strategyMetaById[id]?.status || 'ACTIVE',
+      strictHierarchy: true,
+      maxLevels: 4,
+      weightType: 'IMPACT',
+      edgeMethods: {}
+    };
+
+    const elementTypes = Array.isArray(saved?.elementTypes) && saved.elementTypes.length > 0 ? saved.elementTypes : defaultTypes;
+    const rules = saved?.typeRulesByChildName || {
+      Pillar: { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true },
+      Goal: { canBeRoot: false, allowedParentTypeNames: ['Pillar'], hasIndicators: true },
+      Initiative: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: true },
+      Program: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: false },
+      Milestone: { canBeRoot: false, allowedParentTypeNames: ['Initiative'], hasIndicators: false }
+    };
+    const rawElements = Array.isArray(saved?.elements) && saved.elements.length > 0 ? saved.elements : defaultElements;
+    const elements = rawElements
+      .map(e => ({ ...e, id: Number(e.id) }))
+      .filter(e => Number.isFinite(e.id) && e.name && e.type);
+    const validIds = new Set(elements.map(e => e.id));
+    const rawLinks = Array.isArray(saved?.links) && saved.links.length > 0 ? saved.links : defaultLinks;
+    const links = rawLinks
+      .map(l => ({ ...l, parent: Number(l.parent), child: Number(l.child) }))
+      .filter(l => Number.isFinite(l.parent) && Number.isFinite(l.child) && validIds.has(l.parent) && validIds.has(l.child));
+    const indicatorCatalog = (Array.isArray(saved?.indicatorCatalog) ? saved.indicatorCatalog : defaultIndicators)
+      .map(i => ({ ...i, id: Number(i.id), elementId: Number(i.elementId) }))
+      .filter(i => Number.isFinite(i.id) && Number.isFinite(i.elementId) && validIds.has(i.elementId));
+    const libraryElements = Array.isArray(saved?.libraryElements) && saved.libraryElements.length > 0
+      ? saved.libraryElements
+      : [...defaultElements, ...extraLibrary];
+
+    return { id, key, strategy, elementTypes, rules, elements, links, indicatorCatalog, libraryElements };
+  }
+
+  function saveState() {
+    const s = app.state;
+    const payload = {
+      strategy: s.strategy,
+      elementTypes: s.elementTypes,
+      typeRulesByChildName: s.rules,
+      elements: s.elements,
+      links: s.links,
+      indicatorCatalog: s.indicatorCatalog,
+      libraryElements: s.libraryElements,
+    };
+    localStorage.setItem(s.key, JSON.stringify(payload));
+  }
+
+  function contributionText(ind){
+    if (ind.contributionType === 'PERCENT') return 'Contribution ' + (ind.contributionValue || 0) + '%';
+    if (ind.contributionType === 'BUSINESS_VALUE') return 'Business Value ' + (ind.contributionValue || 0);
+    if (ind.contributionType === 'BUDGETABLE') return 'Planned Budget OMR ' + (ind.contributionValue || 0);
+    return 'Impact ' + (ind.contributionValue || 0) + '/10';
+  }
+
+  function typeAllowsIndicators(typeName){
+    const r = app.state.rules[typeName];
+    return r ? r.hasIndicators !== false : true;
+  }
+
+  function typeRule(typeName){
+    return app.state.rules[typeName] || { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true };
+  }
+
+  function typeDepth(typeName, stack){
+    const seen = stack || new Set();
+    if (seen.has(typeName)) return 999;
+    const r = typeRule(typeName);
+    if (r.canBeRoot || !Array.isArray(r.allowedParentTypeNames) || r.allowedParentTypeNames.length === 0) return 0;
+    seen.add(typeName);
+    let min = 999;
+    r.allowedParentTypeNames.forEach(p => { min = Math.min(min, 1 + typeDepth(p, seen)); });
+    seen.delete(typeName);
+    return min;
+  }
+
+  function configuredTypeOrder(){
+    return [...app.state.elementTypes].map(t => t.name).sort((a,b) => typeDepth(a) - typeDepth(b));
+  }
+
+  function generatedProfiles(){
+    const ordered = configuredTypeOrder();
+    const profiles = [];
+    if (ordered.length) profiles.push({ id:'direct', label:'Direct: ' + ordered.join(' → '), levels:[...ordered] });
+
+    for (let i = 0; i < ordered.length - 1; i++) {
+      const p = ordered[i];
+      const c = ordered[i + 1];
+      if (typeAllowsIndicators(c)) {
+        profiles.push({ id:'indirect-' + i, label:'Indirect: ' + p + ' → ' + c + ' KPIs → ' + c, levels:[p, c + ' KPIs', c] });
+      }
+    }
+    ordered.forEach(t => {
+      if (typeAllowsIndicators(t)) profiles.push({ id:'reverse-' + t, label:'Reverse: ' + t + ' KPIs → ' + t, levels:[t + ' KPIs', t] });
+    });
+    return profiles;
+  }
+
+  function parseLevel(label){
+    const s = ' KPIs';
+    if (label.endsWith(s)) return { kind:'indicator', typeName: label.slice(0, -s.length) };
+    return { kind:'type', typeName: label };
+  }
+
+  function navLaneItems(profile, idx){
+    const level = parseLevel(profile.levels[idx]);
+    const prev = idx > 0 ? parseLevel(profile.levels[idx-1]) : null;
+    const prevSel = idx > 0 ? app.selected[idx-1] : null;
+    if (idx > 0 && !prevSel) return [];
+
+    const state = app.state;
+
+    if (idx === 0 && level.kind === 'type') {
+      return state.elements.filter(e => e.type === level.typeName).map(e => ({ key:'e-' + e.id, id:e.id, kind:'element', label:e.name, meta:e.status }));
+    }
+    if (idx === 0 && level.kind === 'indicator') {
+      return state.indicatorCatalog
+        .filter(ind => state.elements.find(e => e.id === ind.elementId)?.type === level.typeName)
+        .map(ind => ({ key:'i-' + ind.id, id:ind.id, kind:'indicator', label:ind.name, meta:contributionText(ind), elementId:ind.elementId }));
+    }
+
+    if (level.kind === 'type' && prev.kind === 'type') {
+      return state.links
+        .filter(l => l.parent === prevSel.id)
+        .map(l => state.elements.find(e => e.id === l.child))
+        .filter(Boolean)
+        .filter(e => e.type === level.typeName)
+        .map(e => ({ key:'e-' + e.id, id:e.id, kind:'element', label:e.name, meta:e.status }));
+    }
+
+    if (level.kind === 'indicator' && prev.kind === 'type') {
+      if (prev.typeName === level.typeName) {
+        return state.indicatorCatalog
+          .filter(ind => ind.elementId === prevSel.id)
+          .map(ind => ({ key:'i-' + ind.id, id:ind.id, kind:'indicator', label:ind.name, meta:contributionText(ind), elementId:ind.elementId }));
+      }
+      const childIds = state.links
+        .filter(l => l.parent === prevSel.id)
+        .map(l => l.child)
+        .filter(cid => state.elements.find(e => e.id === cid)?.type === level.typeName);
+      return state.indicatorCatalog
+        .filter(ind => childIds.includes(ind.elementId))
+        .map(ind => ({ key:'i-' + ind.id, id:ind.id, kind:'indicator', label:ind.name, meta:contributionText(ind), elementId:ind.elementId }));
+    }
+
+    if (level.kind === 'type' && prev.kind === 'indicator') {
+      const owner = state.elements.find(e => e.id === prevSel.elementId);
+      if (!owner || owner.type !== level.typeName) return [];
+      return [{ key:'e-' + owner.id, id:owner.id, kind:'element', label:owner.name, meta:owner.status }];
+    }
+
+    return [];
+  }
+
+  function depthOf(elementId){
+    const state = app.state;
+    let depth = 0;
+    let current = elementId;
+    let guard = 0;
+    while (guard < 500) {
+      const edge = state.links.find(l => l.child === current);
+      if (!edge) break;
+      depth += 1;
+      current = edge.parent;
+      guard += 1;
+    }
+    return depth;
+  }
+
+  function edgeMethod(parentType, childType){
+    return app.state.strategy.edgeMethods?.[`${parentType}>${childType}`] || app.state.strategy.weightType || 'IMPACT';
+  }
+
+  function parentOf(childId){
+    const edge = app.state.links.find(l => l.child === childId);
+    return edge ? edge.parent : null;
+  }
+
+  function isElementInStrategy(id){
+    return app.state.elements.some(e => e.id === id);
+  }
+
+  function wouldCreateCycle(parentId, childId){
+    if (parentId === childId) return true;
+    const stack = [childId];
+    const seen = new Set();
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (current === parentId) return true;
+      if (seen.has(current)) continue;
+      seen.add(current);
+      app.state.links.filter(l => l.parent === current).forEach(l => stack.push(l.child));
+    }
+    return false;
+  }
+
+  function elementById(id){
+    return app.state.elements.find(e => e.id === id) || null;
+  }
+
+  function childrenOf(id){
+    const childIds = app.state.links.filter(l => l.parent === id).map(l => l.child);
+    return app.state.elements.filter(e => childIds.includes(e.id));
+  }
+
+  function indicatorsOf(elementId){
+    return app.state.indicatorCatalog.filter(i => i.elementId === elementId);
+  }
+
+  function openViewPanelForElement(elementId){
+    const el = elementById(elementId);
+    if (!el) return;
+    app.viewTarget = { kind: 'element', id: elementId };
+    document.getElementById('viewPanelType').textContent = 'Element';
+    document.getElementById('viewPanelTitle').textContent = el.name;
+    document.getElementById('vpStatus').textContent = el.status || 'DRAFT';
+    document.getElementById('vpType').textContent = el.type || '-';
+    const pid = parentOf(el.id);
+    document.getElementById('vpParent').textContent = pid ? (elementById(pid)?.name || ('#' + pid)) : 'Root';
+    const children = childrenOf(el.id);
+    document.getElementById('vpChildrenCount').textContent = String(children.length);
+    const cl = document.getElementById('vpChildrenList');
+    cl.innerHTML = '';
+    if (children.length === 0) {
+      cl.innerHTML = '<div class="text-xs text-gray-400 italic">No children linked.</div>';
+    } else {
+      children.forEach(c => {
+        const row = document.createElement('button');
+        row.className = 'w-full text-left border border-gray-200 rounded-lg px-2.5 py-2 hover:border-indigo-300';
+        row.innerHTML = '<div class="text-xs font-medium text-gray-800 truncate">' + c.name + '</div><div class="text-[11px] text-gray-400 mt-0.5">' + c.type + '</div>';
+        row.onclick = () => openViewPanelForElement(c.id);
+        cl.appendChild(row);
+      });
+    }
+    const inds = indicatorsOf(el.id);
+    const il = document.getElementById('vpIndicatorsList');
+    il.innerHTML = '';
+    if (inds.length === 0) {
+      il.innerHTML = '<div class="text-xs text-gray-400 italic">No KPIs linked.</div>';
+    } else {
+      inds.forEach(ind => {
+        const row = document.createElement('div');
+        row.className = 'border border-gray-200 rounded-lg px-2.5 py-2';
+        row.innerHTML = '<div class="text-xs font-medium text-gray-800 truncate">' + ind.name + '</div><div class="text-[11px] text-gray-400 mt-0.5">' + contributionText(ind) + '</div>';
+        il.appendChild(row);
+      });
+    }
+    document.getElementById('viewPanel').classList.remove('hidden');
+  }
+
+  function openViewPanelForIndicator(indId){
+    const ind = app.state.indicatorCatalog.find(i => i.id === indId);
+    if (!ind) return;
+    const owner = elementById(ind.elementId);
+    app.viewTarget = { kind: 'indicator', id: indId };
+    document.getElementById('viewPanelType').textContent = 'KPI';
+    document.getElementById('viewPanelTitle').textContent = ind.name;
+    document.getElementById('vpStatus').textContent = owner?.status || '-';
+    document.getElementById('vpType').textContent = owner ? (owner.type + ' KPI') : 'KPI';
+    document.getElementById('vpParent').textContent = owner ? owner.name : '-';
+    document.getElementById('vpChildrenCount').textContent = '0';
+    document.getElementById('vpChildrenList').innerHTML = '<div class="text-xs text-gray-400 italic">KPIs do not have child elements.</div>';
+    document.getElementById('vpIndicatorsList').innerHTML =
+      '<div class="border border-gray-200 rounded-lg px-2.5 py-2">' +
+        '<div class="text-xs font-medium text-gray-800">Contribution</div>' +
+        '<div class="text-[11px] text-gray-500 mt-0.5">' + contributionText(ind) + '</div>' +
+      '</div>';
+    document.getElementById('viewPanel').classList.remove('hidden');
+  }
+
+  function closeViewPanel(){
+    document.getElementById('viewPanel').classList.add('hidden');
+    app.viewTarget = null;
+  }
+
+  function canAddAt(profile, idx){
+    const level = parseLevel(profile.levels[idx]);
+    if (level.kind !== 'type') return { ok:false, reason:'This lane is indicator-based.' };
+
+    if (idx === 0) {
+      const r = typeRule(level.typeName);
+      if (!r.canBeRoot) return { ok:false, reason:`${level.typeName} is not configured as root.` };
+      return { ok:true, parentId:null, forcedType:level.typeName, reason:'' };
+    }
+
+    const prevLevel = parseLevel(profile.levels[idx - 1]);
+    const prevSel = app.selected[idx - 1];
+    if (!prevSel) return { ok:false, reason:'Select previous lane element first.' };
+    if (prevLevel.kind !== 'type') return { ok:false, reason:'Cannot add directly after indicator lane.' };
+
+    const parent = app.state.elements.find(e => e.id === prevSel.id);
+    if (!parent) return { ok:false, reason:'Parent element not found.' };
+
+    const rule = typeRule(level.typeName);
+    if (!rule.allowedParentTypeNames.includes(parent.type)) {
+      return { ok:false, reason:`${level.typeName} is not allowed under ${parent.type}.` };
+    }
+
+    if (app.state.strategy.strictHierarchy !== false && app.state.strategy.maxLevels > 0) {
+      const newLevel = depthOf(parent.id) + 2;
+      if (newLevel > app.state.strategy.maxLevels) {
+        return { ok:false, reason:`Exceeds max levels (${app.state.strategy.maxLevels}).` };
+      }
+    }
+
+    return { ok:true, parentId:parent.id, forcedType:level.typeName, parentType:parent.type, reason:'' };
+  }
+
+  function nextElementId(){
+    return Math.max(0, ...app.state.elements.map(e => Number(e.id) || 0)) + 1;
+  }
+
+  function filteredLibraryCandidates(){
+    if (!app.addCtx) return [];
+    const q = (document.getElementById('librarySearch')?.value || '').toLowerCase().trim();
+    const typeName = app.addCtx.forcedType;
+    return app.state.libraryElements
+      .filter(e => e.type === typeName)
+      .filter(e => !q || String(e.name || '').toLowerCase().includes(q));
+  }
+
+  function renderLibraryCandidates(){
+    const sel = document.getElementById('librarySelect');
+    if (!sel) return;
+    const list = filteredLibraryCandidates();
+    sel.innerHTML = '';
+    if (list.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No matching library elements';
+      sel.appendChild(opt);
+      return;
+    }
+    list.forEach(e => {
+      const inStrategy = isElementInStrategy(e.id) ? ' (already in strategy)' : '';
+      const opt = document.createElement('option');
+      opt.value = String(e.id);
+      opt.textContent = `${e.name}${inStrategy}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function setAddMode(mode){
+    app.addMode = mode;
+    const bNew = document.getElementById('modeNew');
+    const bExisting = document.getElementById('modeExisting');
+    const newWrap = document.getElementById('addNewWrap');
+    const existingWrap = document.getElementById('addExistingWrap');
+    if (mode === 'existing') {
+      bNew.className = 'px-3 py-1.5 text-xs rounded-lg text-gray-600';
+      bExisting.className = 'px-3 py-1.5 text-xs rounded-lg bg-white text-indigo-700 border border-indigo-200';
+      newWrap.classList.add('hidden');
+      existingWrap.classList.remove('hidden');
+      renderLibraryCandidates();
+    } else {
+      bNew.className = 'px-3 py-1.5 text-xs rounded-lg bg-white text-indigo-700 border border-indigo-200';
+      bExisting.className = 'px-3 py-1.5 text-xs rounded-lg text-gray-600';
+      newWrap.classList.remove('hidden');
+      existingWrap.classList.add('hidden');
+    }
+  }
+
+  function renderByType(){
+    const cards = document.getElementById('byTypeCards');
+    cards.innerHTML = '';
+
+    app.state.elementTypes.forEach(t => {
+      const list = app.state.elements.filter(e => e.type === t.name);
+      const r = typeRule(t.name);
+
+      const card = document.createElement('div');
+      card.className = 'bg-gradient-to-b from-white to-gray-50 border border-gray-200 rounded-xl p-3';
+
+      const header = document.createElement('div');
+      header.className = 'flex items-start justify-between gap-2 mb-2';
+      header.innerHTML =
+        '<div class="flex items-center gap-2 min-w-0">' +
+          '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:' + (t.color || '#64748b') + '22;color:' + (t.color || '#64748b') + '">' + (t.icon || '◆') + '</div>' +
+          '<div class="min-w-0"><div class="text-sm font-semibold truncate">' + t.name + '</div><div class="text-xs text-gray-500">' + list.length + ' elements</div></div>' +
+        '</div>' +
+        '<div class="flex flex-col items-end gap-1">' +
+          (r.canBeRoot ? '<button data-root-type="' + t.name + '" class="text-[11px] px-2 py-1 rounded-md border border-indigo-200 text-indigo-700 hover:bg-indigo-50">+ Add Root</button>' : '<span class="text-[11px] text-gray-400">Child-only</span>') +
+        '</div>';
+      card.appendChild(header);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'space-y-1.5 max-h-60 overflow-y-auto';
+      if (!list.length) {
+        const e = document.createElement('div');
+        e.className = 'text-xs text-gray-400 italic';
+        e.textContent = 'No elements of this type yet.';
+        wrap.appendChild(e);
+      } else {
+        list.forEach(el => {
+          const row = document.createElement('div');
+          row.className = 'border border-gray-200 rounded-lg px-2.5 py-2 hover:border-indigo-300';
+          row.innerHTML =
+            '<div class="flex items-start justify-between gap-2">' +
+              '<div class="min-w-0">' +
+                '<div class="text-xs font-medium text-gray-800 truncate">' + el.name + '</div>' +
+                '<div class="mt-1 flex items-center gap-2"><span class="text-[11px] text-gray-400">' + el.type + '</span><span class="sb ' + statusClass(el.status) + '">' + (el.status || 'DRAFT') + '</span></div>' +
+              '</div>' +
+              '<div class="flex items-center gap-1">' +
+                '<button data-view-el="' + el.id + '" class="p-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50" title="View">' +
+                  '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+                '</button>' +
+                '<a href="strategy-builder.html?id=' + encodeURIComponent(app.state.strategy.id || app.state.id) + '" class="p-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50" title="Open in Builder">' +
+                  '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>' +
+                '</a>' +
+              '</div>' +
+            '</div>';
+          wrap.appendChild(row);
+        });
+      }
+      card.appendChild(wrap);
+      cards.appendChild(card);
+    });
+
+    cards.querySelectorAll('[data-root-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openAddModal({ parentId: null, forcedType: btn.getAttribute('data-root-type'), contextText: 'Add root element from type card', parentType: null });
+      });
+    });
+    cards.querySelectorAll('[data-view-el]').forEach(btn => {
+      btn.addEventListener('click', () => openViewPanelForElement(Number(btn.getAttribute('data-view-el'))));
+    });
+  }
+
+  function renderProfiles(){
+    app.profiles = generatedProfiles();
+    if (!app.profiles.some(p => p.id === app.activeProfileId)) {
+      app.activeProfileId = app.profiles[0]?.id || '';
+      app.selected = {};
+    }
+
+    document.getElementById('dbg').textContent = 'profiles=' + app.profiles.length + ', elements=' + app.state.elements.length + ', links=' + app.state.links.length + ', indicators=' + app.state.indicatorCatalog.length;
+
+    const btnWrap = document.getElementById('profileButtons');
+    const lanesWrap = document.getElementById('profileLanes');
+
+    btnWrap.innerHTML = '';
+    app.profiles.forEach(p => {
+      const b = document.createElement('button');
+      b.textContent = p.label;
+      b.className = 'text-xs border rounded-lg px-2.5 py-1.5 ' + (app.activeProfileId === p.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400');
+      b.onclick = function(){
+        app.activeProfileId = p.id;
+        app.selected = {};
+        renderProfiles();
+      };
+      btnWrap.appendChild(b);
+    });
+
+    const active = app.profiles.find(p => p.id === app.activeProfileId);
+    lanesWrap.innerHTML = '';
+    if (!active) {
+      lanesWrap.innerHTML = '<div class="text-xs text-gray-500">No navigation profiles available.</div>';
+      return;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 min-w-max';
+
+    active.levels.forEach((lvl, idx) => {
+      const items = navLaneItems(active, idx);
+      const addState = canAddAt(active, idx);
+
+      const col = document.createElement('div');
+      col.className = 'w-64 border border-gray-200 rounded-xl bg-gradient-to-b from-white to-gray-50 shadow-sm';
+
+      const header = document.createElement('div');
+      header.className = 'px-3 py-2 border-b border-gray-100 bg-white/80';
+      header.innerHTML =
+        '<div class="flex items-center justify-between gap-2">' +
+          '<div class="min-w-0"><div class="text-xs font-semibold text-gray-700 truncate">' + lvl + '</div><div class="text-[11px] text-gray-400 mt-0.5">' + items.length + ' items</div></div>' +
+          '<button data-add-idx="' + idx + '" data-add-ok="' + (addState.ok ? '1' : '0') + '" class="text-[11px] px-2 py-1 rounded-md border ' + (addState.ok ? 'border-indigo-200 text-indigo-700 hover:bg-indigo-50' : 'border-gray-200 text-gray-400 bg-gray-50') + '">+ Add</button>' +
+        '</div>';
+      col.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = 'p-2 space-y-1.5 max-h-72 overflow-y-auto';
+
+      if (!items.length) {
+        const e = document.createElement('div');
+        e.className = 'text-[11px] text-gray-400 italic px-1';
+        e.textContent = 'No data at this level yet.';
+        body.appendChild(e);
+      } else {
+        items.forEach(item => {
+          const row = document.createElement('div');
+          const selectedNow = app.selected[idx]?.key === item.key;
+          row.className = 'border rounded-lg px-2 py-2 transition ' + (selectedNow ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-indigo-200');
+          row.innerHTML =
+            '<div class="flex items-start justify-between gap-2">' +
+              '<button data-select-item="' + item.key + '" class="flex-1 text-left min-w-0">' +
+                '<div class="text-xs font-medium text-gray-800 truncate">' + item.label + '</div>' +
+                '<div class="text-[11px] text-gray-400 mt-0.5">' + item.meta + '</div>' +
+              '</button>' +
+              '<button data-view-item="' + item.key + '" class="p-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50" title="View">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+              '</button>' +
+            '</div>';
+          row.querySelector('[data-select-item]').onclick = function(){
+            app.selected[idx] = item;
+            Object.keys(app.selected).map(Number).filter(k => k > idx).forEach(k => delete app.selected[k]);
+            renderProfiles();
+          };
+          row.querySelector('[data-view-item]').onclick = function(){
+            if (item.kind === 'indicator') openViewPanelForIndicator(item.id);
+            else openViewPanelForElement(item.id);
+          };
+          body.appendChild(row);
+        });
+      }
+
+      col.appendChild(body);
+      row.appendChild(col);
+    });
+
+    lanesWrap.appendChild(row);
+
+    lanesWrap.querySelectorAll('[data-add-idx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.getAttribute('data-add-idx'));
+        const profile = app.profiles.find(p => p.id === app.activeProfileId);
+        const check = canAddAt(profile, idx);
+        if (!check.ok) {
+          showNotice(check.reason || 'Cannot add here.', 'warning');
+          return;
+        }
+        const ctx = idx === 0
+          ? { parentId: null, forcedType: check.forcedType, contextText: 'Add root in lane: ' + profile.levels[idx], parentType: null }
+          : { parentId: check.parentId, forcedType: check.forcedType, contextText: 'Add child under selected parent in lane: ' + profile.levels[idx], parentType: check.parentType };
+        openAddModal(ctx);
+      });
+    });
+  }
+
+  function openAddModal(ctx){
+    app.addCtx = ctx;
+    const modal = document.getElementById('addModal');
+    const typeSel = document.getElementById('addType');
+    const nameInput = document.getElementById('addName');
+    const msg = document.getElementById('addModalMsg');
+    const ctxText = document.getElementById('addModalContext');
+    const weightWrap = document.getElementById('addWeightWrap');
+    const weightInput = document.getElementById('addWeight');
+    const hint = document.getElementById('addWeightHint');
+    const libSearch = document.getElementById('librarySearch');
+    const libSelect = document.getElementById('librarySelect');
+
+    typeSel.innerHTML = '';
+    const allowed = [ctx.forcedType];
+    allowed.forEach(tn => {
+      const opt = document.createElement('option');
+      opt.value = tn;
+      opt.textContent = tn;
+      typeSel.appendChild(opt);
+    });
+
+    ctxText.textContent = ctx.contextText;
+    nameInput.value = '';
+    libSearch.value = '';
+    libSelect.innerHTML = '';
+    msg.classList.add('hidden');
+    setAddMode('new');
+
+    if (ctx.parentId) {
+      const method = edgeMethod(ctx.parentType, ctx.forcedType);
+      if (method === 'PERCENT') {
+        weightWrap.classList.remove('hidden');
+        weightInput.min = '0';
+        weightInput.max = '100';
+        weightInput.value = '25';
+        hint.textContent = 'Contribution percent 0-100';
+      } else if (method === 'IMPACT') {
+        weightWrap.classList.remove('hidden');
+        weightInput.min = '1';
+        weightInput.max = '10';
+        weightInput.value = '5';
+        hint.textContent = 'Impact score 1-10';
+      } else if (method === 'BUSINESS_VALUE' || method === 'BUDGETABLE') {
+        weightWrap.classList.remove('hidden');
+        weightInput.min = '0';
+        weightInput.max = '0';
+        weightInput.value = '0';
+        hint.textContent = method === 'BUSINESS_VALUE' ? 'Auto from business value' : 'Auto from planned budget';
+      } else {
+        weightWrap.classList.add('hidden');
+      }
+    } else {
+      weightWrap.classList.add('hidden');
+    }
+
+    modal.classList.remove('hidden');
+    nameInput.focus();
+  }
+
+  function closeAddModal(){
+    document.getElementById('addModal').classList.add('hidden');
+    app.addCtx = null;
+  }
+
+  function setAddModalError(text){
+    const msg = document.getElementById('addModalMsg');
+    msg.className = 'text-xs rounded-lg px-3 py-2 bg-red-50 text-red-700 border border-red-200';
+    msg.textContent = text;
+    msg.classList.remove('hidden');
+  }
+
+  function submitAddModal(){
+    if (!app.addCtx) return;
+    const typeName = document.getElementById('addType').value;
+    const weightWrap = document.getElementById('addWeightWrap');
+    const rawWeight = Number(document.getElementById('addWeight').value);
+    const parentId = app.addCtx.parentId;
+    const mode = app.addMode;
+
+    const validateTarget = (elementId, elementType) => {
+      if (parentId === null) {
+        const rule = typeRule(elementType);
+        if (!rule.canBeRoot) return `${elementType} cannot be root based on configuration.`;
+        const existingParent = parentOf(elementId);
+        if (existingParent !== null) return 'This element already has a parent and cannot be promoted to root.';
+        if (isElementInStrategy(elementId) && existingParent === null) return 'This element is already a root in this strategy.';
+      } else {
+        const parent = app.state.elements.find(e => e.id === parentId);
+        if (!parent) return 'Parent element was not found.';
+        const rule = typeRule(elementType);
+        if (!rule.allowedParentTypeNames.includes(parent.type)) {
+          return elementType + ' cannot be linked under ' + parent.type + ' based on configuration.';
+        }
+        const existingParent = parentOf(elementId);
+        if (existingParent !== null && existingParent !== parentId) {
+          return 'This element already has a parent in strategy.';
+        }
+        if (existingParent === parentId) {
+          return 'This link already exists.';
+        }
+        if (wouldCreateCycle(parentId, elementId)) {
+          return 'This link would create a cycle.';
+        }
+        if (app.state.strategy.strictHierarchy !== false && app.state.strategy.maxLevels > 0) {
+          const newLevel = depthOf(parentId) + 2;
+          if (newLevel > app.state.strategy.maxLevels) {
+            return 'Adding this element exceeds max levels (' + app.state.strategy.maxLevels + ').';
+          }
+        }
+      }
+      return '';
+    };
+
+    let targetElement = null;
+    if (mode === 'new') {
+      const name = document.getElementById('addName').value.trim();
+      if (!name) return setAddModalError('Element name is required.');
+      const newId = nextElementId();
+      const e = {
+        id: newId,
+        name,
+        type: typeName,
+        status: 'DRAFT',
+        progress: 0,
+        description: '',
+        isShared: false,
+        weight: 0
+      };
+      const validation = validateTarget(e.id, e.type);
+      if (validation) return setAddModalError(validation);
+      targetElement = e;
+      app.state.elements.push(e);
+      app.state.libraryElements.unshift({
+        id: e.id,
+        name: e.name,
+        type: e.type,
+        status: e.status
+      });
+    } else {
+      const selectedId = Number(document.getElementById('librarySelect').value || 0);
+      if (!selectedId) return setAddModalError('Select an existing element first.');
+      const lib = app.state.libraryElements.find(e => Number(e.id) === selectedId);
+      if (!lib) return setAddModalError('Selected library element not found.');
+      if (lib.type !== typeName) return setAddModalError('Selected element type does not match lane type.');
+      const inStrategy = isElementInStrategy(lib.id);
+      const validation = validateTarget(lib.id, lib.type);
+      if (validation) return setAddModalError(validation);
+
+      if (!inStrategy) {
+        targetElement = {
+          id: lib.id,
+          name: lib.name,
+          type: lib.type,
+          status: lib.status || 'DRAFT',
+          progress: 0,
+          description: lib.description || '',
+          isShared: !!lib.isShared,
+          weight: 0
+        };
+        app.state.elements.push(targetElement);
+      } else {
+        targetElement = app.state.elements.find(e => e.id === lib.id);
+      }
+    }
+
+    if (parentId !== null && targetElement) {
+      const parentType = app.state.elements.find(e => e.id === parentId)?.type;
+      const method = edgeMethod(parentType, typeName);
+      let weight = 0;
+      if (!weightWrap.classList.contains('hidden') && Number.isFinite(rawWeight)) weight = rawWeight;
+      if (method === 'IMPACT') weight = Math.max(1, Math.min(10, weight || 5));
+      if (method === 'PERCENT') weight = Math.max(0, Math.min(100, weight || 25));
+      if (method === 'EQUAL') weight = 0;
+      if (method === 'BUSINESS_VALUE') weight = Math.max(0, Number(targetElement.businessValue || 0));
+      if (method === 'BUDGETABLE') weight = Math.max(0, Number(targetElement.plannedBudget || 0));
+      app.state.links.push({ parent: parentId, child: targetElement.id, weight, weightType: method });
+      targetElement.weight = weight;
+    }
+
+    saveState();
+    closeAddModal();
+    showNotice('Element added successfully.', 'success');
+    renderProfiles();
+    renderByType();
+  }
+
+  function init(){
+    app.state = loadState();
+
+    const id = app.state.strategy?.id || app.state.id;
+    document.getElementById('strategyName').textContent = app.state.strategy?.name || 'Strategy By Type';
+    document.getElementById('strategyMeta').textContent = 'ID: ' + id + ' · Status: ' + (app.state.strategy?.status || 'ACTIVE');
+    document.getElementById('backBuilder').href = 'strategy-builder.html?id=' + encodeURIComponent(id);
+    document.getElementById('openGraph').href = 'strategy-graph.html?id=' + encodeURIComponent(id);
+
+    renderProfiles();
+    renderByType();
+
+    document.getElementById('closeAddModal').onclick = closeAddModal;
+    document.getElementById('cancelAddModal').onclick = closeAddModal;
+    document.getElementById('submitAddModal').onclick = submitAddModal;
+    document.getElementById('modeNew').onclick = function(){ setAddMode('new'); };
+    document.getElementById('modeExisting').onclick = function(){ setAddMode('existing'); };
+    document.getElementById('librarySearch').addEventListener('input', renderLibraryCandidates);
+    document.getElementById('closeViewPanelBtn').onclick = closeViewPanel;
+    document.getElementById('closeViewPanelBg').onclick = closeViewPanel;
+    document.getElementById('addModal').addEventListener('click', (e) => {
+      if (e.target.id === 'addModal') closeAddModal();
+    });
+
+    document.getElementById('resetState').onclick = function(){
+      localStorage.removeItem(app.state.key);
+      showNotice('Local strategy state cleared. Reloading defaults...', 'warning');
+      setTimeout(() => window.location.reload(), 450);
+    };
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

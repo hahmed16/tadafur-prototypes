@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPM — Create Strategy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>[x-cloak]{display:none!important}</style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="app()">
+
+<!-- NAV -->
+<nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
+  <div class="flex items-center gap-3">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <span class="font-semibold text-gray-800 text-lg">Advance360</span>
+    </a>
+    <span class="text-gray-300">|</span>
+    <a href="index.html" class="text-gray-500 hover:text-indigo-600 text-sm">Strategic Performance</a>
+    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-indigo-600 font-medium text-sm">New Strategy</span>
+  </div>
+  <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-semibold text-sm">AH</div>
+</nav>
+
+<div class="max-w-4xl mx-auto px-6 py-8">
+
+  <!-- Stepper -->
+  <div class="flex items-center justify-center mb-10">
+    <template x-for="(s, i) in steps" :key="i">
+      <div class="flex items-center">
+        <div class="flex flex-col items-center">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all"
+               :class="step > i+1 ? 'bg-indigo-600 text-white' : step === i+1 ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' : 'bg-gray-200 text-gray-400'">
+            <span x-show="step <= i+1" x-text="i+1"></span>
+            <svg x-show="step > i+1" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <span class="text-xs mt-1.5 font-medium" :class="step===i+1?'text-indigo-600':'text-gray-400'" x-text="s"></span>
+        </div>
+        <div x-show="i < steps.length-1" class="w-20 h-0.5 mx-2 mb-4" :class="step > i+1 ? 'bg-indigo-600' : 'bg-gray-200'"></div>
+      </div>
+    </template>
+  </div>
+
+  <!-- ======= STEP 1: Basic Info ======= -->
+  <div x-show="step===1" class="bg-white rounded-2xl border border-gray-200 p-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-1">Strategy Details</h2>
+    <p class="text-gray-500 text-sm mb-6">Basic information about this strategy.</p>
+    <div class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Strategy Name <span class="text-red-500">*</span></label>
+        <input x-model="form.name" placeholder="e.g. National Digital Transformation 2025–2030"
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea x-model="form.description" rows="3" placeholder="Strategic intent and expected outcomes..."
+                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Start Date <span class="text-red-500">*</span></label>
+          <input x-model="form.startDate" type="date" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">End Date <span class="text-red-500">*</span></label>
+          <input x-model="form.endDate" type="date" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Planned Budget (OMR)</label>
+          <input x-model="form.budget" type="number" placeholder="0" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Responsible Unit</label>
+          <select x-model="form.unit" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
+            <option value="">Select unit...</option>
+            <option>Ministry of Digital Affairs</option>
+            <option>National Strategy Office</option>
+            <option>Planning & Development</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= STEP 2: Type Hierarchy ======= -->
+  <div x-show="step===2" x-cloak class="space-y-4">
+    <div class="bg-white rounded-2xl border border-gray-200 p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-1">Element Types & Hierarchy</h2>
+      <p class="text-gray-500 text-sm mb-1">Choose which element types will be used in this strategy.</p>
+      <p class="text-gray-500 text-sm mb-5">Then for each type, define <strong>what it can be placed under</strong>. This becomes the allowed structure.</p>
+
+      <!-- Type selection pills -->
+      <div class="mb-5">
+        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Select element types to include</label>
+        <div class="flex flex-wrap gap-2">
+          <template x-for="t in availableTypes" :key="t.id">
+            <button @click="toggleTypeSelection(t)"
+                    :class="isTypeSelected(t.id) ? 'ring-2 ring-offset-1 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'"
+                    :style="isTypeSelected(t.id) ? `background:${t.color}; ring-color:${t.color}` : ''"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all">
+              <span x-text="t.icon"></span>
+              <span x-text="t.name"></span>
+              <span x-show="isTypeSelected(t.id)" class="text-xs opacity-75">✓</span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hierarchy configuration — only shown when types selected -->
+    <template x-if="selectedTypes.length > 0">
+      <div class="grid grid-cols-5 gap-4">
+
+        <!-- Left: Configuration panel (3 cols) -->
+        <div class="col-span-3 space-y-3">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">Configure: what each type can be placed under</div>
+
+          <template x-for="t in selectedTypes" :key="t.id">
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div class="flex items-center gap-3 px-4 py-3">
+                <!-- Type identity -->
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
+                     :style="`background:${t.color}22; color:${t.color}`" x-text="t.icon"></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900 text-sm" x-text="t.name"></div>
+                  <div class="text-xs text-gray-400 flex gap-2 mt-0.5">
+                    <span x-show="t.isBudgetable" class="text-emerald-600">💰 Budget</span>
+                    <span x-show="t.isTrackable" class="text-violet-600">📊 Trackable</span>
+                    <span x-show="t.isVisionAligned" class="text-amber-600">🎯 Vision</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Placement rules -->
+              <div class="border-t border-gray-100 px-4 py-3 bg-gray-50">
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    <span class="text-gray-600">KPIs</span>
+                    <input type="checkbox" x-model="t.hasKPIs" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  </label>
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    <span class="text-gray-600">Risks</span>
+                    <input type="checkbox" x-model="t.hasRisks" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  </label>
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs col-span-2">
+                    <span class="text-gray-600">Quarterly Measurable</span>
+                    <input type="checkbox" x-model="t.isQuarterlyMeasurable" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  </label>
+                </div>
+                <!-- Can be root -->
+                <div class="flex items-center gap-2 mb-3">
+                  <button @click="t.canBeRoot = !t.canBeRoot"
+                          :class="t.canBeRoot ? 'bg-indigo-600' : 'bg-gray-200'"
+                          class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0">
+                    <span :class="t.canBeRoot ? 'translate-x-4' : 'translate-x-0.5'"
+                          class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+                  </button>
+                  <span class="text-xs font-medium" :class="t.canBeRoot ? 'text-indigo-700' : 'text-gray-500'">
+                    Can be a <strong>root element</strong> (top of strategy, no parent)
+                  </span>
+                </div>
+
+                <!-- Can be placed under -->
+                <div>
+                  <div class="text-xs text-gray-500 mb-2 font-medium">Can be placed under:</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <template x-for="other in selectedTypes.filter(o => o.id !== t.id)" :key="other.id">
+                      <button @click="toggleParentRule(t.id, other.id)"
+                              :class="hasParentRule(t.id, other.id)
+                                ? 'text-white'
+                                : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'"
+                              :style="hasParentRule(t.id, other.id) ? `background:${other.color}` : ''"
+                              class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all">
+                        <span x-text="other.icon"></span>
+                        <span x-text="other.name"></span>
+                      </button>
+                    </template>
+                    <span x-show="selectedTypes.filter(o=>o.id!==t.id).length === 0" class="text-xs text-gray-400 italic">Select more types first</span>
+                    <span x-show="!t.canBeRoot && !hasAnyParentRule(t.id)" class="text-xs text-amber-600 font-medium flex items-center gap-1">
+                      <span>⚠</span> Must have a parent or be root
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Right: Live hierarchy preview (2 cols) -->
+        <div class="col-span-2">
+          <div class="sticky top-4">
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-3">Live Preview</div>
+            <div class="bg-white border border-gray-200 rounded-2xl p-4">
+              <p class="text-xs text-gray-400 mb-3">Allowed structure for this strategy:</p>
+
+              <!-- Root types -->
+              <div class="space-y-2">
+                <template x-for="root in rootTypes" :key="root.id">
+                  <div>
+                    <!-- Root type card -->
+                    <div class="flex items-center gap-2 px-3 py-2 rounded-xl"
+                         :style="`background:${root.color}18; border:1.5px solid ${root.color}44`">
+                      <span x-text="root.icon" class="text-sm"></span>
+                      <span class="text-sm font-semibold" :style="`color:${root.color}`" x-text="root.name"></span>
+                      <span class="text-xs text-gray-400 ml-auto">root</span>
+                    </div>
+
+                    <!-- Children of this root type -->
+                    <div class="ml-6 mt-1.5 space-y-1.5" x-show="getChildTypes(root.id).length > 0">
+                      <template x-for="child in getChildTypes(root.id)" :key="child.id">
+                        <div>
+                          <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-px bg-gray-300 flex-shrink-0"></div>
+                            <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg flex-1"
+                                 :style="`background:${child.color}14; border:1px solid ${child.color}33`">
+                              <span x-text="child.icon" class="text-xs"></span>
+                              <span class="text-xs font-medium" :style="`color:${child.color}`" x-text="child.name"></span>
+                            </div>
+                          </div>
+
+                          <!-- Grand-children -->
+                          <div class="ml-8 mt-1 space-y-1" x-show="getChildTypes(child.id).length > 0">
+                            <template x-for="gc in getChildTypes(child.id)" :key="gc.id">
+                              <div class="flex items-center gap-1.5">
+                                <div class="w-3 h-px bg-gray-200 flex-shrink-0"></div>
+                                <div class="flex items-center gap-1.5 px-2 py-1 rounded-md flex-1"
+                                     :style="`background:${gc.color}10; border:1px solid ${gc.color}25`">
+                                  <span x-text="gc.icon" class="text-xs"></span>
+                                  <span class="text-xs" :style="`color:${gc.color}`" x-text="gc.name"></span>
+                                </div>
+                              </div>
+                            </template>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+
+                <div x-show="rootTypes.length === 0" class="text-center py-6 text-gray-400 text-xs">
+                  Enable "Can be root" on at least one type to see the hierarchy
+                </div>
+              </div>
+
+              <!-- Validation warnings -->
+              <div class="mt-4 space-y-1.5">
+                <template x-for="w in hierarchyWarnings" :key="w">
+                  <div class="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 rounded-lg px-2.5 py-2">
+                    <span class="flex-shrink-0 mt-0.5">⚠</span>
+                    <span x-text="w"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </template>
+
+    <!-- No types selected -->
+    <div x-show="selectedTypes.length === 0" class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-400">
+      <div class="text-4xl mb-3">🧩</div>
+      <p class="font-medium">Select element types above to configure the hierarchy</p>
+    </div>
+  </div>
+
+  <!-- ======= STEP 3: Weight & Progress ======= -->
+  <div x-show="step===3" x-cloak class="bg-white rounded-2xl border border-gray-200 p-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-1">Weight & Progress Settings</h2>
+    <p class="text-gray-500 text-sm mb-6">How element weights and progress are calculated in this strategy.</p>
+
+    <!-- Default weight input type -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-3">Default Weight Input Method <span class="text-gray-400 font-normal">(used when a pair has no override)</span></label>
+      <div class="grid grid-cols-5 gap-3">
+        <button @click="form.weightType='IMPACT'"
+                :class="form.weightType==='IMPACT'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-2xl mb-2">🎚️</div>
+          <div class="font-semibold text-gray-800 text-sm">Impact Score</div>
+          <div class="text-xs text-gray-500 mt-1">Rate 1–10. Normalized relative to siblings.</div>
+        </button>
+        <button @click="form.weightType='PERCENT'"
+                :class="form.weightType==='PERCENT'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-2xl mb-2">📊</div>
+          <div class="font-semibold text-gray-800 text-sm">Percentage</div>
+          <div class="text-xs text-gray-500 mt-1">Enter % directly. Siblings sum to 100%.</div>
+        </button>
+        <button @click="form.weightType='EQUAL'"
+                :class="form.weightType==='EQUAL'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-2xl mb-2">⚖️</div>
+          <div class="font-semibold text-gray-800 text-sm">Equal Weight</div>
+          <div class="text-xs text-gray-500 mt-1">All siblings get equal weight automatically.</div>
+        </button>
+        <button @click="form.weightType='BUSINESS_VALUE'"
+                :class="form.weightType==='BUSINESS_VALUE'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-2xl mb-2">💼</div>
+          <div class="font-semibold text-gray-800 text-sm">Business Value</div>
+          <div class="text-xs text-gray-500 mt-1">Auto weight from each child element business value.</div>
+        </button>
+        <button @click="form.weightType='BUDGETABLE'"
+                :class="form.weightType==='BUDGETABLE'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-2xl mb-2">💰</div>
+          <div class="font-semibold text-gray-800 text-sm">Planned Budget</div>
+          <div class="text-xs text-gray-500 mt-1">Auto weight from planned budget of each child element.</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Per edge pair method -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Edge Weight Method By Parent → Child Type</label>
+      <p class="text-xs text-gray-400 mb-3">Define the calculation method for each allowed link in this strategy build configuration.</p>
+      <div class="border border-gray-200 rounded-xl overflow-hidden">
+        <div class="grid grid-cols-12 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 px-3 py-2">
+          <div class="col-span-6">Type Pair</div>
+          <div class="col-span-6">Weight Method</div>
+        </div>
+        <template x-for="pair in configuredEdgePairs" :key="pair.key">
+          <div class="grid grid-cols-12 items-center px-3 py-2.5 border-b border-gray-100 last:border-b-0">
+            <div class="col-span-6 flex items-center gap-2 text-sm">
+              <span class="font-medium text-gray-700" x-text="pair.parent.name"></span>
+              <span class="text-gray-300">→</span>
+              <span class="font-medium text-gray-900" x-text="pair.child.name"></span>
+            </div>
+            <div class="col-span-6">
+              <select :value="getEdgeMethod(pair.parent.id, pair.child.id)"
+                      @change="setEdgeMethod(pair.parent.id, pair.child.id, $event.target.value)"
+                      class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+                <option value="IMPACT">IMPACT (1-10)</option>
+                <option value="PERCENT">PERCENT (0-100%)</option>
+                <option value="EQUAL">EQUAL (auto)</option>
+                <option value="BUSINESS_VALUE">BUSINESS_VALUE (auto)</option>
+                <option value="BUDGETABLE">BUDGETABLE (auto)</option>
+              </select>
+            </div>
+          </div>
+        </template>
+        <div x-show="configuredEdgePairs.length===0" class="px-3 py-4 text-xs text-gray-500">
+          Configure parent-child relationships in step 2 first.
+        </div>
+      </div>
+    </div>
+
+    <!-- Discrepancy threshold -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Progress Discrepancy Alert Threshold</label>
+      <p class="text-xs text-gray-400 mb-3">When manual progress and calculated-from-children differ by more than this, a warning flag appears.</p>
+      <div class="flex items-center gap-4">
+        <input type="range" min="1" max="30" x-model.number="form.discrepancyThreshold" class="flex-1 accent-indigo-600" />
+        <div class="bg-indigo-50 text-indigo-700 font-bold text-lg rounded-xl px-4 py-2 w-20 text-center" x-text="form.discrepancyThreshold + '%'"></div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 text-sm space-y-2">
+      <p class="font-semibold text-gray-700 mb-2">Summary</p>
+      <div class="flex justify-between text-gray-600"><span>Strategy Name</span><span class="font-medium text-gray-900" x-text="form.name||'—'"></span></div>
+      <div class="flex justify-between text-gray-600"><span>Duration</span><span class="font-medium text-gray-900" x-text="form.startDate && form.endDate ? form.startDate + ' → ' + form.endDate : '—'"></span></div>
+      <div class="flex justify-between text-gray-600"><span>Element Types</span><span class="font-medium text-gray-900" x-text="selectedTypes.length + ' types'"></span></div>
+      <div class="flex justify-between text-gray-600"><span>Configured Links</span><span class="font-medium text-gray-900" x-text="configuredEdgePairs.length + ' pairs'"></span></div>
+      <div class="flex justify-between text-gray-600"><span>Max Levels</span><span class="font-medium text-gray-900" x-text="maxLevels"></span></div>
+      <div class="flex justify-between text-gray-600"><span>Default Weight Method</span><span class="font-medium text-gray-900" x-text="form.weightType"></span></div>
+      <div class="flex justify-between text-gray-600"><span>Discrepancy Threshold</span><span class="font-medium text-gray-900" x-text="form.discrepancyThreshold + '%'"></span></div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex items-center justify-between mt-6">
+    <button x-show="step > 1" @click="step--"
+            class="flex items-center gap-2 text-sm text-gray-600 px-4 py-2 rounded-xl hover:bg-white border border-gray-200 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <div x-show="step===1"></div>
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">Cancel</a>
+      <button x-show="step < 3" @click="nextStep()"
+              :disabled="!canNext"
+              :class="!canNext ? 'opacity-40 cursor-not-allowed' : 'hover:bg-indigo-700'"
+              class="bg-indigo-600 text-white text-sm font-medium px-6 py-2 rounded-xl transition flex items-center gap-2">
+        Next
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button x-show="step===3" @click="createAndBuild()"
+         class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-xl transition flex items-center gap-2">
+        Create & Start Building
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function app() {
+  return {
+    step: 1,
+    steps: ['Basic Details', 'Element Hierarchy', 'Weight & Progress'],
+    form: {
+      name: '', description: '', startDate: '2025-01-01', endDate: '2030-12-31',
+      budget: '', unit: '', weightType: 'IMPACT', discrepancyThreshold: 5,
+    },
+    // parentRules[childTypeId] = Set of parentTypeIds that child can appear under
+    parentRules: {},
+    edgeMethods: {},
+
+    availableTypes: [
+      { id:1, name:'Pillar',     icon:'🏛️', color:'#6366f1', isBudgetable:false, isTrackable:false, isVisionAligned:true,  canBeRoot:true,  hasKPIs:true, hasRisks:true, isQuarterlyMeasurable:false  },
+      { id:2, name:'Goal',       icon:'🎯', color:'#10b981', isBudgetable:false, isTrackable:true,  isVisionAligned:true,  canBeRoot:false, hasKPIs:true, hasRisks:true, isQuarterlyMeasurable:true },
+      { id:3, name:'Initiative', icon:'⚡', color:'#f59e0b', isBudgetable:true,  isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:true, hasRisks:true, isQuarterlyMeasurable:true },
+      { id:4, name:'Program',    icon:'📦', color:'#8b5cf6', isBudgetable:true,  isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:false,hasRisks:true, isQuarterlyMeasurable:false },
+      { id:5, name:'Milestone',  icon:'🚩', color:'#ec4899', isBudgetable:false, isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:false,hasRisks:false, isQuarterlyMeasurable:false },
+    ],
+    selectedTypeIds: [1, 2, 3],
+
+    get selectedTypes() {
+      return this.availableTypes.filter(t => this.selectedTypeIds.includes(t.id));
+    },
+
+    isTypeSelected(id) { return this.selectedTypeIds.includes(id); },
+    toggleTypeSelection(t) {
+      const idx = this.selectedTypeIds.indexOf(t.id);
+      if (idx !== -1) {
+        this.selectedTypeIds.splice(idx, 1);
+        delete this.parentRules[t.id];
+        Object.keys(this.edgeMethods).forEach(key => {
+          const [parentId, childId] = key.split('>').map(Number);
+          if (parentId === t.id || childId === t.id) delete this.edgeMethods[key];
+        });
+        Object.keys(this.parentRules).forEach(childId => {
+          this.parentRules[childId] = (this.parentRules[childId] || []).filter(parentId => parentId !== t.id);
+        });
+      } else {
+        this.selectedTypeIds.push(t.id);
+        if (!this.parentRules[t.id]) this.parentRules[t.id] = [];
+      }
+    },
+
+    hasParentRule(childId, parentId) {
+      return (this.parentRules[childId] || []).includes(parentId);
+    },
+    hasAnyParentRule(childId) {
+      return (this.parentRules[childId] || []).length > 0;
+    },
+    toggleParentRule(childId, parentId) {
+      if (!this.parentRules[childId]) this.parentRules[childId] = [];
+      const idx = this.parentRules[childId].indexOf(parentId);
+      if (idx !== -1) {
+        this.parentRules[childId].splice(idx, 1);
+        delete this.edgeMethods[`${parentId}>${childId}`];
+      } else {
+        this.parentRules[childId].push(parentId);
+        this.edgeMethods[`${parentId}>${childId}`] = this.form.weightType;
+      }
+    },
+
+    get rootTypes() {
+      return this.selectedTypes.filter(t => t.canBeRoot);
+    },
+
+    get configuredEdgePairs() {
+      const selected = new Set(this.selectedTypeIds);
+      const byId = Object.fromEntries(this.selectedTypes.map(t => [t.id, t]));
+      const pairs = [];
+      Object.entries(this.parentRules).forEach(([childIdStr, parents]) => {
+        const childId = Number(childIdStr);
+        if (!selected.has(childId)) return;
+        (parents || []).forEach(parentId => {
+          if (!selected.has(parentId)) return;
+          pairs.push({
+            key: `${parentId}>${childId}`,
+            parent: byId[parentId],
+            child: byId[childId],
+          });
+        });
+      });
+      return pairs;
+    },
+
+    get maxLevels() {
+      if (this.rootTypes.length === 0) return 0;
+      const memo = {};
+      const depthFrom = (typeId, stack = new Set()) => {
+        if (memo[typeId]) return memo[typeId];
+        if (stack.has(typeId)) return 0;
+        stack.add(typeId);
+        const children = this.selectedTypes
+          .filter(t => (this.parentRules[t.id] || []).includes(typeId))
+          .map(t => t.id);
+        let maxChildDepth = 0;
+        children.forEach(c => { maxChildDepth = Math.max(maxChildDepth, depthFrom(c, stack)); });
+        stack.delete(typeId);
+        memo[typeId] = 1 + maxChildDepth;
+        return memo[typeId];
+      };
+      return Math.max(...this.rootTypes.map(r => depthFrom(r.id)));
+    },
+
+    getEdgeMethod(parentId, childId) {
+      return this.edgeMethods[`${parentId}>${childId}`] || this.form.weightType;
+    },
+    setEdgeMethod(parentId, childId, method) {
+      this.edgeMethods[`${parentId}>${childId}`] = method;
+    },
+
+    hasTypeCycle() {
+      const selected = new Set(this.selectedTypeIds);
+      const childrenByParent = {};
+      this.selectedTypeIds.forEach(id => { childrenByParent[id] = []; });
+      Object.entries(this.parentRules).forEach(([childIdStr, parents]) => {
+        const childId = Number(childIdStr);
+        if (!selected.has(childId)) return;
+        (parents || []).forEach(parentId => {
+          if (!selected.has(parentId)) return;
+          if (!childrenByParent[parentId]) childrenByParent[parentId] = [];
+          childrenByParent[parentId].push(childId);
+        });
+      });
+      const visited = new Set();
+      const inStack = new Set();
+      const dfs = (node) => {
+        if (inStack.has(node)) return true;
+        if (visited.has(node)) return false;
+        visited.add(node);
+        inStack.add(node);
+        const children = childrenByParent[node] || [];
+        for (const c of children) {
+          if (dfs(c)) return true;
+        }
+        inStack.delete(node);
+        return false;
+      };
+      for (const id of this.selectedTypeIds) {
+        if (dfs(id)) return true;
+      }
+      return false;
+    },
+
+    getChildTypes(parentTypeId) {
+      return this.selectedTypes.filter(t =>
+        (this.parentRules[t.id] || []).includes(parentTypeId)
+      );
+    },
+
+    get hierarchyWarnings() {
+      const warnings = [];
+      for (const t of this.selectedTypes) {
+        if (!t.canBeRoot && !this.hasAnyParentRule(t.id)) {
+          warnings.push(`"${t.name}" has no parent rule and can't be root — it won't be placeable anywhere.`);
+        }
+      }
+      if (this.rootTypes.length === 0) {
+        warnings.push('No root types defined. At least one type must allow being a root element.');
+      }
+      if (this.hasTypeCycle()) {
+        warnings.push('Type hierarchy contains a cycle. A strict build requires an acyclic hierarchy.');
+      }
+      const depthBuckets = {};
+      this.selectedTypes.forEach(t => {
+        const d = this.typeDepthForValidation(t.id);
+        if (!depthBuckets[d]) depthBuckets[d] = [];
+        depthBuckets[d].push(t.name);
+      });
+      Object.entries(depthBuckets).forEach(([depth, names]) => {
+        if (names.length > 1) {
+          warnings.push(`One level, one type rule violated at level ${Number(depth) + 1}: ${names.join(', ')}`);
+        }
+      });
+      return warnings;
+    },
+    typeDepthForValidation(typeId, stack = new Set()) {
+      if (stack.has(typeId)) return 999;
+      const type = this.selectedTypes.find(t => t.id === typeId);
+      if (!type) return 0;
+      const parents = this.parentRules[typeId] || [];
+      if (type.canBeRoot || parents.length === 0) return 0;
+      stack.add(typeId);
+      const d = 1 + Math.min(...parents.map(p => this.typeDepthForValidation(p, stack)));
+      stack.delete(typeId);
+      return d;
+    },
+
+    get canNext() {
+      if (this.step === 1) return this.form.name.trim().length > 0 && !!this.form.startDate && !!this.form.endDate && this.form.startDate <= this.form.endDate;
+      if (this.step === 2) return this.selectedTypeIds.length > 0 && this.hierarchyWarnings.length === 0;
+      return true;
+    },
+    nextStep() { if (this.canNext) this.step++; },
+    createAndBuild() {
+      if (!this.canNext) return;
+
+      const selectedTypes = this.selectedTypes.map(t => ({
+        id: t.id,
+        name: t.name,
+        icon: t.icon,
+        color: t.color,
+        isBudgetable: t.isBudgetable,
+        isTrackable: t.isTrackable,
+        isVisionAligned: t.isVisionAligned,
+        canBeRoot: !!t.canBeRoot,
+        hasKPIs: !!t.hasKPIs,
+        hasIndicators: !!t.hasKPIs,
+        hasRisks: !!t.hasRisks,
+        isQuarterlyMeasurable: !!t.isQuarterlyMeasurable,
+      }));
+
+      const strategyDraft = {
+        id: `strategy-${Date.now()}`,
+        name: this.form.name.trim(),
+        description: this.form.description.trim(),
+        startDate: this.form.startDate,
+        endDate: this.form.endDate,
+        budget: this.form.budget,
+        unit: this.form.unit,
+        weightType: this.form.weightType,
+        discrepancyThreshold: this.form.discrepancyThreshold,
+        status: 'DRAFT',
+        strictHierarchy: true,
+        maxLevels: this.maxLevels,
+        typeConfig: selectedTypes,
+        parentRules: this.parentRules,
+        edgeMethods: this.edgeMethods,
+        createdAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem('spm_active_strategy', JSON.stringify(strategyDraft));
+      window.location.href = 'strategy-builder.html';
+    },
+
+    init() {
+      // Pre-populate default parent rules
+      this.parentRules = { 2: [1], 3: [2] }; // Goal under Pillar, Initiative under Goal
+      this.edgeMethods = { '1>2': 'IMPACT', '2>3': 'PERCENT' };
+      this.availableTypes[0].canBeRoot = true;
+    }
+  }
+}
+</script>
+</body>
+</html>

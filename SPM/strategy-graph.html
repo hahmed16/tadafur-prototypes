@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPM — Strategy Graph</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+  <style>
+    #cy { width: 100%; height: 100%; }
+    .sb{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:600;white-space:nowrap}
+    .s-draft{background:#f3f4f6;color:#6b7280}
+    .s-active{background:#dcfce7;color:#16a34a}
+    .s-on_hold{background:#fef9c3;color:#ca8a04}
+    .s-completed{background:#dbeafe;color:#2563eb}
+    .s-deactivated{background:#fee2e2;color:#dc2626}
+    .s-deprecated{background:#f5f3ff;color:#7c3aed}
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-[1400px] mx-auto p-4">
+    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-semibold text-gray-900" id="strategyName">Strategy Graph</div>
+        <div class="text-xs text-gray-500" id="strategyMeta"></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a id="backBuilder" href="strategy-builder.html" class="px-3 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">Back To Builder</a>
+        <a id="openTypes" href="strategy-by-type.html" class="px-3 py-2 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">By Type</a>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div class="lg:col-span-3 bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="px-3 py-2 border-b border-gray-100 text-xs font-semibold text-gray-600">Graph View</div>
+        <div class="relative h-[520px]">
+          <div id="cy" class="absolute inset-0"></div>
+          <div id="graphMessageWrap" class="absolute inset-0 hidden items-center justify-center">
+            <div id="graphMessage" class="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 shadow-sm"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl p-3">
+        <div class="text-xs font-semibold text-gray-600 mb-2">Debug</div>
+        <div class="space-y-1 text-xs">
+          <div class="flex justify-between"><span class="text-gray-500">Elements</span><span id="elementsCount" class="font-semibold text-gray-800">0</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Links</span><span id="linksCount" class="font-semibold text-gray-800">0</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Cytoscape</span><span id="cyStatus" class="font-semibold text-gray-800">-</span></div>
+        </div>
+        <div class="mt-3 border-t border-gray-100 pt-3">
+          <div class="text-xs font-semibold text-gray-600 mb-2">Types</div>
+          <div id="typeLegend" class="space-y-1.5"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="bg-white border border-gray-200 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-semibold text-gray-600">Nodes</div>
+          <button id="addRootBtn" class="text-[11px] px-2 py-1 rounded-md border border-indigo-200 text-indigo-700 hover:bg-indigo-50">+ Add Root</button>
+        </div>
+        <div id="nodeList" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-3">
+        <div class="text-xs font-semibold text-gray-600 mb-2">Edges</div>
+        <div id="edgeList" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewPanel" class="hidden fixed inset-0 z-40">
+    <div class="absolute inset-0 bg-black/30" id="closeViewPanelBg"></div>
+    <aside class="absolute right-0 top-0 h-full w-[36rem] max-w-[96vw] bg-white border-l border-gray-200 shadow-2xl flex flex-col">
+      <div class="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div id="vpKind" class="text-xs text-gray-500">Element</div>
+          <div id="vpTitle" class="text-sm font-semibold text-gray-900 truncate">-</div>
+        </div>
+        <button id="closeViewPanelBtn" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">✕</button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Status</div>
+            <div id="vpStatus" class="font-semibold text-gray-800 mt-1">-</div>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Type</div>
+            <div id="vpType" class="font-semibold text-gray-800 mt-1">-</div>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Parent</div>
+            <div id="vpParent" class="font-semibold text-gray-800 mt-1">-</div>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-2.5">
+            <div class="text-[11px] text-gray-500">Children</div>
+            <div id="vpChildrenCount" class="font-semibold text-gray-800 mt-1">0</div>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Children</div>
+          <div id="vpChildrenList" class="space-y-1.5"></div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">KPIs</div>
+          <div id="vpIndicatorsList" class="space-y-1.5"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="addModal" class="hidden fixed inset-0 z-50 bg-black/45 p-4 flex items-center justify-center">
+    <div class="w-full max-w-lg bg-white rounded-2xl border border-gray-200 shadow-xl">
+      <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold">Add Strategy Element</div>
+          <div class="text-xs text-gray-500" id="addModalContext"></div>
+        </div>
+        <button id="closeAddModal" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">✕</button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+          <button id="modeNew" class="px-3 py-1.5 text-xs rounded-lg bg-white text-indigo-700 border border-indigo-200">New</button>
+          <button id="modeExisting" class="px-3 py-1.5 text-xs rounded-lg text-gray-600">Existing From Library</button>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Element Type</label>
+          <select id="addType" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300"></select>
+        </div>
+        <div id="addNewWrap">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Element Name</label>
+          <input id="addName" type="text" placeholder="Enter element name" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+        </div>
+        <div id="addExistingWrap" class="hidden space-y-2">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Search Library</label>
+            <input id="librarySearch" type="text" placeholder="Search existing elements..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Select Existing Element</label>
+            <select id="librarySelect" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300"></select>
+          </div>
+        </div>
+        <div id="addWeightWrap" class="hidden">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Link Weight</label>
+          <input id="addWeight" type="number" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+          <div id="addWeightHint" class="text-[11px] text-gray-500 mt-1"></div>
+        </div>
+        <div id="addModalMsg" class="hidden text-xs rounded-lg px-3 py-2"></div>
+      </div>
+      <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-end gap-2">
+        <button id="cancelAddModal" class="px-3 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+        <button id="submitAddModal" class="px-3 py-2 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Element</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  let graphCy = null;
+  const defaultTypes = [
+    { id: 1, name: 'Pillar', icon: '🏛️', color: '#6366f1' },
+    { id: 2, name: 'Goal', icon: '🎯', color: '#10b981' },
+    { id: 3, name: 'Initiative', icon: '⚡', color: '#f59e0b' },
+    { id: 4, name: 'Program', icon: '📦', color: '#8b5cf6' },
+    { id: 5, name: 'Milestone', icon: '🚩', color: '#ec4899' },
+  ];
+  const defaultElements = [
+    { id: 1, name: 'Digital Infrastructure', type: 'Pillar', status: 'ACTIVE' },
+    { id: 2, name: 'Digital Services & Experience', type: 'Pillar', status: 'ACTIVE' },
+    { id: 3, name: 'Data & AI Governance', type: 'Pillar', status: 'ACTIVE' },
+    { id: 4, name: 'Nationwide Fiber Coverage', type: 'Goal', status: 'ACTIVE' },
+    { id: 5, name: 'Cloud Migration', type: 'Goal', status: 'ON_HOLD' },
+    { id: 6, name: 'Cybersecurity Baseline', type: 'Goal', status: 'ACTIVE' },
+    { id: 7, name: 'Citizen Portal (Single Sign-On)', type: 'Goal', status: 'ACTIVE' },
+    { id: 8, name: 'Mobile-First Services', type: 'Goal', status: 'ACTIVE' },
+    { id: 9, name: 'National Data Catalog', type: 'Goal', status: 'DRAFT' },
+    { id: 10, name: 'AI Ethics Framework', type: 'Goal', status: 'DRAFT' },
+    { id: 11, name: 'Phase 1 – Northern Region', type: 'Initiative', status: 'COMPLETED' },
+    { id: 12, name: 'Phase 2 – Central Region', type: 'Initiative', status: 'ACTIVE' },
+    { id: 13, name: 'Phase 3 – Southern Region', type: 'Initiative', status: 'DRAFT' },
+    { id: 14, name: 'Identity Platform Build', type: 'Initiative', status: 'ACTIVE' },
+    { id: 15, name: 'API Gateway & Integration', type: 'Initiative', status: 'ACTIVE' },
+    { id: 16, name: 'Telecom Partnership Program', type: 'Program', status: 'ACTIVE' }
+  ];
+  const defaultLinks = [
+    { parent:1,child:4,weight:8,weightType:'IMPACT' },{ parent:1,child:5,weight:6,weightType:'IMPACT' },{ parent:1,child:6,weight:9,weightType:'IMPACT' },
+    { parent:2,child:7,weight:10,weightType:'IMPACT' },{ parent:2,child:8,weight:8,weightType:'IMPACT' },
+    { parent:3,child:9,weight:7,weightType:'IMPACT' },{ parent:3,child:10,weight:5,weightType:'IMPACT' },
+    { parent:4,child:11,weight:7,weightType:'PERCENT' },{ parent:4,child:12,weight:8,weightType:'PERCENT' },{ parent:4,child:13,weight:6,weightType:'PERCENT' },
+    { parent:7,child:14,weight:10,weightType:'PERCENT' },{ parent:7,child:15,weight:8,weightType:'PERCENT' },
+    { parent:4,child:16,weight:5,weightType:'IMPACT' }
+  ];
+  const defaultIndicators = [
+    { id:1, elementId:4, name:'Fiber Penetration Rate', contributionType:'IMPACT', contributionValue:8 },
+    { id:2, elementId:7, name:'Portal Adoption', contributionType:'PERCENT', contributionValue:45 },
+    { id:3, elementId:12, name:'Phase Delivery Rate', contributionType:'PERCENT', contributionValue:30 }
+  ];
+
+  const strategyMetaById = {
+    '1': { name: 'National Digital Transformation 2025–2030', status: 'ACTIVE' },
+    '2': { name: 'Healthcare Infrastructure Improvement', status: 'ACTIVE' },
+    '3': { name: 'Education Excellence Plan', status: 'DRAFT' },
+    '4': { name: 'Sustainable Energy Transition', status: 'ON_HOLD' },
+    '5': { name: 'Smart City Pilot — Al Riyadh', status: 'COMPLETED' }
+  };
+
+  function qs(name) {
+    const p = new URLSearchParams(window.location.search || '');
+    return p.get(name);
+  }
+
+  function loadState() {
+    const id = String(qs('id') || 'default-strategy');
+    const key = 'spm_builder_state_' + id;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { saved = null; }
+
+    const rawElements = Array.isArray(saved?.elements) && saved.elements.length > 0 ? saved.elements : defaultElements;
+    const elements = rawElements
+      .map(e => ({ ...e, id: Number(e.id) }))
+      .filter(e => Number.isFinite(e.id) && e.name && e.type);
+    const validIds = new Set(elements.map(e => e.id));
+    const rawLinks = Array.isArray(saved?.links) ? saved.links : defaultLinks;
+    const links = rawLinks
+      .map(l => ({ ...l, parent: Number(l.parent), child: Number(l.child) }))
+      .filter(l => Number.isFinite(l.parent) && Number.isFinite(l.child) && validIds.has(l.parent) && validIds.has(l.child));
+    const elementTypes = Array.isArray(saved?.elementTypes) && saved.elementTypes.length > 0 ? saved.elementTypes : defaultTypes;
+    const strategy = saved?.strategy || { id, name: strategyMetaById[id]?.name || 'Strategy', status: strategyMetaById[id]?.status || 'ACTIVE', strictHierarchy: true, maxLevels: 4, weightType: 'IMPACT', edgeMethods: {} };
+    const indicatorCatalog = (Array.isArray(saved?.indicatorCatalog) ? saved.indicatorCatalog : defaultIndicators)
+      .map(i => ({ ...i, id: Number(i.id), elementId: Number(i.elementId) }))
+      .filter(i => Number.isFinite(i.id) && Number.isFinite(i.elementId) && validIds.has(i.elementId));
+    const rules = saved?.typeRulesByChildName || {
+      Pillar: { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true },
+      Goal: { canBeRoot: false, allowedParentTypeNames: ['Pillar'], hasIndicators: true },
+      Initiative: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: true },
+      Program: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: false },
+      Milestone: { canBeRoot: false, allowedParentTypeNames: ['Initiative'], hasIndicators: false }
+    };
+    const libraryElements = Array.isArray(saved?.libraryElements) && saved.libraryElements.length > 0
+      ? saved.libraryElements
+      : [...defaultElements];
+    return { id, key, strategy, elements, links, elementTypes, indicatorCatalog, rules, libraryElements };
+  }
+
+  function typeColor(types, name) {
+    const t = types.find(x => x.name === name);
+    return t?.color || '#64748b';
+  }
+
+  function edgeLabel(l) {
+    if (l.weightType === 'PERCENT') return String(l.weight ?? 0) + '%';
+    if (l.weightType === 'EQUAL') return 'Equal';
+    if (l.weightType === 'BUSINESS_VALUE') return 'BV ' + String(l.weight ?? 0);
+    if (l.weightType === 'BUDGETABLE') return 'Budget ' + String(l.weight ?? 0);
+    return String(l.weight ?? 0);
+  }
+
+  function showMessage(msg) {
+    const wrap = document.getElementById('graphMessageWrap');
+    const box = document.getElementById('graphMessage');
+    box.textContent = msg;
+    wrap.classList.remove('hidden');
+    wrap.classList.add('flex');
+  }
+
+  function contributionText(ind){
+    if (ind.contributionType === 'PERCENT') return 'Contribution ' + (ind.contributionValue || 0) + '%';
+    if (ind.contributionType === 'BUSINESS_VALUE') return 'Business Value ' + (ind.contributionValue || 0);
+    if (ind.contributionType === 'BUDGETABLE') return 'Planned Budget OMR ' + (ind.contributionValue || 0);
+    return 'Impact ' + (ind.contributionValue || 0) + '/10';
+  }
+
+  function parentOf(state, childId){
+    const edge = state.links.find(l => l.child === childId);
+    return edge ? edge.parent : null;
+  }
+
+  function childrenOf(state, id){
+    const childIds = state.links.filter(l => l.parent === id).map(l => l.child);
+    return state.elements.filter(e => childIds.includes(e.id));
+  }
+
+  function openViewPanel(state, elementId){
+    const el = state.elements.find(e => e.id === elementId);
+    if (!el) return;
+    document.getElementById('vpKind').textContent = 'Element';
+    document.getElementById('vpTitle').textContent = el.name;
+    document.getElementById('vpStatus').textContent = el.status || 'DRAFT';
+    document.getElementById('vpType').textContent = el.type || '-';
+    const pid = parentOf(state, el.id);
+    document.getElementById('vpParent').textContent = pid ? (state.elements.find(e => e.id === pid)?.name || ('#' + pid)) : 'Root';
+    const children = childrenOf(state, el.id);
+    document.getElementById('vpChildrenCount').textContent = String(children.length);
+    const cl = document.getElementById('vpChildrenList');
+    cl.innerHTML = '';
+    if (children.length === 0) cl.innerHTML = '<div class="text-xs text-gray-400 italic">No children linked.</div>';
+    else {
+      children.forEach(c => {
+        const row = document.createElement('button');
+        row.className = 'w-full text-left border border-gray-200 rounded-lg px-2.5 py-2 hover:border-indigo-300';
+        row.innerHTML = '<div class="text-xs font-medium text-gray-800 truncate">' + c.name + '</div><div class="text-[11px] text-gray-400 mt-0.5">' + c.type + '</div>';
+        row.onclick = () => openViewPanel(state, c.id);
+        cl.appendChild(row);
+      });
+    }
+    const inds = state.indicatorCatalog.filter(i => i.elementId === el.id);
+    const il = document.getElementById('vpIndicatorsList');
+    il.innerHTML = '';
+    if (inds.length === 0) il.innerHTML = '<div class="text-xs text-gray-400 italic">No KPIs linked.</div>';
+    else {
+      inds.forEach(ind => {
+        const row = document.createElement('div');
+        row.className = 'border border-gray-200 rounded-lg px-2.5 py-2';
+        row.innerHTML = '<div class="text-xs font-medium text-gray-800 truncate">' + ind.name + '</div><div class="text-[11px] text-gray-400 mt-0.5">' + contributionText(ind) + '</div>';
+        il.appendChild(row);
+      });
+    }
+    document.getElementById('viewPanel').classList.remove('hidden');
+  }
+
+  function closeViewPanel(){
+    document.getElementById('viewPanel').classList.add('hidden');
+  }
+
+  const addState = { mode: 'new', ctx: null };
+  let state = null;
+
+  function saveState() {
+    const payload = {
+      strategy: state.strategy,
+      elementTypes: state.elementTypes,
+      typeRulesByChildName: state.rules,
+      elements: state.elements,
+      links: state.links,
+      indicatorCatalog: state.indicatorCatalog,
+      libraryElements: state.libraryElements,
+    };
+    localStorage.setItem(state.key, JSON.stringify(payload));
+  }
+
+  function typeRule(typeName){
+    return state.rules[typeName] || { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true };
+  }
+
+  function edgeMethod(parentType, childType){
+    return state.strategy.edgeMethods?.[`${parentType}>${childType}`] || state.strategy.weightType || 'IMPACT';
+  }
+
+  function nextElementId(){
+    return Math.max(0, ...state.elements.map(e => Number(e.id) || 0), ...state.libraryElements.map(e => Number(e.id) || 0)) + 1;
+  }
+
+  function wouldCreateCycle(parentId, childId){
+    if (parentId === childId) return true;
+    const stack = [childId];
+    const seen = new Set();
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (current === parentId) return true;
+      if (seen.has(current)) continue;
+      seen.add(current);
+      state.links.filter(l => l.parent === current).forEach(l => stack.push(l.child));
+    }
+    return false;
+  }
+
+  function isElementInStrategy(id){
+    return state.elements.some(e => e.id === id);
+  }
+
+  function parentElementId(childId){
+    const edge = state.links.find(l => l.child === childId);
+    return edge ? edge.parent : null;
+  }
+
+  function depthOf(elementId){
+    let depth = 0;
+    let current = elementId;
+    let guard = 0;
+    while (guard < 500) {
+      const edge = state.links.find(l => l.child === current);
+      if (!edge) break;
+      depth += 1;
+      current = edge.parent;
+      guard += 1;
+    }
+    return depth;
+  }
+
+  function openAddModal(ctx){
+    addState.ctx = ctx;
+    addState.mode = 'new';
+    const modal = document.getElementById('addModal');
+    const typeSel = document.getElementById('addType');
+    const msg = document.getElementById('addModalMsg');
+    const ctxText = document.getElementById('addModalContext');
+    const weightWrap = document.getElementById('addWeightWrap');
+    const weightInput = document.getElementById('addWeight');
+    const hint = document.getElementById('addWeightHint');
+
+    typeSel.innerHTML = '';
+    [ctx.forcedType].forEach(tn => {
+      const opt = document.createElement('option');
+      opt.value = tn;
+      opt.textContent = tn;
+      typeSel.appendChild(opt);
+    });
+    document.getElementById('addName').value = '';
+    document.getElementById('librarySearch').value = '';
+    document.getElementById('librarySelect').innerHTML = '';
+    msg.classList.add('hidden');
+    ctxText.textContent = ctx.contextText || '';
+    setAddMode('new');
+
+    if (ctx.parentId !== null && ctx.parentId !== undefined) {
+      const method = edgeMethod(ctx.parentType, ctx.forcedType);
+      if (method === 'PERCENT') {
+        weightWrap.classList.remove('hidden');
+        weightInput.min = '0'; weightInput.max = '100'; weightInput.value = '25';
+        hint.textContent = 'Contribution percent 0-100';
+      } else if (method === 'IMPACT') {
+        weightWrap.classList.remove('hidden');
+        weightInput.min = '1'; weightInput.max = '10'; weightInput.value = '5';
+        hint.textContent = 'Impact score 1-10';
+      } else if (method === 'BUSINESS_VALUE' || method === 'BUDGETABLE') {
+        weightWrap.classList.remove('hidden');
+        weightInput.min = '0'; weightInput.max = '0'; weightInput.value = '0';
+        hint.textContent = method === 'BUSINESS_VALUE' ? 'Auto from business value' : 'Auto from planned budget';
+      } else {
+        weightWrap.classList.add('hidden');
+      }
+    } else {
+      weightWrap.classList.add('hidden');
+    }
+
+    modal.classList.remove('hidden');
+    document.getElementById('addName').focus();
+  }
+
+  function closeAddModal(){
+    document.getElementById('addModal').classList.add('hidden');
+    addState.ctx = null;
+  }
+
+  function setAddMode(mode){
+    addState.mode = mode;
+    const bNew = document.getElementById('modeNew');
+    const bExisting = document.getElementById('modeExisting');
+    const newWrap = document.getElementById('addNewWrap');
+    const existingWrap = document.getElementById('addExistingWrap');
+    if (mode === 'existing') {
+      bNew.className = 'px-3 py-1.5 text-xs rounded-lg text-gray-600';
+      bExisting.className = 'px-3 py-1.5 text-xs rounded-lg bg-white text-indigo-700 border border-indigo-200';
+      newWrap.classList.add('hidden');
+      existingWrap.classList.remove('hidden');
+      renderLibraryCandidates();
+    } else {
+      bNew.className = 'px-3 py-1.5 text-xs rounded-lg bg-white text-indigo-700 border border-indigo-200';
+      bExisting.className = 'px-3 py-1.5 text-xs rounded-lg text-gray-600';
+      newWrap.classList.remove('hidden');
+      existingWrap.classList.add('hidden');
+    }
+  }
+
+  function filteredLibraryCandidates(){
+    if (!addState.ctx) return [];
+    const q = (document.getElementById('librarySearch')?.value || '').toLowerCase().trim();
+    return state.libraryElements
+      .filter(e => e.type === addState.ctx.forcedType)
+      .filter(e => !q || String(e.name || '').toLowerCase().includes(q));
+  }
+
+  function renderLibraryCandidates(){
+    const sel = document.getElementById('librarySelect');
+    if (!sel) return;
+    const list = filteredLibraryCandidates();
+    sel.innerHTML = '';
+    if (list.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No matching library elements';
+      sel.appendChild(opt);
+      return;
+    }
+    list.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = String(e.id);
+      opt.textContent = `${e.name}${isElementInStrategy(e.id) ? ' (already in strategy)' : ''}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function setAddError(text){
+    const msg = document.getElementById('addModalMsg');
+    msg.className = 'text-xs rounded-lg px-3 py-2 bg-red-50 text-red-700 border border-red-200';
+    msg.textContent = text;
+    msg.classList.remove('hidden');
+  }
+
+  function submitAddModal(){
+    if (!addState.ctx) return;
+    const typeName = document.getElementById('addType').value;
+    const parentId = addState.ctx.parentId;
+    const mode = addState.mode;
+    const rawWeight = Number(document.getElementById('addWeight').value || 0);
+    const weightWrap = document.getElementById('addWeightWrap');
+    let targetElement = null;
+
+    const validateTarget = (elementId, elementType) => {
+      if (parentId === null || parentId === undefined) {
+        const rule = typeRule(elementType);
+        if (!rule.canBeRoot) return `${elementType} cannot be root based on configuration.`;
+        const existingParent = parentElementId(elementId);
+        if (existingParent !== null) return 'This element already has a parent and cannot be promoted to root.';
+        if (isElementInStrategy(elementId) && existingParent === null) return 'This element is already a root in this strategy.';
+      } else {
+        const parent = state.elements.find(e => e.id === parentId);
+        if (!parent) return 'Parent element not found.';
+        const rule = typeRule(elementType);
+        if (!rule.allowedParentTypeNames.includes(parent.type)) return `${elementType} cannot be linked under ${parent.type} based on configuration.`;
+        const existingParent = parentElementId(elementId);
+        if (existingParent !== null && existingParent !== parentId) return 'This element already has a parent in strategy.';
+        if (existingParent === parentId) return 'This link already exists.';
+        if (wouldCreateCycle(parentId, elementId)) return 'This link would create a cycle.';
+        if (state.strategy.strictHierarchy !== false && state.strategy.maxLevels > 0) {
+          const newLevel = depthOf(parent.id) + 2;
+          if (newLevel > state.strategy.maxLevels) return `Exceeds max levels (${state.strategy.maxLevels}).`;
+        }
+      }
+      return '';
+    };
+
+    if (mode === 'new') {
+      const name = (document.getElementById('addName').value || '').trim();
+      if (!name) return setAddError('Element name is required.');
+      const e = { id: nextElementId(), name, type: typeName, status: 'DRAFT', progress: 0, description: '', isShared: false, weight: 0, businessValue: 0, plannedBudget: 0 };
+      const validation = validateTarget(e.id, e.type);
+      if (validation) return setAddError(validation);
+      targetElement = e;
+      state.elements.push(e);
+      state.libraryElements.unshift({ id: e.id, name: e.name, type: e.type, status: e.status, businessValue: 0, plannedBudget: 0 });
+    } else {
+      const selectedId = Number(document.getElementById('librarySelect').value || 0);
+      if (!selectedId) return setAddError('Select an existing element first.');
+      const lib = state.libraryElements.find(e => Number(e.id) === selectedId);
+      if (!lib) return setAddError('Selected library element not found.');
+      if (lib.type !== typeName) return setAddError('Selected element type does not match context type.');
+      const validation = validateTarget(lib.id, lib.type);
+      if (validation) return setAddError(validation);
+      if (!isElementInStrategy(lib.id)) {
+        targetElement = { id: lib.id, name: lib.name, type: lib.type, status: lib.status || 'DRAFT', progress: 0, description: lib.description || '', isShared: !!lib.isShared, weight: 0, businessValue: Number(lib.businessValue || 0), plannedBudget: Number(lib.plannedBudget || 0) };
+        state.elements.push(targetElement);
+      } else {
+        targetElement = state.elements.find(e => e.id === lib.id);
+      }
+    }
+
+    if (parentId !== null && parentId !== undefined && targetElement) {
+      const parentType = state.elements.find(e => e.id === parentId)?.type;
+      const method = edgeMethod(parentType, typeName);
+      let weight = 0;
+      if (!weightWrap.classList.contains('hidden') && Number.isFinite(rawWeight)) weight = rawWeight;
+      if (method === 'IMPACT') weight = Math.max(1, Math.min(10, weight || 5));
+      if (method === 'PERCENT') weight = Math.max(0, Math.min(100, weight || 25));
+      if (method === 'EQUAL') weight = 0;
+      if (method === 'BUSINESS_VALUE') weight = Math.max(0, Number(targetElement.businessValue || 0));
+      if (method === 'BUDGETABLE') weight = Math.max(0, Number(targetElement.plannedBudget || 0));
+      state.links.push({ parent: parentId, child: targetElement.id, weight, weightType: method });
+      targetElement.weight = weight;
+    }
+
+    saveState();
+    closeAddModal();
+    rerenderAll();
+  }
+
+  function rerenderAll() {
+    document.getElementById('graphMessageWrap').classList.add('hidden');
+    if (graphCy) { try { graphCy.destroy(); } catch (e) {} graphCy = null; }
+    renderLists(state);
+    renderGraph(state);
+  }
+
+  function renderLists(state) {
+    document.getElementById('elementsCount').textContent = String(state.elements.length);
+    document.getElementById('linksCount').textContent = String(state.links.length);
+
+    const nodeList = document.getElementById('nodeList');
+    nodeList.innerHTML = '';
+    state.elements.forEach(el => {
+      const row = document.createElement('div');
+      row.className = 'text-xs border border-gray-200 rounded-lg px-2.5 py-2 flex items-start justify-between gap-2';
+      row.innerHTML =
+        '<div class="min-w-0">' +
+          '<div class="text-gray-700 truncate">' + el.name + ' <span class="text-gray-400">(' + el.type + ')</span></div>' +
+          '<span class="sb s-' + String(el.status || 'DRAFT').toLowerCase() + '">' + String(el.status || 'DRAFT') + '</span>' +
+        '</div>' +
+        '<div class="flex items-center gap-1">' +
+          '<button data-add-child="' + el.id + '" class="text-[11px] px-2 py-1 rounded-md border border-indigo-200 text-indigo-700 hover:bg-indigo-50" title="Add child">+ Child</button>' +
+          '<button data-view-id="' + el.id + '" class="p-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50" title="View">' +
+            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+          '</button>' +
+        '</div>';
+      nodeList.appendChild(row);
+    });
+    nodeList.querySelectorAll('[data-view-id]').forEach(btn => {
+      btn.onclick = () => openViewPanel(state, Number(btn.getAttribute('data-view-id')));
+    });
+    nodeList.querySelectorAll('[data-add-child]').forEach(btn => {
+      btn.onclick = () => {
+        const parentId = Number(btn.getAttribute('data-add-child'));
+        const parent = state.elements.find(e => e.id === parentId);
+        if (!parent) return;
+        const allowed = state.elementTypes
+          .filter(t => (typeRule(t.name).allowedParentTypeNames || []).includes(parent.type))
+          .map(t => t.name);
+        if (allowed.length === 0) return;
+        openAddModal({ parentId, parentType: parent.type, forcedType: allowed[0], contextText: 'Add child under ' + parent.name });
+      };
+    });
+
+    const edgeList = document.getElementById('edgeList');
+    edgeList.innerHTML = '';
+    state.links.forEach(l => {
+      const p = state.elements.find(e => e.id === l.parent)?.name || ('#' + l.parent);
+      const c = state.elements.find(e => e.id === l.child)?.name || ('#' + l.child);
+      const row = document.createElement('div');
+      row.className = 'text-xs border border-gray-200 rounded-lg px-2.5 py-2 text-gray-700';
+      row.textContent = p + ' → ' + c + ' (' + edgeLabel(l) + ')';
+      edgeList.appendChild(row);
+    });
+
+    const legend = document.getElementById('typeLegend');
+    legend.innerHTML = '';
+    state.elementTypes.forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-2';
+      row.innerHTML = '<div class="w-3 h-3 rounded-full" style="background:' + (t.color || '#64748b') + '"></div><span class="text-xs text-gray-600">' + t.name + '</span>';
+      legend.appendChild(row);
+    });
+  }
+
+  function renderGraph(state) {
+    const cyStatus = document.getElementById('cyStatus');
+    if (typeof cytoscape !== 'function') {
+      cyStatus.textContent = 'Unavailable';
+      showMessage('Cytoscape unavailable. Showing data lists only.');
+      return;
+    }
+    if (!state.elements.length) {
+      cyStatus.textContent = 'No data';
+      showMessage('No elements in strategy.');
+      return;
+    }
+
+    const nodes = state.elements.map(e => ({ data: { id: String(e.id), label: e.name, color: typeColor(state.elementTypes, e.type), status: e.status } }));
+    const edges = state.links.map((l, i) => ({ data: { id: 'e' + i, source: String(l.parent), target: String(l.child), weight: edgeLabel(l) } }));
+
+    try {
+      graphCy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: { nodes, edges },
+        style: [
+          { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(label)', 'color': '#1f2937', 'font-size': '11px', 'text-valign': 'bottom', 'text-margin-y': '5px', 'width': 40, 'height': 40, 'border-width': 2, 'border-color': '#fff', 'text-wrap': 'wrap', 'text-max-width': '90px' } },
+          { selector: 'edge', style: { 'width': 2, 'line-color': '#cbd5e1', 'target-arrow-color': '#cbd5e1', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'label': 'data(weight)', 'font-size': '10px', 'color': '#64748b', 'text-background-color': '#f8fafc', 'text-background-opacity': 1 } }
+        ],
+        layout: { name: 'breadthfirst', directed: true, padding: 40, spacingFactor: 1.4, avoidOverlap: true }
+      });
+      graphCy.on('tap', 'node', evt => {
+        const id = Number(evt.target.data('id'));
+        openViewPanel(state, id);
+      });
+      cyStatus.textContent = 'Ready';
+    } catch (e) {
+      cyStatus.textContent = 'Error';
+      showMessage('Graph failed to render. Showing data lists only.');
+    }
+  }
+
+  state = loadState();
+  const id = state.strategy?.id || state.id;
+  document.getElementById('strategyName').textContent = state.strategy?.name || 'Strategy Graph';
+  document.getElementById('strategyMeta').textContent = 'ID: ' + id + ' · Status: ' + (state.strategy?.status || 'ACTIVE');
+  document.getElementById('backBuilder').href = 'strategy-builder.html?id=' + encodeURIComponent(id);
+  document.getElementById('openTypes').href = 'strategy-by-type.html?id=' + encodeURIComponent(id);
+  document.getElementById('closeViewPanelBtn').onclick = closeViewPanel;
+  document.getElementById('closeViewPanelBg').onclick = closeViewPanel;
+  document.getElementById('addRootBtn').onclick = () => {
+    const rootType = state.elementTypes.find(t => typeRule(t.name).canBeRoot)?.name;
+    if (!rootType) return;
+    openAddModal({ parentId: null, parentType: null, forcedType: rootType, contextText: 'Add root element' });
+  };
+  document.getElementById('closeAddModal').onclick = closeAddModal;
+  document.getElementById('cancelAddModal').onclick = closeAddModal;
+  document.getElementById('submitAddModal').onclick = submitAddModal;
+  document.getElementById('modeNew').onclick = () => setAddMode('new');
+  document.getElementById('modeExisting').onclick = () => setAddMode('existing');
+  document.getElementById('librarySearch').addEventListener('input', renderLibraryCandidates);
+  document.getElementById('addModal').addEventListener('click', (e) => { if (e.target.id === 'addModal') closeAddModal(); });
+
+  renderLists(state);
+  renderGraph(state);
+})();
+</script>
+</body>
+</html>

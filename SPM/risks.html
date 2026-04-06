@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPM — Risk Registry</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>[x-cloak]{display:none!important}</style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="app()">
+
+<!-- NAV -->
+<nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
+  <div class="flex items-center gap-3">
+    <a href="index.html" class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <span class="font-semibold text-gray-800 text-lg">Advance360</span>
+    </a>
+    <span class="text-gray-300">|</span>
+    <a href="index.html" class="text-gray-500 hover:text-indigo-600 text-sm">Strategic Performance</a>
+    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-indigo-600 font-medium text-sm">Risk Registry</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="indicators.html" class="text-sm text-gray-500 hover:text-indigo-600 transition">📈 KPIs</a>
+    <button @click="openCreate()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      New Risk
+    </button>
+    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-semibold text-sm">AH</div>
+  </div>
+</nav>
+
+<!-- KEY CONCEPT BANNER -->
+<div class="bg-blue-50 border-b border-blue-200 px-6 py-3 flex items-center gap-3 text-sm text-blue-800">
+  <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <span><strong>Risks are standalone entities</strong> — created independently, then <strong>linked</strong> to one or more SPM elements (Goals, Initiatives, etc.). The same risk can threaten multiple elements across strategies.</span>
+</div>
+
+<div class="flex h-[calc(100vh-105px)]">
+
+  <!-- Main list -->
+  <div class="flex-1 overflow-y-auto p-6">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <template x-for="s in stats" :key="s.label">
+          <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <div class="text-sm text-gray-500" x-text="s.label"></div>
+            <div class="text-2xl font-bold mt-1" :class="s.color" x-text="s.value"></div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex items-center gap-3 mb-5 flex-wrap">
+        <div class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <template x-for="f in levelFilters" :key="f.key">
+            <button @click="levelFilter=f.key"
+                    :class="levelFilter===f.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'"
+                    class="px-4 py-2 text-sm font-medium transition" x-text="f.label"></button>
+          </template>
+        </div>
+        <div class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <template x-for="s in statusFilters" :key="s.key">
+            <button @click="statusFilter=s.key"
+                    :class="statusFilter===s.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'"
+                    class="px-4 py-2 text-sm font-medium transition" x-text="s.label"></button>
+          </template>
+        </div>
+        <div class="flex-1 relative min-w-40">
+          <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input x-model="search" placeholder="Search risks..." class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        </div>
+      </div>
+
+      <!-- Risk cards grid -->
+      <div class="space-y-3">
+        <template x-for="r in filteredRisks" :key="r.id">
+          <div @click="selectedRisk=r; panelOpen=true"
+               :class="selectedRisk?.id===r.id ? 'border-indigo-400 bg-indigo-50/30 ring-1 ring-indigo-200' : 'border-gray-200 hover:border-indigo-200 hover:shadow-sm'"
+               class="bg-white border rounded-2xl p-5 cursor-pointer transition-all">
+            <div class="flex items-start gap-4">
+
+              <!-- Level badge -->
+              <div class="flex-shrink-0">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold"
+                     :class="{
+                       'bg-red-100 text-red-600': r.level==='CRITICAL',
+                       'bg-orange-100 text-orange-600': r.level==='HIGH',
+                       'bg-amber-100 text-amber-600': r.level==='MEDIUM',
+                       'bg-gray-100 text-gray-500': r.level==='LOW'
+                     }" x-text="r.level==='CRITICAL'?'🔴':r.level==='HIGH'?'🟠':r.level==='MEDIUM'?'🟡':'🟢'"></div>
+              </div>
+
+              <!-- Main info -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                      <span class="font-semibold text-gray-900" x-text="r.name"></span>
+                      <span class="text-xs px-2 py-0.5 rounded-full font-semibold"
+                            :class="{
+                              'bg-red-100 text-red-700': r.level==='CRITICAL',
+                              'bg-orange-100 text-orange-700': r.level==='HIGH',
+                              'bg-amber-100 text-amber-700': r.level==='MEDIUM',
+                              'bg-gray-100 text-gray-600': r.level==='LOW'
+                            }" x-text="r.level"></span>
+                      <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                            :class="r.status==='OPEN'?'bg-red-50 text-red-600':r.status==='MITIGATED'?'bg-emerald-50 text-emerald-700':'bg-gray-100 text-gray-500'"
+                            x-text="r.status"></span>
+                    </div>
+                    <p class="text-sm text-gray-500 line-clamp-2" x-text="r.description"></p>
+                  </div>
+                </div>
+
+                <!-- Impact matrix + meta -->
+                <div class="flex items-center gap-6 mt-3 flex-wrap">
+                  <!-- Probability x Impact mini matrix -->
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs text-gray-400">Probability:</span>
+                      <div class="flex gap-0.5">
+                        <template x-for="i in 5" :key="i">
+                          <div class="w-3 h-3 rounded-sm" :class="i <= r.probability ? 'bg-orange-400' : 'bg-gray-200'"></div>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs text-gray-400">Impact:</span>
+                      <div class="flex gap-0.5">
+                        <template x-for="i in 5" :key="i">
+                          <div class="w-3 h-3 rounded-sm" :class="i <= r.impact ? 'bg-red-400' : 'bg-gray-200'"></div>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Linked elements -->
+                  <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    Linked to <strong x-text="r.linkedElements.length"></strong> elements
+                  </div>
+
+                  <!-- Owner -->
+                  <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                    <div class="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold" x-text="r.ownerInitials"></div>
+                    <span x-text="r.owner"></span>
+                  </div>
+
+                  <!-- Mitigation flag -->
+                  <div x-show="r.mitigation" class="flex items-center gap-1 text-xs text-emerald-600">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    Mitigation plan defined
+                  </div>
+                </div>
+
+                <!-- Linked element pills -->
+                <div class="flex flex-wrap gap-1.5 mt-3">
+                  <template x-for="el in r.linkedElements.slice(0,4)" :key="el.name">
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                          :style="`background:${el.color}18; color:${el.color}`"
+                          x-text="el.icon + ' ' + el.name"></span>
+                  </template>
+                  <span x-show="r.linkedElements.length > 4" class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full"
+                        x-text="'+' + (r.linkedElements.length - 4) + ' more'"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL SIDE PANEL ===== -->
+  <div x-show="panelOpen && selectedRisk" x-cloak
+       class="w-96 bg-white border-l border-gray-200 flex flex-col overflow-hidden flex-shrink-0">
+
+    <!-- Panel header -->
+    <div class="p-4 border-b border-gray-100 flex-shrink-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
+               :class="{
+                 'bg-red-100': selectedRisk?.level==='CRITICAL',
+                 'bg-orange-100': selectedRisk?.level==='HIGH',
+                 'bg-amber-100': selectedRisk?.level==='MEDIUM',
+                 'bg-gray-100': selectedRisk?.level==='LOW'
+               }" x-text="selectedRisk?.level==='CRITICAL'?'🔴':selectedRisk?.level==='HIGH'?'🟠':selectedRisk?.level==='MEDIUM'?'🟡':'🟢'"></div>
+          <div>
+            <div class="text-xs text-gray-400">Risk</div>
+            <div class="text-sm font-semibold text-gray-900" x-text="selectedRisk?.name"></div>
+          </div>
+        </div>
+        <button @click="panelOpen=false" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-5">
+
+      <!-- Level + Status -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-medium text-gray-500 block mb-1">Level</label>
+          <select class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
+            <option>CRITICAL</option><option selected>HIGH</option><option>MEDIUM</option><option>LOW</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-gray-500 block mb-1">Status</label>
+          <select class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
+            <option selected>OPEN</option><option>MITIGATED</option><option>CLOSED</option><option>ACCEPTED</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="text-xs font-medium text-gray-500 block mb-1">Description</label>
+        <textarea rows="3" :value="selectedRisk?.description" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+      </div>
+
+      <!-- Probability × Impact -->
+      <div>
+        <label class="text-xs font-medium text-gray-500 block mb-2">Probability &amp; Impact</label>
+        <div class="space-y-2.5">
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500">Probability</span><span class="font-semibold text-gray-700" x-text="['','Very Low','Low','Medium','High','Very High'][selectedRisk?.probability||0]"></span></div>
+            <div class="flex gap-1">
+              <template x-for="i in 5" :key="i">
+                <div class="h-2.5 flex-1 rounded-sm" :class="i <= (selectedRisk?.probability||0) ? 'bg-orange-400' : 'bg-gray-200'"></div>
+              </template>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500">Impact</span><span class="font-semibold text-gray-700" x-text="['','Very Low','Low','Medium','High','Very High'][selectedRisk?.impact||0]"></span></div>
+            <div class="flex gap-1">
+              <template x-for="i in 5" :key="i">
+                <div class="h-2.5 flex-1 rounded-sm" :class="i <= (selectedRisk?.impact||0) ? 'bg-red-400' : 'bg-gray-200'"></div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <!-- Risk Score -->
+        <div class="mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+          <span class="text-sm text-gray-600">Risk Score (P × I)</span>
+          <span class="text-xl font-bold" :class="(selectedRisk?.probability||0)*(selectedRisk?.impact||0)>=16?'text-red-600':(selectedRisk?.probability||0)*(selectedRisk?.impact||0)>=9?'text-orange-600':'text-amber-600'"
+                x-text="((selectedRisk?.probability||0) * (selectedRisk?.impact||0))"></span>
+        </div>
+      </div>
+
+      <!-- Mitigation Plan -->
+      <div>
+        <label class="text-xs font-medium text-gray-500 block mb-1">Mitigation Plan</label>
+        <textarea rows="3" :value="selectedRisk?.mitigation || ''" placeholder="Describe the mitigation strategy..."
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+      </div>
+
+      <!-- Owner -->
+      <div>
+        <label class="text-xs font-medium text-gray-500 block mb-2">Risk Owner</label>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold" x-text="selectedRisk?.ownerInitials"></div>
+          <span class="text-sm text-gray-700" x-text="selectedRisk?.owner"></span>
+          <button class="ml-auto text-xs text-indigo-600 hover:underline">Change</button>
+        </div>
+      </div>
+
+      <!-- Linked Elements -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-medium text-gray-500">Linked Elements (<span x-text="selectedRisk?.linkedElements.length"></span>)</label>
+          <button class="text-xs text-indigo-600 hover:underline font-medium">+ Link Element</button>
+        </div>
+        <div class="space-y-1.5">
+          <template x-for="el in selectedRisk?.linkedElements" :key="el.name">
+            <div class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-xl">
+              <div class="w-6 h-6 rounded-md flex items-center justify-center text-xs" :style="`background:${el.color}22; color:${el.color}`" x-text="el.icon"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-700 truncate" x-text="el.name"></div>
+                <div class="text-xs text-gray-400" x-text="el.type + ' · ' + el.strategy"></div>
+              </div>
+              <button class="p-1 text-gray-300 hover:text-red-500 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 rounded-xl transition">Save Changes</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== CREATE MODAL ===== -->
+<div x-show="createModal" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="createModal=false">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6"
+       x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+    <h2 class="text-lg font-semibold text-gray-900 mb-5">New Risk</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Risk Name <span class="text-red-500">*</span></label>
+        <input type="text" placeholder="Describe the risk briefly..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Description</label>
+        <textarea rows="3" placeholder="Detailed risk description, triggers, and context..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Level</label>
+          <select class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
+            <option>CRITICAL</option><option>HIGH</option><option selected>MEDIUM</option><option>LOW</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Owner</label>
+          <select class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
+            <option>Ahmed Hassan</option><option>Sarah Khalil</option><option>Mohammed Raji</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Probability (1–5)</label>
+          <div class="flex gap-1">
+            <template x-for="i in 5" :key="i">
+              <button @click="newRisk.probability=i"
+                      :class="i <= newRisk.probability ? 'bg-orange-400' : 'bg-gray-200 hover:bg-gray-300'"
+                      class="h-8 flex-1 rounded-md transition text-xs font-bold text-white" x-text="i"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Impact (1–5)</label>
+          <div class="flex gap-1">
+            <template x-for="i in 5" :key="i">
+              <button @click="newRisk.impact=i"
+                      :class="i <= newRisk.impact ? 'bg-red-400' : 'bg-gray-200 hover:bg-gray-300'"
+                      class="h-8 flex-1 rounded-md transition text-xs font-bold text-white" x-text="i"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Mitigation Plan</label>
+        <textarea rows="2" placeholder="How will this risk be mitigated?" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 mt-5">
+      <button @click="createModal=false" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+      <button @click="createModal=false" class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium">Create Risk</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    search: '',
+    levelFilter: 'all',
+    statusFilter: 'all',
+    selectedRisk: null,
+    panelOpen: false,
+    createModal: false,
+    newRisk: { probability: 3, impact: 3 },
+
+    levelFilters:  [{ key:'all', label:'All Levels' },{ key:'CRITICAL', label:'Critical' },{ key:'HIGH', label:'High' },{ key:'MEDIUM', label:'Medium' },{ key:'LOW', label:'Low' }],
+    statusFilters: [{ key:'all', label:'All Status' },{ key:'OPEN', label:'Open' },{ key:'MITIGATED', label:'Mitigated' },{ key:'CLOSED', label:'Closed' }],
+
+    stats: [
+      { label:'Total Risks',    value:8,  color:'text-gray-900' },
+      { label:'Critical / High', value:3, color:'text-red-600' },
+      { label:'Open',           value:5,  color:'text-orange-600' },
+      { label:'Mitigated',      value:3,  color:'text-emerald-600' },
+    ],
+
+    risks: [
+      {
+        id:1, name:'Telecom Operator Delays', level:'HIGH', status:'OPEN',
+        description:'Delays in equipment procurement from key telecom vendors may push Phase 2 timeline by 3–4 months, impacting overall fiber coverage targets.',
+        probability:3, impact:4, owner:'Ahmed Hassan', ownerInitials:'AH',
+        mitigation:'Dual-sourcing strategy activated. Secondary vendor approved for Phase 2 equipment supply chain.',
+        linkedElements: [
+          { name:'Nationwide Fiber Coverage', type:'Goal',       icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+          { name:'Phase 2 – Central Region',  type:'Initiative', icon:'⚡', color:'#f59e0b', strategy:'Digital Transformation' },
+        ]
+      },
+      {
+        id:2, name:'Regulatory Approval Bottleneck', level:'MEDIUM', status:'OPEN',
+        description:'Pending right-of-way approvals in Central Region municipalities creating delays in Phase 2 deployment schedule.',
+        probability:2, impact:3, owner:'Sarah Khalil', ownerInitials:'SK',
+        mitigation:'Legal team coordinating with municipalities. Expect resolution Q2 2026.',
+        linkedElements: [
+          { name:'Phase 2 – Central Region',  type:'Initiative', icon:'⚡', color:'#f59e0b', strategy:'Digital Transformation' },
+        ]
+      },
+      {
+        id:3, name:'Data Privacy Compliance Gap', level:'CRITICAL', status:'OPEN',
+        description:'National Data Catalog initiative may conflict with emerging data localization regulations. Legal review pending.',
+        probability:4, impact:5, owner:'Mohammed Raji', ownerInitials:'MR',
+        mitigation:null,
+        linkedElements: [
+          { name:'National Data Catalog', type:'Goal',       icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+          { name:'AI Ethics Framework',   type:'Goal',       icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+          { name:'Cloud Migration',       type:'Goal',       icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+        ]
+      },
+      {
+        id:4, name:'Cloud Vendor Lock-in', level:'MEDIUM', status:'MITIGATED',
+        description:'Over-reliance on a single cloud provider creates long-term cost and flexibility risks.',
+        probability:2, impact:3, owner:'Ahmed Hassan', ownerInitials:'AH',
+        mitigation:'Multi-cloud architecture mandated. Contract includes exit provisions and data portability guarantees.',
+        linkedElements: [
+          { name:'Cloud Migration', type:'Goal', icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+        ]
+      },
+      {
+        id:5, name:'Skilled Talent Shortage', level:'HIGH', status:'OPEN',
+        description:'Shortage of qualified data engineers and AI specialists to support the Data & AI Governance pillar initiatives.',
+        probability:4, impact:3, owner:'Sarah Khalil', ownerInitials:'SK',
+        mitigation:'Partnership with 3 universities for talent pipeline. Upskilling program launched.',
+        linkedElements: [
+          { name:'Data & AI Governance',    type:'Pillar',     icon:'🏛️', color:'#6366f1', strategy:'Digital Transformation' },
+          { name:'National Data Catalog',   type:'Goal',       icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+          { name:'AI Ethics Framework',     type:'Goal',       icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+        ]
+      },
+      {
+        id:6, name:'Budget Overrun – Phase 2', level:'MEDIUM', status:'MITIGATED',
+        description:'Cost escalation risk due to inflation and equipment price increases impacting Phase 2 budget.',
+        probability:3, impact:2, owner:'Mohammed Raji', ownerInitials:'MR',
+        mitigation:'5% contingency buffer added. Monthly budget review cadence established.',
+        linkedElements: [
+          { name:'Phase 2 – Central Region', type:'Initiative', icon:'⚡', color:'#f59e0b', strategy:'Digital Transformation' },
+          { name:'Nationwide Fiber Coverage', type:'Goal',      icon:'🎯', color:'#10b981', strategy:'Digital Transformation' },
+        ]
+      },
+    ],
+
+    get filteredRisks() {
+      return this.risks.filter(r => {
+        const q = !this.search || r.name.toLowerCase().includes(this.search.toLowerCase()) || r.description.toLowerCase().includes(this.search.toLowerCase());
+        const l = this.levelFilter === 'all' || r.level === this.levelFilter;
+        const s = this.statusFilter === 'all' || r.status === this.statusFilter;
+        return q && l && s;
+      });
+    },
+
+    openCreate() {
+      this.newRisk = { probability: 3, impact: 3 };
+      this.createModal = true;
+    },
+
+    init() {
+      this.selectedRisk = this.risks[0];
+      this.panelOpen = true;
+    }
+  }
+}
+</script>
+</body>
+</html>

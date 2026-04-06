@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPM — Element Detail</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak]{display:none!important}
+    .sb{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
+    .s-draft{background:#f3f4f6;color:#6b7280}
+    .s-active{background:#dcfce7;color:#16a34a}
+    .s-on_hold{background:#fef9c3;color:#ca8a04}
+    .s-completed{background:#dbeafe;color:#2563eb}
+    .s-deactivated{background:#fee2e2;color:#dc2626}
+    .s-deprecated{background:#f5f3ff;color:#7c3aed}
+    .section-anchor { scroll-margin-top: 80px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="app()">
+
+<!-- NAV -->
+<nav class="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between sticky top-0 z-40">
+  <div class="flex items-center gap-2 min-w-0">
+    <a href="strategy-builder.html" class="text-gray-400 hover:text-indigo-600 flex items-center gap-1.5 text-sm flex-shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Strategy
+    </a>
+    <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <div class="w-6 h-6 rounded-md flex items-center justify-center text-xs flex-shrink-0" style="background:#10b98122; color:#10b981">🎯</div>
+    <span class="text-sm font-medium text-gray-700 truncate">Nationwide Fiber Coverage</span>
+    <span class="sb s-active ml-1 flex-shrink-0">ACTIVE</span>
+  </div>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <button class="text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">Edit</button>
+    <div class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xs">AH</div>
+  </div>
+</nav>
+
+<div class="max-w-6xl mx-auto px-4 py-6">
+  <div class="flex gap-6">
+
+    <!-- ===== LEFT NAV (sticky sidebar) ===== -->
+    <div class="w-48 flex-shrink-0 hidden lg:block">
+      <div class="sticky top-20 space-y-0.5">
+        <template x-for="s in sections" :key="s.id">
+          <a :href="'#' + s.id"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition hover:bg-white hover:text-indigo-600 text-gray-500"
+             :class="activeSection === s.id ? 'bg-white text-indigo-600 font-medium shadow-sm' : ''">
+            <span x-text="s.icon"></span>
+            <span x-text="s.label"></span>
+          </a>
+        </template>
+      </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="flex-1 min-w-0 space-y-5">
+
+      <!-- Header card -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-start gap-4">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0" style="background:#10b98122; color:#10b981">🎯</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full text-emerald-700" style="background:#10b98122">Goal</span>
+              <span class="sb s-active">ACTIVE</span>
+              <span class="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium">Shared · 2 strategies</span>
+            </div>
+            <h1 class="text-xl font-bold text-gray-900">Nationwide Fiber Coverage</h1>
+            <p class="text-gray-500 text-sm mt-1">Achieve 95% fiber connectivity for all populated areas by 2028. Coordinated across 3 regional phases in partnership with telecom operators.</p>
+          </div>
+        </div>
+
+        <!-- Status lifecycle -->
+        <div class="mt-5 pt-5 border-t border-gray-100">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Status Lifecycle</div>
+          <div class="flex items-center gap-1 overflow-x-auto pb-1">
+            <template x-for="(s, i) in lifecycle" :key="s.key">
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <div class="flex flex-col items-center">
+                  <div class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                       :class="s.key === 'ACTIVE'
+                         ? 'bg-emerald-500 text-white ring-2 ring-emerald-200 ring-offset-1'
+                         : s.passed ? 'bg-gray-200 text-gray-600' : 'border border-gray-200 text-gray-400'"
+                       x-text="s.label"></div>
+                  <div x-show="s.date" class="text-xs text-gray-400 mt-0.5" x-text="s.date"></div>
+                </div>
+                <svg x-show="i < lifecycle.length - 1" class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </div>
+            </template>
+          </div>
+          <div class="mt-3 flex items-center gap-2">
+            <span class="text-xs text-gray-500">Move to:</span>
+            <button class="text-xs px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition font-medium">ON_HOLD</button>
+            <button class="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-medium">COMPLETED</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PROGRESS ===== -->
+      <div id="progress" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900 flex items-center gap-2">📊 Progress</h2>
+          <button class="text-sm text-indigo-600 hover:underline font-medium">+ Log Update</button>
+        </div>
+
+        <!-- Two values -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-indigo-700">Manual Progress</span>
+              <span class="text-xs text-indigo-500">Reported by owner</span>
+            </div>
+            <div class="text-3xl font-bold text-indigo-700 mb-1">62%</div>
+            <div class="w-full bg-indigo-100 rounded-full h-2">
+              <div class="bg-indigo-500 h-2 rounded-full" style="width:62%"></div>
+            </div>
+            <div class="text-xs text-indigo-500 mt-1.5">Last updated: Mar 28, 2026</div>
+          </div>
+          <div class="bg-violet-50 border border-violet-200 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-violet-700">Calculated Progress</span>
+              <span class="text-xs text-violet-500">From 3 children</span>
+            </div>
+            <div class="text-3xl font-bold text-violet-700 mb-1">48%</div>
+            <div class="w-full bg-violet-100 rounded-full h-2">
+              <div class="bg-violet-500 h-2 rounded-full" style="width:48%"></div>
+            </div>
+            <div class="text-xs text-violet-500 mt-1.5">Recalculated: 10 mins ago</div>
+          </div>
+        </div>
+
+        <!-- Discrepancy warning -->
+        <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 flex gap-3 mb-4">
+          <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <div class="text-sm text-amber-800">
+            <strong>Discrepancy detected:</strong> Manual (62%) and calculated (48%) differ by <strong>14%</strong>, which exceeds the strategy threshold of 5%. Consider reviewing child progress or updating the manual entry.
+          </div>
+        </div>
+
+        <!-- Children progress breakdown -->
+        <div class="space-y-2 mb-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Children Contribution</div>
+          <template x-for="c in children" :key="c.id">
+            <div class="flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0" :style="`background:${c.color}22; color:${c.color}`" x-text="c.icon"></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-gray-700 truncate" x-text="c.name"></span>
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="text-xs text-gray-400">w:<span x-text="c.weight" class="font-medium text-gray-600 ml-0.5"></span></span>
+                    <span class="text-sm font-bold text-gray-700" x-text="c.progress + '%'"></span>
+                  </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                  <div class="h-1.5 rounded-full" :style="`width:${c.progress}%; background:${c.color}`"></div>
+                </div>
+              </div>
+              <span class="sb flex-shrink-0" :class="'s-' + c.status.toLowerCase()" x-text="c.status"></span>
+            </div>
+          </template>
+        </div>
+
+        <!-- Log entry form -->
+        <div x-show="logFormOpen" x-cloak class="border border-indigo-200 rounded-xl p-4 bg-indigo-50/40">
+          <div class="flex items-center gap-3 mb-3">
+            <input type="range" min="0" max="100" x-model.number="logValue" class="flex-1 accent-indigo-600" />
+            <span class="text-lg font-bold text-indigo-700 w-12 text-center" x-text="logValue + '%'"></span>
+          </div>
+          <textarea placeholder="Describe this update..." rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 resize-none mb-3"></textarea>
+          <div class="flex justify-end gap-2">
+            <button @click="logFormOpen=false" class="text-sm text-gray-500 px-4 py-2 hover:bg-gray-100 rounded-lg transition">Cancel</button>
+            <button @click="logFormOpen=false" class="text-sm bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">Save Update</button>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">History</div>
+          <div class="space-y-2.5">
+            <template x-for="log in progressHistory" :key="log.date">
+              <div class="flex gap-3 text-sm">
+                <div class="flex flex-col items-center">
+                  <div class="w-2 h-2 bg-indigo-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                  <div class="w-px flex-1 bg-gray-100 mt-1"></div>
+                </div>
+                <div class="flex-1 pb-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold text-gray-800" x-text="log.value + '%'"></span>
+                    <span class="text-gray-400 text-xs" x-text="log.date"></span>
+                    <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full" x-text="log.by"></span>
+                  </div>
+                  <p class="text-gray-500 text-xs mt-0.5" x-text="log.note"></p>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BUDGET ===== -->
+      <div id="budget" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900 flex items-center gap-2">💰 Budget</h2>
+          <button @click="openPaymentModal()" class="text-sm text-indigo-600 hover:underline font-medium">+ Add Payment</button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 mb-5">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <div class="text-xs font-medium text-emerald-600 mb-1">Planned Budget</div>
+            <div class="text-2xl font-bold text-emerald-700">OMR 12.4M</div>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div class="text-xs font-medium text-blue-600 mb-1">Allocated</div>
+            <div class="text-2xl font-bold text-blue-700">OMR 9.1M</div>
+          </div>
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div class="text-xs font-medium text-gray-500 mb-1">Remaining</div>
+            <div class="text-2xl font-bold text-gray-700">OMR 3.3M</div>
+          </div>
+        </div>
+
+        <!-- Utilization bar -->
+        <div class="mb-5">
+          <div class="flex justify-between text-xs text-gray-500 mb-1.5"><span>Budget Utilization</span><span class="font-bold text-gray-700">73%</span></div>
+          <div class="w-full bg-gray-100 rounded-full h-3">
+            <div class="bg-emerald-500 h-3 rounded-full relative" style="width:73%">
+              <div class="absolute right-0 top-0 bottom-0 w-0.5 bg-emerald-700 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payments table -->
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Payments</div>
+        <div class="border border-gray-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Description</th>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Date</th>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Category</th>
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500">Amount</th>
+                <th class="px-4 py-2.5"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <template x-for="p in payments" :key="p.id">
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-4 py-2.5 font-medium text-gray-800" x-text="p.desc"></td>
+                  <td class="px-4 py-2.5 text-gray-500 text-xs" x-text="p.date"></td>
+                  <td class="px-4 py-2.5">
+                    <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full" x-text="p.category"></span>
+                  </td>
+                  <td class="px-4 py-2.5 font-semibold text-right text-gray-900" x-text="'OMR ' + p.amount"></td>
+                  <td class="px-4 py-2.5 text-center">
+                    <button class="text-gray-300 hover:text-gray-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== INDICATORS ===== -->
+      <div id="indicators" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900 flex items-center gap-2">📈 KPIs <span class="text-sm font-normal text-gray-400" x-text="'(' + indicators.length + ')'"></span></h2>
+          <div class="flex items-center gap-3">
+            <button @click="openLinkModal('indicator-existing')" class="text-sm text-gray-600 hover:text-indigo-600 font-medium">+ Existing</button>
+            <button @click="openLinkModal('indicator-new')" class="text-sm text-indigo-600 hover:underline font-medium">+ New</button>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <template x-for="ind in indicators" :key="ind.id">
+            <div class="border border-gray-200 rounded-xl p-4 hover:border-indigo-200 transition">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="font-medium text-gray-900 text-sm" x-text="ind.name"></span>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="ind.onTrack ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'" x-text="ind.onTrack ? 'On Track' : 'Behind'"></span>
+                  </div>
+                  <div class="text-xs text-gray-500 mb-2" x-text="ind.description"></div>
+                  <div class="flex items-center gap-4 text-xs">
+                    <span class="text-gray-500">Baseline: <strong x-text="ind.baseline"></strong></span>
+                    <span class="text-gray-500">Target: <strong x-text="ind.target"></strong></span>
+                    <span class="text-gray-700 font-semibold">Current: <span x-text="ind.current" class="text-indigo-600"></span></span>
+                  </div>
+                  <div class="text-xs text-indigo-600 mt-1 font-medium" x-text="indicatorContributionText(ind)"></div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <div class="text-lg font-bold" :class="ind.onTrack ? 'text-emerald-600' : 'text-red-600'" x-text="ind.achievement + '%'"></div>
+                  <div class="text-xs text-gray-400">achievement</div>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                  <div class="h-2 rounded-full" :class="ind.onTrack ? 'bg-emerald-500' : 'bg-red-400'"
+                       :style="`width:${Math.min(ind.achievement, 100)}%`"></div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- ===== RISKS ===== -->
+      <div id="risks" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900 flex items-center gap-2">⚠️ Risks <span class="text-sm font-normal text-gray-400" x-text="'(' + risks.length + ')'"></span></h2>
+          <div class="flex items-center gap-3">
+            <button @click="openLinkModal('risk-existing')" class="text-sm text-gray-600 hover:text-indigo-600 font-medium">+ Existing</button>
+            <button @click="openLinkModal('risk-new')" class="text-sm text-indigo-600 hover:underline font-medium">+ New</button>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <template x-for="r in risks" :key="r.id">
+            <div class="border rounded-xl p-4" :class="r.level === 'HIGH' ? 'border-red-200 bg-red-50/30' : 'border-amber-200 bg-amber-50/30'">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0 font-bold"
+                     :class="r.level === 'HIGH' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'"
+                     x-text="r.level === 'HIGH' ? '!' : '~'"></div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="font-medium text-gray-900 text-sm" x-text="r.name"></span>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-semibold"
+                          :class="r.level === 'HIGH' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
+                          x-text="r.level"></span>
+                  </div>
+                  <p class="text-xs text-gray-600 mb-2" x-text="r.description"></p>
+                  <div class="flex items-center gap-3 text-xs text-gray-500">
+                    <span>Probability: <strong x-text="r.probability"></strong></span>
+                    <span>Impact: <strong x-text="r.impact"></strong></span>
+                    <span>Owner: <strong x-text="r.owner"></strong></span>
+                  </div>
+                </div>
+              </div>
+              <div x-show="r.mitigation" class="mt-3 pl-11">
+                <div class="text-xs font-semibold text-gray-500 mb-1">Mitigation Plan:</div>
+                <p class="text-xs text-gray-600" x-text="r.mitigation"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- ===== TEAM ===== -->
+      <div id="team" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900 flex items-center gap-2">👥 Team</h2>
+          <button @click="openLinkModal('member-existing')" class="text-sm text-indigo-600 hover:underline font-medium">+ Add Existing Member</button>
+        </div>
+        <div class="space-y-2">
+          <template x-for="m in team" :key="m.id">
+            <div class="p-3 rounded-xl hover:bg-gray-50 transition border border-gray-100">
+              <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                   :style="`background:${m.color}`" x-text="m.initials"></div>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900 flex items-center gap-2 flex-wrap">
+                  <span x-text="m.name"></span>
+                  <span x-show="m.inherited" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium"
+                    x-text="'Inherited from ' + (m.inheritedFrom || 'parent')"></span>
+                </div>
+                <div class="text-xs text-gray-400" x-text="m.unit"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <select x-model="m.role" @change="onTeamRoleChange(m)"
+                  class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+                  <option value="Owner">Owner</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Editor">Editor</option>
+                  <option value="Viewer">Viewer</option>
+                  <option value="Custom">Custom</option>
+                </select>
+                <button x-show="m.inherited" @click="unlinkInheritedMember(m)"
+                  class="text-xs text-rose-600 hover:text-rose-700 font-medium">Unlink</button>
+              </div>
+              </div>
+              <div x-show="m.role==='Custom'" class="mt-2 border border-indigo-100 bg-indigo-50/50 rounded-lg p-2">
+                <div class="text-[11px] text-indigo-700 font-semibold mb-1">Custom Permissions</div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <template x-for="perm in permissionCatalog" :key="perm">
+                    <label class="inline-flex items-center gap-1.5 text-[11px] text-gray-700">
+                      <input type="checkbox" :checked="(m.customPermissions || []).includes(perm)"
+                        @change="toggleCustomPermission(m, perm)"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      <span x-text="perm"></span>
+                    </label>
+                  </template>
+                </div>
+              </div>
+              <div class="mt-2 text-[11px] text-gray-500">
+                Effective permissions:
+                <span class="font-medium text-gray-700" x-text="effectivePermissions(m).join(', ') || '-'"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- ===== VISION ALIGNMENT ===== -->
+      <div id="vision" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900 flex items-center gap-2">🎯 Vision Alignment</h2>
+          <button class="text-sm text-indigo-600 hover:underline font-medium">Edit</button>
+        </div>
+        <div class="border border-indigo-200 bg-indigo-50/40 rounded-xl p-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-lg flex-shrink-0">🏆</div>
+            <div>
+              <div class="text-xs text-indigo-500 font-medium mb-0.5">Vision 2030 — Digital Economy</div>
+              <div class="font-semibold text-gray-900 text-sm">Pillar 3: Infrastructure & Connectivity</div>
+              <div class="text-xs text-gray-500 mt-1">Priority: Achieve world-class digital infrastructure to support economic diversification</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 text-xs text-gray-500 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          This element directly contributes to a national Vision priority
+        </div>
+      </div>
+
+      <!-- ===== LINKS ===== -->
+      <div id="links" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <h2 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">🔗 Strategy Links</h2>
+
+        <!-- Parent in current strategy -->
+        <div class="mb-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Parent in Current Strategy</div>
+          <div class="border border-gray-200 rounded-xl p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:#6366f122; color:#6366f1">🏛️</div>
+            <div>
+              <div class="text-sm font-medium text-gray-800">Digital Infrastructure</div>
+              <div class="text-xs text-gray-400">Pillar · impact weight: 8</div>
+            </div>
+            <span class="ml-auto text-xs text-indigo-600 font-medium">Open</span>
+          </div>
+        </div>
+
+        <!-- Appears in strategies -->
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Appears in Strategies (2)</div>
+          <div class="space-y-2">
+            <div class="border border-indigo-200 bg-indigo-50/40 rounded-xl p-3 flex items-center gap-3">
+              <div class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-indigo-800">National Digital Transformation 2025–2030</div>
+                <div class="text-xs text-indigo-500">Under: Digital Infrastructure (Pillar) · weight 8</div>
+              </div>
+              <span class="text-xs bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Current</span>
+            </div>
+            <div class="border border-gray-200 rounded-xl p-3 flex items-center gap-3">
+              <div class="w-2 h-2 bg-gray-300 rounded-full flex-shrink-0"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-700">Healthcare Infrastructure Improvement</div>
+                <div class="text-xs text-gray-400">Under: Connectivity Goal · weight 6</div>
+              </div>
+              <a href="strategy-builder.html" class="text-xs text-indigo-600 hover:underline font-medium flex-shrink-0">Open</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ACTIVITY LOG ===== -->
+      <div id="activity" class="section-anchor bg-white rounded-2xl border border-gray-200 p-6">
+        <h2 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">📋 Activity Log</h2>
+        <div class="space-y-3">
+          <template x-for="a in activityLog" :key="a.id">
+            <div class="flex gap-3">
+              <div class="flex flex-col items-center">
+                <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                     :style="`background:${a.color}`" x-text="a.initials"></div>
+                <div class="w-px flex-1 bg-gray-100 mt-1"></div>
+              </div>
+              <div class="flex-1 pb-3">
+                <div class="text-sm">
+                  <span class="font-medium text-gray-800" x-text="a.user"></span>
+                  <span class="text-gray-500"> · </span>
+                  <span class="text-gray-600" x-text="a.action"></span>
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5" x-text="a.time"></div>
+                <div x-show="a.detail" class="mt-1.5 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2" x-text="a.detail"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== RIGHT METADATA SIDEBAR ===== -->
+    <div class="w-56 flex-shrink-0 hidden xl:block">
+      <div class="sticky top-20 space-y-3">
+
+        <!-- Dates -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Dates</div>
+          <div class="space-y-2 text-sm">
+            <div><div class="text-xs text-gray-400">Created</div><div class="font-medium text-gray-700">Jan 15, 2025</div></div>
+            <div><div class="text-xs text-gray-400">Activated</div><div class="font-medium text-gray-700">Mar 1, 2025</div></div>
+            <div><div class="text-xs text-gray-400">Last Modified</div><div class="font-medium text-gray-700">Mar 28, 2026</div></div>
+          </div>
+        </div>
+
+        <!-- Owner -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Owner</div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">AH</div>
+            <div>
+              <div class="text-sm font-medium text-gray-700">Ahmed Hassan</div>
+              <div class="text-xs text-gray-400">Program Director</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Stats</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between"><span class="text-gray-500">Children</span><span class="font-semibold text-gray-700">3</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">KPIs</span><span class="font-semibold text-gray-700">3</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Risks</span><span class="font-semibold text-gray-700">2</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Team Members</span><span class="font-semibold text-gray-700">4</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Strategies</span><span class="font-semibold text-gray-700">2</span></div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Actions</div>
+          <button class="w-full text-left text-sm text-gray-600 hover:text-indigo-600 py-1.5 flex items-center gap-2 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            Link to Strategy
+          </button>
+          <button class="w-full text-left text-sm text-gray-600 hover:text-indigo-600 py-1.5 flex items-center gap-2 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Duplicate
+          </button>
+          <button class="w-full text-left text-sm text-red-500 hover:text-red-700 py-1.5 flex items-center gap-2 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Deactivate
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div x-show="paymentModal.open" x-cloak class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" @click.self="closePaymentModal()">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-base font-semibold text-gray-900">Add Payment</h3>
+      <button @click="closePaymentModal()" class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="space-y-2.5">
+      <input x-model="paymentModal.form.desc" placeholder="Description" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      <div class="grid grid-cols-2 gap-2">
+        <input x-model="paymentModal.form.date" type="date" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+        <input x-model.number="paymentModal.form.amount" type="number" min="1" step="1" placeholder="Amount (OMR)" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      </div>
+      <input x-model="paymentModal.form.category" placeholder="Category (e.g., Services)" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+    </div>
+    <div x-show="paymentModal.message" class="mt-3 text-xs rounded-lg px-3 py-2 border bg-red-50 border-red-200 text-red-700" x-text="paymentModal.message"></div>
+    <div class="mt-4 flex justify-end gap-3">
+      <button @click="closePaymentModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
+      <button @click="submitPaymentModal()" class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Add Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- LINK MODAL -->
+<div x-show="linkModal.open" x-cloak class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" @click.self="closeLinkModal()">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-base font-semibold text-gray-900" x-text="linkModalTitle()"></h3>
+      <button @click="closeLinkModal()" class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div x-show="linkModal.mode==='indicator-existing' || linkModal.mode==='risk-existing' || linkModal.mode==='member-existing'" class="space-y-2">
+      <input x-model="linkModal.search" placeholder="Search existing..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      <div class="max-h-56 overflow-y-auto space-y-1.5">
+        <template x-for="item in filteredLinkCandidates()" :key="item.id">
+          <button @click="linkModal.selectedId=item.id"
+                  :class="linkModal.selectedId===item.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'"
+                  class="w-full text-left border rounded-xl px-3 py-2.5 transition hover:border-indigo-300">
+            <div class="text-sm font-medium text-gray-800" x-text="item.name"></div>
+            <div class="text-xs text-gray-400 mt-0.5" x-text="item.meta || ''"></div>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div x-show="linkModal.mode==='indicator-new' || linkModal.mode==='risk-new'" class="space-y-2">
+      <input x-model="linkModal.form.name" placeholder="Name" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      <textarea x-model="linkModal.form.description" rows="3" placeholder="Description" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none resize-none"></textarea>
+    </div>
+
+    <div x-show="linkModal.mode==='indicator-existing' || linkModal.mode==='indicator-new'" class="mt-3 grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Contribution Type</label>
+        <select x-model="linkModal.form.contributionType" class="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+          <option value="IMPACT">Impact (1-10)</option>
+          <option value="PERCENT">Contribution %</option>
+          <option value="BUSINESS_VALUE">Business Value (auto)</option>
+          <option value="BUDGETABLE">Planned Budget (auto)</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Value</label>
+        <input x-model.number="linkModal.form.contributionValue"
+               :min="linkModal.form.contributionType==='PERCENT' ? 0 : 1"
+               :max="linkModal.form.contributionType==='PERCENT' ? 100 : 10"
+               :disabled="linkModal.form.contributionType==='BUSINESS_VALUE' || linkModal.form.contributionType==='BUDGETABLE'"
+               type="number" step="1"
+               class="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none" />
+      </div>
+    </div>
+
+    <div x-show="linkModal.message" class="mt-3 text-xs rounded-lg px-3 py-2 border"
+         :class="linkModal.messageType==='error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'"
+         x-text="linkModal.message"></div>
+
+    <div class="mt-4 flex justify-end gap-3">
+      <button @click="closeLinkModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
+      <button @click="submitLinkModal()" class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    activeSection: 'progress',
+    logFormOpen: false,
+    logValue: 62,
+    paymentModal: { open:false, message:'', form:{ desc:'', date:'', amount:null, category:'' } },
+    linkModal: {
+      open: false,
+      mode: '',
+      search: '',
+      selectedId: null,
+      form: { name: '', description: '', contributionType: 'IMPACT', contributionValue: 5 },
+      message: '',
+      messageType: 'error',
+    },
+
+    sections: [
+      { id: 'progress',   icon: '📊', label: 'Progress'   },
+      { id: 'budget',     icon: '💰', label: 'Budget'     },
+      { id: 'indicators', icon: '📈', label: 'KPIs' },
+      { id: 'risks',      icon: '⚠️', label: 'Risks'      },
+      { id: 'team',       icon: '👥', label: 'Team'       },
+      { id: 'vision',     icon: '🎯', label: 'Vision'     },
+      { id: 'links',      icon: '🔗', label: 'Links'      },
+      { id: 'activity',   icon: '📋', label: 'Activity'   },
+    ],
+
+    lifecycle: [
+      { key:'DRAFT',       label:'DRAFT',       passed:true,  date:'Jan 2025' },
+      { key:'ACTIVE',      label:'ACTIVE',      passed:false, date:'Mar 2025' },
+      { key:'ON_HOLD',     label:'ON_HOLD',     passed:false, date:null       },
+      { key:'COMPLETED',   label:'COMPLETED',   passed:false, date:null       },
+      { key:'DEACTIVATED', label:'DEACTIVATED', passed:false, date:null       },
+    ],
+
+    children: [
+      { id:11, name:'Phase 1 – Northern Region', type:'Initiative', icon:'⚡', color:'#f59e0b', weight:7,  progress:100, status:'COMPLETED' },
+      { id:12, name:'Phase 2 – Central Region',  type:'Initiative', icon:'⚡', color:'#f59e0b', weight:8,  progress:62,  status:'ACTIVE'    },
+      { id:13, name:'Phase 3 – Southern Region', type:'Initiative', icon:'⚡', color:'#f59e0b', weight:6,  progress:0,   status:'DRAFT'     },
+    ],
+
+    progressHistory: [
+      { value:62, date:'Mar 28, 2026', by:'Ahmed H.', note:'Q1 review completed. Northern region fully delivered, central at 62%.' },
+      { value:55, date:'Feb 15, 2026', by:'Ahmed H.', note:'Mid-quarter checkpoint. Phase 2 progressing on schedule.' },
+      { value:40, date:'Jan 10, 2026', by:'Sarah K.', note:'Phase 1 completed, progress updated accordingly.' },
+      { value:20, date:'Oct 5, 2025',  by:'Ahmed H.', note:'Initial progress logged after Phase 1 kickoff.' },
+    ],
+
+    payments: [
+      { id:1, desc:'Equipment Purchase – Phase 2', date:'Mar 20, 2026', category:'Equipment', amount:'2.1M' },
+      { id:2, desc:'Consultant Fees – Q1 2026',    date:'Feb 28, 2026', category:'Services',  amount:'450K' },
+      { id:3, desc:'Infrastructure Setup – Phase 1', date:'Jan 15, 2026', category:'Construction', amount:'1.8M' },
+      { id:4, desc:'Vendor Contract – Fiber Supply', date:'Dec 10, 2025', category:'Procurement', amount:'3.2M' },
+    ],
+
+    indicators: [
+      { id:1, name:'Fiber Penetration Rate', description:'% of households with fiber access',
+        baseline:'42%', target:'95%', current:'67%', achievement:47, onTrack:true, contributionType:'IMPACT', contributionValue:8 },
+      { id:2, name:'Phase Delivery On-Time Rate', description:'% of phases delivered on schedule',
+        baseline:'0', target:'100%', current:'67%', achievement:67, onTrack:true, contributionType:'PERCENT', contributionValue:40 },
+      { id:3, name:'Cost Per Household (OMR)', description:'Average infrastructure cost per connected household',
+        baseline:'3200', target:'2500', current:'2850', achievement:50, onTrack:false, contributionType:'PERCENT', contributionValue:20 },
+    ],
+
+    risks: [
+      { id:1, name:'Telecom Operator Delays',
+        description:'Delays in equipment procurement from key telecom vendors may push Phase 2 timeline.',
+        level:'HIGH', probability:'Medium', impact:'High', owner:'Ahmed H.',
+        mitigation:'Dual-sourcing strategy activated. Secondary vendor approved for Phase 2 equipment.' },
+      { id:2, name:'Regulatory Approval Bottleneck',
+        description:'Pending right-of-way approvals in Central Region municipalities.',
+        level:'MEDIUM', probability:'Low', impact:'Medium', owner:'Sarah K.',
+        mitigation:'Legal team coordinating with municipalities. Expect resolution by Q2 2026.' },
+    ],
+
+    team: [
+      { id:1, name:'Ahmed Hassan',  initials:'AH', unit:'Digital Ministry',     role:'Owner',  color:'#6366f1', inherited:false, inheritedFrom:'', inheritedPermissions:[], customPermissions:[] },
+      { id:2, name:'Sarah Khalil',  initials:'SK', unit:'Telecom Authority',    role:'Editor', color:'#10b981', inherited:false, inheritedFrom:'', inheritedPermissions:[], customPermissions:[] },
+      { id:3, name:'Mohammed Raji', initials:'MR', unit:'Planning Dept.',       role:'Editor', color:'#f59e0b', inherited:true, inheritedFrom:'Parent Goal', inheritedPermissions:['view','edit','comment'], customPermissions:[] },
+      { id:4, name:'Fatima Al-R.',  initials:'FA', unit:'Finance Directorate',  role:'Viewer', color:'#ec4899', inherited:true, inheritedFrom:'Strategy Team', inheritedPermissions:['view','export'], customPermissions:[] },
+    ],
+    permissionCatalog: ['view', 'edit', 'delete', 'export', 'share', 'import', 'manage_members', 'link_kpi', 'link_risk'],
+    existingIndicators: [
+      { id:101, name:'Broadband Adoption Rate', meta:'Goal KPI' },
+      { id:102, name:'Avg. Service Availability', meta:'Initiative KPI' },
+      { id:103, name:'Digital Channel NPS', meta:'Program KPI' },
+    ],
+    existingRisks: [
+      { id:201, name:'Vendor Delay Risk', meta:'Procurement' },
+      { id:202, name:'Regulatory Delay Risk', meta:'Compliance' },
+      { id:203, name:'Cost Overrun Risk', meta:'Financial' },
+    ],
+    existingMembers: [
+      { id:11, name:'Laila Omar', meta:'Planning Unit', initials:'LO', color:'#0ea5e9' },
+      { id:12, name:'Yousef Salem', meta:'Digital PMO', initials:'YS', color:'#14b8a6' },
+      { id:13, name:'Nora Habib', meta:'Finance Directorate', initials:'NH', color:'#f97316' },
+    ],
+
+    activityLog: [
+      { id:1, user:'Ahmed Hassan',  initials:'AH', color:'#6366f1', action:'logged progress update (62%)',        time:'2 hours ago',  detail:'Q1 review completed. Northern region fully delivered.' },
+      { id:2, user:'Sarah Khalil',  initials:'SK', color:'#10b981', action:'linked risk "Telecom Operator Delays"', time:'1 day ago',   detail:null },
+      { id:3, user:'Mohammed Raji', initials:'MR', color:'#f59e0b', action:'added payment "Consultant Fees Q1"',    time:'3 days ago',  detail:'OMR 450,000 — Q1 consultancy services' },
+      { id:4, user:'Ahmed Hassan',  initials:'AH', color:'#6366f1', action:'added child element "Phase 3 – Southern Region"', time:'5 days ago', detail:null },
+      { id:5, user:'System',        initials:'SY', color:'#94a3b8', action:'calculated progress updated to 48%',  time:'6 days ago',  detail:'Recalculated from 3 children: Phase1(100%), Phase2(62%), Phase3(0%)' },
+      { id:6, user:'Ahmed Hassan',  initials:'AH', color:'#6366f1', action:'status changed DRAFT → ACTIVE',       time:'Mar 1, 2025', detail:null },
+    ],
+
+    linkModalTitle() {
+      if (this.linkModal.mode === 'indicator-existing') return 'Link Existing KPI';
+      if (this.linkModal.mode === 'indicator-new') return 'Create and Link KPI';
+      if (this.linkModal.mode === 'risk-existing') return 'Link Existing Risk';
+      if (this.linkModal.mode === 'risk-new') return 'Create and Link Risk';
+      if (this.linkModal.mode === 'member-existing') return 'Add Existing Team Member';
+      return 'Link';
+    },
+    openLinkModal(mode) {
+      this.linkModal = {
+        open: true,
+        mode,
+        search: '',
+        selectedId: null,
+        form: { name: '', description: '', contributionType: 'IMPACT', contributionValue: 5 },
+        message: '',
+        messageType: 'error',
+      };
+    },
+    closeLinkModal() {
+      this.linkModal.open = false;
+    },
+    filteredLinkCandidates() {
+      const q = this.linkModal.search.toLowerCase().trim();
+      if (this.linkModal.mode === 'indicator-existing') {
+        return this.existingIndicators.filter(x =>
+          !this.indicators.some(i => i.name === x.name) &&
+          (!q || x.name.toLowerCase().includes(q))
+        );
+      }
+      if (this.linkModal.mode === 'risk-existing') {
+        return this.existingRisks.filter(x =>
+          !this.risks.some(r => r.name === x.name) &&
+          (!q || x.name.toLowerCase().includes(q))
+        );
+      }
+      if (this.linkModal.mode === 'member-existing') {
+        return this.existingMembers.filter(x =>
+          !this.team.some(m => m.name === x.name) &&
+          (!q || x.name.toLowerCase().includes(q))
+        );
+      }
+      return [];
+    },
+    submitLinkModal() {
+      this.linkModal.message = '';
+      const mode = this.linkModal.mode;
+      const contributionType = this.linkModal.form.contributionType;
+      let contributionValue = Number(this.linkModal.form.contributionValue);
+
+      if (mode === 'indicator-existing' || mode === 'indicator-new') {
+        if ((contributionType === 'PERCENT' || contributionType === 'IMPACT') && !Number.isFinite(contributionValue)) { this.linkModal.message = 'Contribution value is required.'; return; }
+        if (contributionType === 'PERCENT') contributionValue = Math.max(0, Math.min(100, contributionValue));
+        if (contributionType === 'IMPACT') contributionValue = Math.max(1, Math.min(10, contributionValue));
+        if (contributionType === 'BUSINESS_VALUE') contributionValue = 0;
+        if (contributionType === 'BUDGETABLE') contributionValue = 0;
+      }
+
+      if (mode === 'indicator-existing') {
+        const c = this.existingIndicators.find(x => x.id === this.linkModal.selectedId);
+        if (!c) { this.linkModal.message = 'Please select an existing KPI.'; return; }
+        this.indicators.unshift({ id: Date.now(), name: c.name, description: c.meta, baseline: '0', target: '100%', current: '0%', achievement: 0, onTrack: true, contributionType, contributionValue });
+      }
+      if (mode === 'indicator-new') {
+        if (!this.linkModal.form.name.trim()) { this.linkModal.message = 'KPI name is required.'; return; }
+        this.indicators.unshift({ id: Date.now(), name: this.linkModal.form.name.trim(), description: this.linkModal.form.description.trim(), baseline: '0', target: '100%', current: '0%', achievement: 0, onTrack: true, contributionType, contributionValue });
+      }
+      if (mode === 'risk-existing') {
+        const c = this.existingRisks.find(x => x.id === this.linkModal.selectedId);
+        if (!c) { this.linkModal.message = 'Please select an existing risk.'; return; }
+        this.risks.unshift({ id: Date.now(), name: c.name, description: c.meta, level: 'MEDIUM', probability: 'Medium', impact: 'Medium', owner: 'Unassigned', mitigation: '' });
+      }
+      if (mode === 'risk-new') {
+        if (!this.linkModal.form.name.trim()) { this.linkModal.message = 'Risk name is required.'; return; }
+        this.risks.unshift({ id: Date.now(), name: this.linkModal.form.name.trim(), description: this.linkModal.form.description.trim(), level: 'MEDIUM', probability: 'Medium', impact: 'Medium', owner: 'Unassigned', mitigation: '' });
+      }
+      if (mode === 'member-existing') {
+        const c = this.existingMembers.find(x => x.id === this.linkModal.selectedId);
+        if (!c) { this.linkModal.message = 'Please select an existing member.'; return; }
+        this.team.push({ id: Date.now(), name: c.name, initials: c.initials, unit: c.meta, role: 'Viewer', color: c.color, inherited: false, inheritedFrom: '', inheritedPermissions: [], customPermissions: [] });
+      }
+
+      this.linkModal.messageType = 'success';
+      this.linkModal.message = 'Saved.';
+      setTimeout(() => this.closeLinkModal(), 300);
+    },
+    indicatorContributionText(ind) {
+      if (ind.contributionType === 'PERCENT') return `Contribution: ${ind.contributionValue ?? 0}%`;
+      if (ind.contributionType === 'BUSINESS_VALUE') return `Business Value: ${ind.contributionValue ?? 0}`;
+      if (ind.contributionType === 'BUDGETABLE') return `Planned Budget: OMR ${ind.contributionValue ?? 0}`;
+      return `Impact: ${ind.contributionValue ?? 0}/10`;
+    },
+    defaultPermissionsByRole(role) {
+      if (role === 'Owner') return ['view', 'edit', 'delete', 'export', 'share', 'import', 'manage_members', 'link_kpi', 'link_risk'];
+      if (role === 'Admin') return ['view', 'edit', 'export', 'share', 'import', 'manage_members', 'link_kpi', 'link_risk'];
+      if (role === 'Editor') return ['view', 'edit', 'export', 'share', 'link_kpi', 'link_risk'];
+      return ['view', 'export'];
+    },
+    effectivePermissions(m) {
+      const inherited = Array.isArray(m.inheritedPermissions) ? m.inheritedPermissions : [];
+      const rolePerms = m.role === 'Custom' ? (m.customPermissions || []) : this.defaultPermissionsByRole(m.role);
+      return [...new Set([...inherited, ...rolePerms])];
+    },
+    onTeamRoleChange(m) {
+      if (m.role !== 'Custom') m.customPermissions = [];
+    },
+    toggleCustomPermission(m, perm) {
+      if (!Array.isArray(m.customPermissions)) m.customPermissions = [];
+      const idx = m.customPermissions.indexOf(perm);
+      if (idx >= 0) m.customPermissions.splice(idx, 1);
+      else m.customPermissions.push(perm);
+    },
+    unlinkInheritedMember(m) {
+      m.inherited = false;
+      m.inheritedFrom = '';
+      m.inheritedPermissions = [];
+    },
+    openPaymentModal() {
+      this.paymentModal = {
+        open: true,
+        message: '',
+        form: {
+          desc: '',
+          date: new Date().toISOString().slice(0, 10),
+          amount: null,
+          category: '',
+        },
+      };
+    },
+    closePaymentModal() {
+      this.paymentModal.open = false;
+    },
+    formatPaymentAmount(amount) {
+      if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+      if (amount >= 1000) return `${Math.round(amount / 1000)}K`;
+      return String(amount);
+    },
+    submitPaymentModal() {
+      const f = this.paymentModal.form;
+      const amount = Number(f.amount);
+      if (!f.desc.trim()) { this.paymentModal.message = 'Description is required.'; return; }
+      if (!f.date) { this.paymentModal.message = 'Date is required.'; return; }
+      if (!Number.isFinite(amount) || amount <= 0) { this.paymentModal.message = 'Amount must be greater than 0.'; return; }
+      if (!f.category.trim()) { this.paymentModal.message = 'Category is required.'; return; }
+
+      this.payments.unshift({
+        id: Date.now(),
+        desc: f.desc.trim(),
+        date: f.date,
+        category: f.category.trim(),
+        amount: this.formatPaymentAmount(amount),
+      });
+      this.activityLog.unshift({
+        id: Date.now(),
+        user: 'Ahmed Hassan',
+        initials: 'AH',
+        color: '#6366f1',
+        action: `added payment "${f.desc.trim()}"`,
+        time: 'Just now',
+        detail: `OMR ${this.formatPaymentAmount(amount)} — ${f.category.trim()}`,
+      });
+      this.closePaymentModal();
+    },
+
+    init() {
+      // Highlight active section on scroll
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) this.activeSection = e.target.id; });
+      }, { threshold: 0.3 });
+      this.$nextTick(() => {
+        document.querySelectorAll('.section-anchor').forEach(el => observer.observe(el));
+      });
+    }
+  }
+}
+</script>
+</body>
+</html>

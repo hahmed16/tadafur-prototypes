@@ -1,0 +1,2034 @@
+{
+  "meta": {
+    "title": "Request Management System Dependency Map",
+    "market": "Oman",
+    "sourceFile": "Refined Talabat Services_v5.0.xlsx",
+    "nodeCount": 139,
+    "edgeCount": 108,
+    "description": "Seed dependency map extracted from the Excel base list. Edit relations in the UI and export the updated JSON."
+  },
+  "nodes": [
+    {
+      "id": "1",
+      "label": "Request annual leave",
+      "arabicLabel": "طلب إجازة سنوية",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request annual leave",
+      "note": "Requires document upload",
+      "market": "Oman"
+    },
+    {
+      "id": "2",
+      "label": "Request sick leave",
+      "arabicLabel": "طلب إجازة مرضية",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request sick leave",
+      "note": "Fast approval workflow",
+      "market": "Oman"
+    },
+    {
+      "id": "3",
+      "label": "Request emergency leave",
+      "arabicLabel": "طلب إجازة طارئة",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request emergency leave",
+      "note": "Frequent issue",
+      "market": "Oman"
+    },
+    {
+      "id": "4",
+      "label": "Request leave cancellation",
+      "arabicLabel": "طلب إلغاء إجازة",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request leave cancellation",
+      "note": "Daily usage",
+      "market": "Oman"
+    },
+    {
+      "id": "5",
+      "label": "Request leave extension",
+      "arabicLabel": "طلب تمديد إجازة",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request leave extension",
+      "note": "High usage",
+      "market": "Oman"
+    },
+    {
+      "id": "6",
+      "label": "Request maternity leave",
+      "arabicLabel": "طلب إجازة أمومة",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request maternity leave",
+      "note": "Prefer self-download",
+      "market": "Oman"
+    },
+    {
+      "id": "7",
+      "label": "Request paternity leave",
+      "arabicLabel": "طلب إجازة أبوة",
+      "domain": "HR",
+      "category": "Leave Management",
+      "requestType": "Request paternity leave",
+      "note": "Sensitive change",
+      "market": "Oman"
+    },
+    {
+      "id": "8",
+      "label": "Request attendance correction",
+      "arabicLabel": "طلب تصحيح الحضور",
+      "domain": "HR",
+      "category": "Attendance",
+      "requestType": "Request attendance correction",
+      "note": "Mandatory service",
+      "market": "Oman"
+    },
+    {
+      "id": "9",
+      "label": "Request short permission",
+      "arabicLabel": "طلب إذن خروج",
+      "domain": "HR",
+      "category": "Attendance",
+      "requestType": "Request short permission",
+      "note": "High usage",
+      "market": "Oman"
+    },
+    {
+      "id": "10",
+      "label": "Request overtime approval",
+      "arabicLabel": "طلب اعتماد ساعات إضافية",
+      "domain": "HR",
+      "category": "Attendance",
+      "requestType": "Request overtime approval",
+      "note": "Onboarding",
+      "market": "Oman"
+    },
+    {
+      "id": "11",
+      "label": "Request work from home",
+      "arabicLabel": "طلب العمل عن بعد",
+      "domain": "HR",
+      "category": "Attendance",
+      "requestType": "Request work from home",
+      "note": "Requires approval",
+      "market": "Oman"
+    },
+    {
+      "id": "12",
+      "label": "Request official mission attendance",
+      "arabicLabel": "طلب اعتماد مهمة رسمية",
+      "domain": "HR",
+      "category": "Attendance",
+      "requestType": "Request official mission attendance",
+      "note": "RBAC control",
+      "market": "Oman"
+    },
+    {
+      "id": "13",
+      "label": "Request salary certificate",
+      "arabicLabel": "طلب شهادة راتب",
+      "domain": "HR",
+      "category": "Payroll",
+      "requestType": "Request salary certificate",
+      "note": "Ticket-based",
+      "market": "Oman"
+    },
+    {
+      "id": "14",
+      "label": "Request payslip",
+      "arabicLabel": "طلب كشف راتب",
+      "domain": "HR",
+      "category": "Payroll",
+      "requestType": "Request payslip",
+      "note": "SLA-driven",
+      "market": "Oman"
+    },
+    {
+      "id": "15",
+      "label": "Request bank account update",
+      "arabicLabel": "طلب تغيير الحساب البنكي",
+      "domain": "HR",
+      "category": "Payroll",
+      "requestType": "Request bank account update",
+      "note": "Automate",
+      "market": "Oman"
+    },
+    {
+      "id": "16",
+      "label": "Request salary transfer letter",
+      "arabicLabel": "طلب شهادة تحويل راتب",
+      "domain": "HR",
+      "category": "Payroll",
+      "requestType": "Request salary transfer letter",
+      "note": "Policy-based",
+      "market": "Oman"
+    },
+    {
+      "id": "17",
+      "label": "Request end of service statement",
+      "arabicLabel": "طلب بيان مستحقات نهاية الخدمة",
+      "domain": "HR",
+      "category": "Payroll",
+      "requestType": "Request end of service statement",
+      "note": "Asset-controlled",
+      "market": "Oman"
+    },
+    {
+      "id": "18",
+      "label": "Update personal information",
+      "arabicLabel": "تحديث البيانات الشخصية",
+      "domain": "HR",
+      "category": "Employee Data",
+      "requestType": "Update personal information",
+      "note": "Common",
+      "market": "Oman"
+    },
+    {
+      "id": "19",
+      "label": "Request employment letter",
+      "arabicLabel": "طلب شهادة لمن يهمه الأمر",
+      "domain": "HR",
+      "category": "Employee Data",
+      "requestType": "Request employment letter",
+      "note": "Mouse/keyboard",
+      "market": "Oman"
+    },
+    {
+      "id": "20",
+      "label": "Request job title update",
+      "arabicLabel": "طلب تعديل المسمى الوظيفي",
+      "domain": "HR",
+      "category": "Employee Data",
+      "requestType": "Request job title update",
+      "note": "High security",
+      "market": "Oman"
+    },
+    {
+      "id": "21",
+      "label": "Request department transfer",
+      "arabicLabel": "طلب نقل داخلي",
+      "domain": "HR",
+      "category": "Employee Data",
+      "requestType": "Request department transfer",
+      "note": "Daily usage",
+      "market": "Oman"
+    },
+    {
+      "id": "22",
+      "label": "Request update of dependent information",
+      "arabicLabel": "طلب تحديث بيانات المعالين",
+      "domain": "HR",
+      "category": "Employee Data",
+      "requestType": "Request update of dependent information",
+      "note": "High frequency",
+      "market": "Oman"
+    },
+    {
+      "id": "23",
+      "label": "Submit employee grievance",
+      "arabicLabel": "تقديم تظلم وظيفي",
+      "domain": "HR",
+      "category": "Employee Relations",
+      "requestType": "Submit employee grievance",
+      "note": "Operational",
+      "market": "Oman"
+    },
+    {
+      "id": "24",
+      "label": "Request disciplinary clearance",
+      "arabicLabel": "طلب إفادة خلو طرف إداري",
+      "domain": "HR",
+      "category": "Employee Relations",
+      "requestType": "Request disciplinary clearance",
+      "note": "Medium usage",
+      "market": "Oman"
+    },
+    {
+      "id": "25",
+      "label": "Request new user account",
+      "arabicLabel": "طلب إنشاء حساب مستخدم",
+      "domain": "IT",
+      "category": "IT Access",
+      "requestType": "Request new user account",
+      "note": "Common",
+      "market": "Oman"
+    },
+    {
+      "id": "26",
+      "label": "Request system access",
+      "arabicLabel": "طلب صلاحية نظام",
+      "domain": "IT",
+      "category": "IT Access",
+      "requestType": "Request system access",
+      "note": "High usage",
+      "market": "Oman"
+    },
+    {
+      "id": "27",
+      "label": "Request role/permission change",
+      "arabicLabel": "طلب تعديل صلاحيات",
+      "domain": "IT",
+      "category": "IT Access",
+      "requestType": "Request role/permission change",
+      "note": "Critical",
+      "market": "Oman"
+    },
+    {
+      "id": "28",
+      "label": "Request shared mailbox access",
+      "arabicLabel": "طلب صلاحية بريد مشترك",
+      "domain": "IT",
+      "category": "IT Access",
+      "requestType": "Request shared mailbox access",
+      "note": "Common",
+      "market": "Oman"
+    },
+    {
+      "id": "29",
+      "label": "Request email account",
+      "arabicLabel": "طلب إنشاء بريد إلكتروني",
+      "domain": "IT",
+      "category": "IT Access",
+      "requestType": "Request email account",
+      "note": "Workflow needed",
+      "market": "Oman"
+    },
+    {
+      "id": "30",
+      "label": "Request technical support",
+      "arabicLabel": "طلب دعم تقني",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Request technical support",
+      "note": "Gov frequent",
+      "market": "Oman"
+    },
+    {
+      "id": "31",
+      "label": "Report IT incident",
+      "arabicLabel": "الإبلاغ عن مشكلة تقنية",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Report IT incident",
+      "note": "Support service",
+      "market": "Oman"
+    },
+    {
+      "id": "32",
+      "label": "Request password reset",
+      "arabicLabel": "طلب إعادة تعيين كلمة المرور",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Request password reset",
+      "note": "Critical",
+      "market": "Oman"
+    },
+    {
+      "id": "33",
+      "label": "Request internet/network access",
+      "arabicLabel": "طلب خدمة الإنترنت أو الشبكة",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Request internet/network access",
+      "note": "Common",
+      "market": "Oman"
+    },
+    {
+      "id": "34",
+      "label": "Request email issue support",
+      "arabicLabel": "طلب دعم البريد الإلكتروني",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Request email issue support",
+      "note": "Workflow needed",
+      "market": "Oman"
+    },
+    {
+      "id": "35",
+      "label": "Report system performance issue",
+      "arabicLabel": "الإبلاغ عن بطء النظام",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Report system performance issue",
+      "note": "Gov frequent",
+      "market": "Oman"
+    },
+    {
+      "id": "36",
+      "label": "Request printer support",
+      "arabicLabel": "طلب دعم الطابعة",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Request printer support",
+      "note": "Support service",
+      "market": "Oman"
+    },
+    {
+      "id": "37",
+      "label": "Request video conferencing support",
+      "arabicLabel": "طلب دعم الاجتماعات المرئية",
+      "domain": "IT",
+      "category": "IT Support",
+      "requestType": "Request video conferencing support",
+      "note": "support",
+      "market": "Oman"
+    },
+    {
+      "id": "38",
+      "label": "Request laptop",
+      "arabicLabel": "طلب جهاز حاسب",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request laptop",
+      "note": "Fast-track",
+      "market": "Oman"
+    },
+    {
+      "id": "39",
+      "label": "Request desktop computer",
+      "arabicLabel": "طلب جهاز حاسب مكتبي",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request desktop computer",
+      "note": "Pre-procurement",
+      "market": "Oman"
+    },
+    {
+      "id": "40",
+      "label": "Request software installation",
+      "arabicLabel": "طلب تثبيت برنامج",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request software installation",
+      "note": "Governance step",
+      "market": "Oman"
+    },
+    {
+      "id": "41",
+      "label": "Request IT accessories",
+      "arabicLabel": "طلب ملحقات تقنية",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request IT accessories",
+      "note": "Execution",
+      "market": "Oman"
+    },
+    {
+      "id": "42",
+      "label": "Request device replacement",
+      "arabicLabel": "طلب استبدال جهاز",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request device replacement",
+      "note": "Linked to mission",
+      "market": "Oman"
+    },
+    {
+      "id": "43",
+      "label": "Request device maintenance",
+      "arabicLabel": "طلب صيانة جهاز",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request device maintenance",
+      "note": "Finance integration",
+      "market": "Oman"
+    },
+    {
+      "id": "44",
+      "label": "Request mobile device",
+      "arabicLabel": "طلب جهاز محمول",
+      "domain": "IT",
+      "category": "IT Assets",
+      "requestType": "Request mobile device",
+      "note": "Mandatory",
+      "market": "Oman"
+    },
+    {
+      "id": "45",
+      "label": "Request remote access (VPN)",
+      "arabicLabel": "طلب وصول عن بعد",
+      "domain": "IT",
+      "category": "IT Security",
+      "requestType": "Request remote access (VPN)",
+      "note": "support",
+      "market": "Oman"
+    },
+    {
+      "id": "46",
+      "label": "Report security incident",
+      "arabicLabel": "الإبلاغ عن حادث أمني",
+      "domain": "IT",
+      "category": "IT Security",
+      "requestType": "Report security incident",
+      "note": "Linked service",
+      "market": "Oman"
+    },
+    {
+      "id": "47",
+      "label": "Request antivirus/security software",
+      "arabicLabel": "طلب برنامج حماية أو أمن معلومات",
+      "domain": "IT",
+      "category": "IT Security",
+      "requestType": "Request antivirus/security software",
+      "note": "Controlled",
+      "market": "Oman"
+    },
+    {
+      "id": "48",
+      "label": "Request data access approval",
+      "arabicLabel": "طلب اعتماد الوصول إلى البيانات",
+      "domain": "IT",
+      "category": "IT Security",
+      "requestType": "Request data access approval",
+      "note": "Mandatory",
+      "market": "Oman"
+    },
+    {
+      "id": "49",
+      "label": "Request meeting room booking",
+      "arabicLabel": "طلب حجز قاعة اجتماع",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request meeting room booking",
+      "note": "support",
+      "market": "Oman"
+    },
+    {
+      "id": "50",
+      "label": "Request office maintenance",
+      "arabicLabel": "طلب صيانة مكتب",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request office maintenance",
+      "note": "Reverse flow",
+      "market": "Oman"
+    },
+    {
+      "id": "51",
+      "label": "Request cleaning service",
+      "arabicLabel": "طلب خدمة تنظيف",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request cleaning service",
+      "note": "Compliance",
+      "market": "Oman"
+    },
+    {
+      "id": "52",
+      "label": "Request office move",
+      "arabicLabel": "طلب نقل مكتب",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request office move",
+      "note": "Trackable",
+      "market": "Oman"
+    },
+    {
+      "id": "53",
+      "label": "Request parking permit",
+      "arabicLabel": "طلب تصريح موقف",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request parking permit",
+      "note": "Onboarding",
+      "market": "Oman"
+    },
+    {
+      "id": "54",
+      "label": "Request office supplies",
+      "arabicLabel": "طلب مستلزمات مكتبية",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request office supplies",
+      "note": "Loss case",
+      "market": "Oman"
+    },
+    {
+      "id": "55",
+      "label": "Report facility issue",
+      "arabicLabel": "الإبلاغ عن مشكلة مرافق",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Report facility issue",
+      "note": "High usage",
+      "market": "Oman"
+    },
+    {
+      "id": "56",
+      "label": "Request access to office location",
+      "arabicLabel": "طلب دخول موقع",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request access to office location",
+      "note": "High control",
+      "market": "Oman"
+    },
+    {
+      "id": "57",
+      "label": "Request furniture",
+      "arabicLabel": "طلب أثاث مكتبي",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request furniture",
+      "note": "Controlled",
+      "market": "Oman"
+    },
+    {
+      "id": "58",
+      "label": "Request key or office access",
+      "arabicLabel": "طلب مفتاح أو صلاحية دخول مكتب",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request key or office access",
+      "note": "Advanced",
+      "market": "Oman"
+    },
+    {
+      "id": "59",
+      "label": "Request telephone line",
+      "arabicLabel": "طلب خط هاتف",
+      "domain": "Admin",
+      "category": "Facility",
+      "requestType": "Request telephone line",
+      "note": "support",
+      "market": "Oman"
+    },
+    {
+      "id": "60",
+      "label": "Request hospitality service",
+      "arabicLabel": "طلب خدمة ضيافة",
+      "domain": "Admin",
+      "category": "Hospitality",
+      "requestType": "Request hospitality service",
+      "note": "Strategic",
+      "market": "Oman"
+    },
+    {
+      "id": "61",
+      "label": "Request expense reimbursement",
+      "arabicLabel": "طلب استرجاع مصروفات",
+      "domain": "Finance",
+      "category": "Expense",
+      "requestType": "Request expense reimbursement",
+      "note": "Strategic",
+      "market": "Oman"
+    },
+    {
+      "id": "62",
+      "label": "Request petty cash",
+      "arabicLabel": "طلب عهدة مالية",
+      "domain": "Finance",
+      "category": "Expense",
+      "requestType": "Request petty cash",
+      "note": "support",
+      "market": "Oman"
+    },
+    {
+      "id": "63",
+      "label": "Submit expense claim",
+      "arabicLabel": "تقديم مطالبة مالية",
+      "domain": "Finance",
+      "category": "Expense",
+      "requestType": "Submit expense claim",
+      "note": "Content approval",
+      "market": "Oman"
+    },
+    {
+      "id": "64",
+      "label": "Request overtime payment",
+      "arabicLabel": "طلب بدل ساعات إضافية",
+      "domain": "Finance",
+      "category": "Payroll",
+      "requestType": "Request overtime payment",
+      "note": "Manager-level",
+      "market": "Oman"
+    },
+    {
+      "id": "65",
+      "label": "Request payment clarification",
+      "arabicLabel": "استفسار عن دفعة",
+      "domain": "Finance",
+      "category": "Support",
+      "requestType": "Request payment clarification",
+      "note": "Same",
+      "market": "Oman"
+    },
+    {
+      "id": "66",
+      "label": "Request budget allocation",
+      "arabicLabel": "طلب تخصيص ميزانية",
+      "domain": "Finance",
+      "category": "Finance Control",
+      "requestType": "Request budget allocation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "67",
+      "label": "Request budget transfer",
+      "arabicLabel": "طلب نقل ميزانية",
+      "domain": "Finance",
+      "category": "Finance Control",
+      "requestType": "Request budget transfer",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "68",
+      "label": "Submit supplier invoice",
+      "arabicLabel": "تقديم فاتورة مورد",
+      "domain": "Finance",
+      "category": "Accounts Payable",
+      "requestType": "Submit supplier invoice",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "69",
+      "label": "Request invoice status",
+      "arabicLabel": "الاستعلام عن حالة فاتورة",
+      "domain": "Finance",
+      "category": "Accounts Payable",
+      "requestType": "Request invoice status",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "70",
+      "label": "Request payment receipt",
+      "arabicLabel": "طلب إيصال دفع",
+      "domain": "Finance",
+      "category": "Accounts Receivable",
+      "requestType": "Request payment receipt",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "71",
+      "label": "Request refund processing",
+      "arabicLabel": "طلب معالجة استرداد مالي",
+      "domain": "Finance",
+      "category": "Accounts Receivable",
+      "requestType": "Request refund processing",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "72",
+      "label": "Request financial clearance",
+      "arabicLabel": "طلب خلو طرف مالي",
+      "domain": "Finance",
+      "category": "Finance Control",
+      "requestType": "Request financial clearance",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "73",
+      "label": "Request item purchase",
+      "arabicLabel": "طلب شراء صنف",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request item purchase",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "74",
+      "label": "Request urgent purchase",
+      "arabicLabel": "طلب شراء عاجل",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request urgent purchase",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "75",
+      "label": "Request quotation",
+      "arabicLabel": "طلب عرض أسعار",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request quotation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "76",
+      "label": "Request purchase approval",
+      "arabicLabel": "طلب اعتماد شراء",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request purchase approval",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "77",
+      "label": "Request vendor registration",
+      "arabicLabel": "طلب تسجيل مورد",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request vendor registration",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "78",
+      "label": "Request vendor evaluation",
+      "arabicLabel": "طلب تقييم مورد",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request vendor evaluation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "79",
+      "label": "Request contract variation",
+      "arabicLabel": "طلب تعديل عقد",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request contract variation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "80",
+      "label": "Request purchase order amendment",
+      "arabicLabel": "طلب تعديل أمر شراء",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request purchase order amendment",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "81",
+      "label": "Request direct purchase",
+      "arabicLabel": "طلب شراء مباشر",
+      "domain": "Procurement",
+      "category": "Procurement",
+      "requestType": "Request direct purchase",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "82",
+      "label": "Request travel approval",
+      "arabicLabel": "طلب اعتماد مهمة سفر",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request travel approval",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "83",
+      "label": "Request travel ticket",
+      "arabicLabel": "طلب تذكرة سفر",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request travel ticket",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "84",
+      "label": "Request hotel booking",
+      "arabicLabel": "طلب حجز فندق",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request hotel booking",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "86",
+      "label": "Submit travel report",
+      "arabicLabel": "تقديم تقرير مهمة",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Submit travel report",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "87",
+      "label": "Request travel amendment",
+      "arabicLabel": "طلب تعديل مهمة سفر",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request travel amendment",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "88",
+      "label": "Request travel cancellation",
+      "arabicLabel": "طلب إلغاء مهمة سفر",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request travel cancellation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "89",
+      "label": "Request visa processing",
+      "arabicLabel": "طلب تأشيرة سفر",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request visa processing",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "90",
+      "label": "Request airport pickup",
+      "arabicLabel": "طلب استقبال من المطار",
+      "domain": "Logistics",
+      "category": "Travel",
+      "requestType": "Request airport pickup",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "91",
+      "label": "Request courier service",
+      "arabicLabel": "طلب خدمة بريد أو شحن",
+      "domain": "Logistics",
+      "category": "Courier",
+      "requestType": "Request courier service",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "92",
+      "label": "Request vehicle",
+      "arabicLabel": "طلب مركبة",
+      "domain": "Fleet",
+      "category": "Transportation",
+      "requestType": "Request vehicle",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "93",
+      "label": "Request driver",
+      "arabicLabel": "طلب سائق",
+      "domain": "Fleet",
+      "category": "Transportation",
+      "requestType": "Request driver",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "94",
+      "label": "Request fuel",
+      "arabicLabel": "طلب وقود",
+      "domain": "Fleet",
+      "category": "Transportation",
+      "requestType": "Request fuel",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "95",
+      "label": "Report vehicle incident",
+      "arabicLabel": "الإبلاغ عن حادث مركبة",
+      "domain": "Fleet",
+      "category": "Transportation",
+      "requestType": "Report vehicle incident",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "96",
+      "label": "Request vehicle maintenance",
+      "arabicLabel": "طلب صيانة مركبة",
+      "domain": "Fleet",
+      "category": "Transportation",
+      "requestType": "Request vehicle maintenance",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "97",
+      "label": "Request vehicle reservation",
+      "arabicLabel": "طلب حجز مركبة",
+      "domain": "Fleet",
+      "category": "Transportation",
+      "requestType": "Request vehicle reservation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "98",
+      "label": "Request items from store",
+      "arabicLabel": "طلب صرف مواد من المخزن",
+      "domain": "Inventory",
+      "category": "Store",
+      "requestType": "Request items from store",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "99",
+      "label": "Request return of items",
+      "arabicLabel": "طلب إرجاع مواد",
+      "domain": "Inventory",
+      "category": "Store",
+      "requestType": "Request return of items",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "100",
+      "label": "Request disposal of items",
+      "arabicLabel": "طلب إتلاف مواد",
+      "domain": "Inventory",
+      "category": "Store",
+      "requestType": "Request disposal of items",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "101",
+      "label": "Request stock availability check",
+      "arabicLabel": "الاستعلام عن توفر المخزون",
+      "domain": "Inventory",
+      "category": "Store",
+      "requestType": "Request stock availability check",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "102",
+      "label": "Request device borrowing",
+      "arabicLabel": "طلب استعارة جهاز",
+      "domain": "Inventory",
+      "category": "Assets",
+      "requestType": "Request device borrowing",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "103",
+      "label": "Request asset registration",
+      "arabicLabel": "طلب تسجيل أصل",
+      "domain": "Inventory",
+      "category": "Assets",
+      "requestType": "Request asset registration",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "104",
+      "label": "Request asset transfer",
+      "arabicLabel": "طلب نقل أصل",
+      "domain": "Inventory",
+      "category": "Assets",
+      "requestType": "Request asset transfer",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "105",
+      "label": "Report asset damage",
+      "arabicLabel": "الإبلاغ عن تلف أصل",
+      "domain": "Inventory",
+      "category": "Assets",
+      "requestType": "Report asset damage",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "106",
+      "label": "Request asset write-off",
+      "arabicLabel": "طلب شطب أصل",
+      "domain": "Inventory",
+      "category": "Assets",
+      "requestType": "Request asset write-off",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "107",
+      "label": "Request access card",
+      "arabicLabel": "طلب بطاقة دخول",
+      "domain": "Security",
+      "category": "Access Control",
+      "requestType": "Request access card",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "108",
+      "label": "Request replacement card",
+      "arabicLabel": "طلب بدل فاقد",
+      "domain": "Security",
+      "category": "Access Control",
+      "requestType": "Request replacement card",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "109",
+      "label": "Request visitor access",
+      "arabicLabel": "طلب تصريح زائر",
+      "domain": "Security",
+      "category": "Access Control",
+      "requestType": "Request visitor access",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "110",
+      "label": "Request restricted area access",
+      "arabicLabel": "طلب دخول منطقة مقيدة",
+      "domain": "Security",
+      "category": "Access Control",
+      "requestType": "Request restricted area access",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "111",
+      "label": "Request temporary access",
+      "arabicLabel": "طلب صلاحية دخول مؤقتة",
+      "domain": "Security",
+      "category": "Access Control",
+      "requestType": "Request temporary access",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "112",
+      "label": "Request access revocation",
+      "arabicLabel": "طلب إلغاء صلاحية دخول",
+      "domain": "Security",
+      "category": "Access Control",
+      "requestType": "Request access revocation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "113",
+      "label": "Report security violation",
+      "arabicLabel": "الإبلاغ عن مخالفة أمنية",
+      "domain": "Security",
+      "category": "Security Compliance",
+      "requestType": "Report security violation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "114",
+      "label": "Request security clearance",
+      "arabicLabel": "طلب تصريح أمني",
+      "domain": "Security",
+      "category": "Security Compliance",
+      "requestType": "Request security clearance",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "115",
+      "label": "Request document access",
+      "arabicLabel": "طلب الاطلاع على الوثائق",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request document access",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "116",
+      "label": "Request document classification",
+      "arabicLabel": "طلب تصنيف وثيقة",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request document classification",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "117",
+      "label": "Request document upload",
+      "arabicLabel": "طلب رفع وثيقة",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request document upload",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "118",
+      "label": "Request document update",
+      "arabicLabel": "طلب تعديل وثيقة",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request document update",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "119",
+      "label": "Request document deletion",
+      "arabicLabel": "طلب حذف وثيقة",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request document deletion",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "120",
+      "label": "Request archive retrieval",
+      "arabicLabel": "طلب استرجاع من الأرشيف",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request archive retrieval",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "121",
+      "label": "Request retention schedule update",
+      "arabicLabel": "طلب تحديث مدة الاحتفاظ",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request retention schedule update",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "122",
+      "label": "Request document approval",
+      "arabicLabel": "طلب اعتماد وثيقة",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request document approval",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "123",
+      "label": "Request record transfer",
+      "arabicLabel": "طلب تحويل ملف أو وثيقة",
+      "domain": "Document",
+      "category": "EDRMS",
+      "requestType": "Request record transfer",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "124",
+      "label": "Request legal opinion",
+      "arabicLabel": "طلب رأي قانوني",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request legal opinion",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "125",
+      "label": "Request contract drafting",
+      "arabicLabel": "طلب إعداد عقد",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request contract drafting",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "126",
+      "label": "Request agreement (MoU) drafting",
+      "arabicLabel": "طلب إعداد مذكرة تفاهم",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request agreement (MoU) drafting",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "127",
+      "label": "Request contract review",
+      "arabicLabel": "طلب مراجعة عقد",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request contract review",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "128",
+      "label": "Request legal translation",
+      "arabicLabel": "طلب ترجمة قانونية",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request legal translation",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "129",
+      "label": "Request policy review",
+      "arabicLabel": "طلب مراجعة سياسة",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request policy review",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "130",
+      "label": "Request legal notice drafting",
+      "arabicLabel": "طلب إعداد إشعار قانوني",
+      "domain": "Legal",
+      "category": "Legal",
+      "requestType": "Request legal notice drafting",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "131",
+      "label": "Request media coverage",
+      "arabicLabel": "طلب تغطية إعلامية",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request media coverage",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "132",
+      "label": "Request news publication",
+      "arabicLabel": "طلب نشر خبر",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request news publication",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "133",
+      "label": "Request event organization",
+      "arabicLabel": "طلب تنظيم فعالية",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request event organization",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "134",
+      "label": "Request exhibition organization",
+      "arabicLabel": "طلب تنظيم معرض",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request exhibition organization",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "135",
+      "label": "Request press release",
+      "arabicLabel": "طلب بيان صحفي",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request press release",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "136",
+      "label": "Request social media post",
+      "arabicLabel": "طلب نشر على وسائل التواصل الاجتماعي",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request social media post",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "137",
+      "label": "Request design support",
+      "arabicLabel": "طلب دعم تصميم",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request design support",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "138",
+      "label": "Request photography or videography",
+      "arabicLabel": "طلب تصوير فوتوغرافي أو فيديو",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request photography or videography",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "139",
+      "label": "Request official announcement",
+      "arabicLabel": "طلب إعلان رسمي",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request official announcement",
+      "note": "",
+      "market": "Oman"
+    },
+    {
+      "id": "140",
+      "label": "Request campaign support",
+      "arabicLabel": "طلب دعم حملة إعلامية",
+      "domain": "PR",
+      "category": "Public Relations",
+      "requestType": "Request campaign support",
+      "note": "",
+      "market": "Oman"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "25",
+      "target": "26",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e2",
+      "source": "25",
+      "target": "27",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e3",
+      "source": "25",
+      "target": "29",
+      "relation": "PREREQUISITE - ONBOARDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e4",
+      "source": "29",
+      "target": "28",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e5",
+      "source": "25",
+      "target": "32",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e6",
+      "source": "26",
+      "target": "45",
+      "relation": "AUTHORIZES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e7",
+      "source": "48",
+      "target": "115",
+      "relation": "AUTHORIZES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e8",
+      "source": "103",
+      "target": "104",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e9",
+      "source": "103",
+      "target": "106",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e10",
+      "source": "105",
+      "target": "106",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e11",
+      "source": "107",
+      "target": "108",
+      "relation": "PREREQUISITE - REPLACES",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e12",
+      "source": "107",
+      "target": "112",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e13",
+      "source": "109",
+      "target": "111",
+      "relation": "RELATED",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e14",
+      "source": "117",
+      "target": "118",
+      "relation": "PREREQUISITE - UPDATES",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e15",
+      "source": "117",
+      "target": "119",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e16",
+      "source": "116",
+      "target": "122",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e17",
+      "source": "117",
+      "target": "122",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e18",
+      "source": "122",
+      "target": "123",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e19",
+      "source": "125",
+      "target": "127",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e20",
+      "source": "126",
+      "target": "128",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e21",
+      "source": "133",
+      "target": "131",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e22",
+      "source": "133",
+      "target": "135",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e23",
+      "source": "133",
+      "target": "136",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e24",
+      "source": "137",
+      "target": "136",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e25",
+      "source": "138",
+      "target": "131",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e26",
+      "source": "140",
+      "target": "136",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e27",
+      "source": "82",
+      "target": "83",
+      "relation": "APPROVES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e28",
+      "source": "82",
+      "target": "84",
+      "relation": "APPROVES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e29",
+      "source": "82",
+      "target": "89",
+      "relation": "APPROVES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e30",
+      "source": "82",
+      "target": "90",
+      "relation": "APPROVES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e31",
+      "source": "82",
+      "target": "86",
+      "relation": "PRECEDES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e32",
+      "source": "82",
+      "target": "87",
+      "relation": "PREREQUISITE - AMENDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e33",
+      "source": "82",
+      "target": "88",
+      "relation": "PREREQUISITE - CANCELS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e34",
+      "source": "83",
+      "target": "87",
+      "relation": "PREREQUISITE - AMENDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e35",
+      "source": "83",
+      "target": "88",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e36",
+      "source": "76",
+      "target": "79",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e37",
+      "source": "76",
+      "target": "80",
+      "relation": "PREREQUISITE - AMENDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e38",
+      "source": "72",
+      "target": "76",
+      "relation": "PRECEDES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e39",
+      "source": "73",
+      "target": "76",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e40",
+      "source": "74",
+      "target": "76",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e41",
+      "source": "75",
+      "target": "76",
+      "relation": "PRECEDES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e42",
+      "source": "77",
+      "target": "76",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e43",
+      "source": "61",
+      "target": "62",
+      "relation": "PRECEDES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e44",
+      "source": "62",
+      "target": "64",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e45",
+      "source": "66",
+      "target": "67",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e46",
+      "source": "66",
+      "target": "68",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e47",
+      "source": "69",
+      "target": "65",
+      "relation": "RECONCILES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e48",
+      "source": "18",
+      "target": "15",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e49",
+      "source": "18",
+      "target": "20",
+      "relation": "SUPPORTS - UPDATES",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e50",
+      "source": "18",
+      "target": "21",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e51",
+      "source": "18",
+      "target": "22",
+      "relation": "SUPPORTS - UPDATES",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e52",
+      "source": "1",
+      "target": "4",
+      "relation": "PREREQUISITE - CANCELS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e53",
+      "source": "2",
+      "target": "4",
+      "relation": "PREREQUISITE - CANCELS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e54",
+      "source": "3",
+      "target": "4",
+      "relation": "PREREQUISITE - CANCELS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e55",
+      "source": "1",
+      "target": "5",
+      "relation": "PREREQUISITE - EXTENDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e56",
+      "source": "2",
+      "target": "5",
+      "relation": "PREREQUISITE - EXTENDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e57",
+      "source": "3",
+      "target": "5",
+      "relation": "PREREQUISITE - EXTENDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e58",
+      "source": "49",
+      "target": "60",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e59",
+      "source": "52",
+      "target": "57",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e60",
+      "source": "52",
+      "target": "58",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e61",
+      "source": "52",
+      "target": "59",
+      "relation": "TRIGGERS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e62",
+      "source": "92",
+      "target": "93",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e63",
+      "source": "92",
+      "target": "94",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e64",
+      "source": "92",
+      "target": "95",
+      "relation": "RELATED",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e65",
+      "source": "92",
+      "target": "96",
+      "relation": "REQUIRES",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e66",
+      "source": "92",
+      "target": "97",
+      "relation": "RELATED",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e67",
+      "source": "38",
+      "target": "40",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e68",
+      "source": "39",
+      "target": "40",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e69",
+      "source": "38",
+      "target": "42",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e70",
+      "source": "39",
+      "target": "42",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e71",
+      "source": "38",
+      "target": "43",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e72",
+      "source": "39",
+      "target": "43",
+      "relation": "PREREQUISITE",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e73",
+      "source": "44",
+      "target": "45",
+      "relation": "SUPPORTS",
+      "confidence": "seeded"
+    },
+    {
+      "id": "e74",
+      "source": "25",
+      "target": "38",
+      "relation": "SUPPORTS - ONBOARDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e75",
+      "source": "25",
+      "target": "39",
+      "relation": "SUPPORTS - ONBOARDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e76",
+      "source": "25",
+      "target": "44",
+      "relation": "SUPPORTS - ONBOARDS",
+      "confidence": "mixed"
+    },
+    {
+      "id": "e80",
+      "source": "5",
+      "target": "4",
+      "relation": "CANCELS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e81",
+      "source": "6",
+      "target": "4",
+      "relation": "CANCELS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e82",
+      "source": "7",
+      "target": "4",
+      "relation": "CANCELS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e86",
+      "source": "6",
+      "target": "5",
+      "relation": "EXTENDS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e87",
+      "source": "7",
+      "target": "5",
+      "relation": "EXTENDS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e88",
+      "source": "22",
+      "target": "18",
+      "relation": "UPDATES",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e90",
+      "source": "22",
+      "target": "20",
+      "relation": "UPDATES",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e92",
+      "source": "43",
+      "target": "42",
+      "relation": "REPLACES",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e93",
+      "source": "44",
+      "target": "42",
+      "relation": "REPLACES",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e97",
+      "source": "84",
+      "target": "87",
+      "relation": "AMENDS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e99",
+      "source": "84",
+      "target": "88",
+      "relation": "CANCELS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e102",
+      "source": "117",
+      "target": "121",
+      "relation": "UPDATES",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e107",
+      "source": "25",
+      "target": "53",
+      "relation": "ONBOARDS",
+      "confidence": "suggested"
+    },
+    {
+      "id": "e108",
+      "source": "25",
+      "target": "107",
+      "relation": "ONBOARDS",
+      "confidence": "suggested"
+    }
+  ]
+}
