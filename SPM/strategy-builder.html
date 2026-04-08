@@ -217,7 +217,7 @@
                      : selections[depth] === el.id
                        ? 'border-indigo-200 bg-indigo-50/50'
                        : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'"
-                    class="border rounded-xl p-2.5 cursor-pointer transition-all">
+                    class="border rounded-xl p-2.5 cursor-pointer transition-all relative">
 
                     <!-- Top row: icon + name + arrow -->
                     <div class="flex items-start gap-2">
@@ -227,6 +227,30 @@
                       <div class="flex-1 min-w-0">
                         <div class="text-sm font-medium text-gray-900 leading-snug" x-text="el.name"
                           style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
+                        </div>
+                      </div>
+                      <div x-show="hasMultipleParents(el.id)" class="relative flex-shrink-0">
+                        <button @click.stop="toggleParentMenu(el.id)"
+                          class="w-5 h-5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center"
+                          title="View parents">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div x-show="parentMenuFor === el.id" x-cloak @click.outside="closeParentMenu()"
+                          class="absolute right-0 top-7 z-20 w-56 bg-white border border-gray-200 rounded-xl shadow-lg p-1.5">
+                          <div class="px-2 py-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                            Parents
+                          </div>
+                          <template x-for="parent in parentEntries(el.id)" :key="parent.id">
+                            <button @click.stop="navigateToElement(parent.id)"
+                              class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-indigo-50 transition">
+                              <div class="text-xs font-medium text-gray-800 truncate" x-text="parent.name"></div>
+                              <div class="text-[11px] text-gray-400 mt-0.5"
+                                x-text="parent.type + ' · ' + edgeLabelFor(parent)"></div>
+                            </button>
+                          </template>
                         </div>
                       </div>
                       <svg x-show="hasChildren(el.id)"
@@ -260,7 +284,7 @@
                     <!-- Meta row -->
                     <div class="flex items-center justify-between mt-1.5 text-xs text-gray-400">
                       <span x-text="el.type"></span>
-                      <span x-show="childCount(el.id) > 0" x-text="childCount(el.id) + ' sub-items'"></span>
+                      <span x-show="hasMultipleParents(el.id)" x-text="parentSummaryText(el.id)"></span>
                     </div>
                   </div>
                 </template>
@@ -275,6 +299,13 @@
                   <p class="text-xs text-gray-400 font-medium">No elements</p>
                   <button @click="openAddModal(depth, depth > 0 ? selections[depth-1] : null)"
                     class="mt-2 text-xs text-indigo-600 hover:underline">Add one</button>
+                </div>
+              </div>
+              <div class="border border-gray-200 rounded-xl p-2.5 flex items-center gap-2 mt-1.5">
+                <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">ðŸŽ¯</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-gray-700 truncate">Shared Services Goal</div>
+                  <div class="text-xs text-gray-400">Business value path</div>
                 </div>
               </div>
             </div>
@@ -459,15 +490,33 @@
 
           <!-- Tab: Links -->
           <div x-show="detailTab==='Links'" class="flex-1 overflow-y-auto p-3.5 space-y-3">
-            <!-- Parent -->
+            <!-- Parents -->
             <div>
-              <label class="text-xs font-medium text-gray-500 block mb-1.5">Parent in this Strategy</label>
-              <div class="border border-gray-200 rounded-xl p-2.5 flex items-center gap-2">
+              <label class="text-xs font-medium text-gray-500 block mb-1.5">Parents in this Strategy</label>
+              <div class="space-y-1.5 mb-1.5">
+                <template x-for="parent in parentEntries(selectedElement?.id || 0)" :key="parent.id">
+                  <button @click="navigateToElement(parent.id)"
+                    class="w-full border border-gray-200 rounded-xl p-2.5 flex items-center gap-2 text-left hover:border-indigo-300 hover:bg-indigo-50/40 transition">
+                    <div class="w-6 h-6 rounded-md flex items-center justify-center text-xs"
+                      :style="`background:${getTypeColor(parent.type)}22; color:${getTypeColor(parent.type)}`"
+                      x-text="getTypeIcon(parent.type)"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-gray-700 truncate" x-text="parent.name"></div>
+                      <div class="text-xs text-gray-400" x-text="parent.type + ' · ' + edgeLabelFor(parent)"></div>
+                    </div>
+                  </button>
+                </template>
+                <div x-show="parentEntries(selectedElement?.id || 0).length === 0"
+                  class="text-xs text-gray-500 italic border border-dashed border-gray-200 rounded-xl px-3 py-2">
+                  This element is currently a root in this strategy.
+                </div>
+              </div>
+              <div x-show="false" class="border border-gray-200 rounded-xl p-2.5 flex items-center gap-2">
                 <div class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">
                   🏛️</div>
                 <div class="flex-1 min-w-0">
                   <div class="text-sm font-medium text-gray-700 truncate">Digital Infrastructure Pillar</div>
-                  <div class="text-xs text-gray-400">Pillar</div>
+                  <div class="text-xs text-gray-400">Impact weight: 8</div>
                 </div>
               </div>
             </div>
@@ -805,12 +854,40 @@
                   </div>
                   <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                     <template x-for="el in elementsByType(t.name)" :key="el.id">
-                      <button @click="selectedElement=el; detailOpen=true; detailTab='Details'; view='tree'"
-                        class="w-full text-left border border-gray-200 hover:border-indigo-300 rounded-lg px-2.5 py-2 transition">
-                        <div class="text-xs font-medium text-gray-800 truncate" x-text="el.name"></div>
-                        <div class="text-[11px] text-gray-400 mt-0.5"
-                          x-text="parentOf(el.id) ? 'Child in map' : 'Root in map'"></div>
-                      </button>
+                      <div class="relative w-full border border-gray-200 hover:border-indigo-300 rounded-lg px-2.5 py-2 transition">
+                        <div class="flex items-start gap-2">
+                          <button @click="navigateToElement(el.id)"
+                            class="flex-1 min-w-0 text-left">
+                            <div class="text-xs font-medium text-gray-800 truncate" x-text="el.name"></div>
+                            <div class="text-[11px] text-gray-400 mt-0.5" x-show="hasMultipleParents(el.id)"
+                              x-text="parentSummaryText(el.id)"></div>
+                          </button>
+                          <div x-show="hasMultipleParents(el.id)" class="relative flex-shrink-0">
+                            <button @click.stop="toggleParentMenu(el.id)"
+                              class="w-5 h-5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center"
+                              title="View parents">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 19l-7-7 7-7" />
+                              </svg>
+                            </button>
+                            <div x-show="parentMenuFor === el.id" x-cloak @click.outside="closeParentMenu()"
+                              class="absolute right-0 top-7 z-20 w-56 bg-white border border-gray-200 rounded-xl shadow-lg p-1.5">
+                              <div class="px-2 py-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                                Parents
+                              </div>
+                              <template x-for="parent in parentEntries(el.id)" :key="parent.id">
+                                <button @click.stop="navigateToElement(parent.id)"
+                                  class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-indigo-50 transition">
+                                  <div class="text-xs font-medium text-gray-800 truncate" x-text="parent.name"></div>
+                                  <div class="text-[11px] text-gray-400 mt-0.5"
+                                    x-text="parent.type + ' · ' + edgeLabelFor(parent)"></div>
+                                </button>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </template>
                     <div x-show="elementsByType(t.name).length === 0" class="text-xs text-gray-400 italic">No elements
                       of this type yet.</div>
@@ -943,8 +1020,7 @@
       <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
         <div>
           <h2 class="text-base font-semibold text-gray-900">Strategy Configuration</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Edit hierarchy rules, max levels, and edge weight method by type
-            pair.
+          <p class="text-xs text-gray-500 mt-0.5">Edit effective type settings, allowed parent combinations, and edge weighting rules for this strategy.
           </p>
         </div>
         <button @click="configOpen=false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
@@ -955,11 +1031,16 @@
       </div>
 
       <div class="p-5 overflow-y-auto space-y-5">
+        <div x-show="configLocked()" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+          This strategy was created from template "<span class="font-semibold" x-text="strategy.templateName || 'Template'"></span>". Type configuration is shown for review only and is locked here.
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label class="text-xs font-medium text-gray-500 block mb-1">Default Weight Method</label>
             <select x-model="configDraft.defaultWeightType"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+              :disabled="configLocked()"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none disabled:opacity-60">
               <option value="IMPACT">IMPACT (1-10)</option>
               <option value="PERCENT">PERCENT (0-100%)</option>
               <option value="EQUAL">EQUAL (auto)</option>
@@ -970,38 +1051,59 @@
           <div class="md:col-span-2 flex items-end">
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" x-model="configDraft.strictHierarchy"
-                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-              Enforce strict hierarchy and levels during strategy build
+                :disabled="configLocked()"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
+              Enforce configured parent rules during strategy build
             </label>
           </div>
         </div>
 
         <div class="border border-gray-200 rounded-xl p-4">
-          <div class="text-sm font-semibold text-gray-800 mb-3">Type Rules</div>
+          <div class="text-sm font-semibold text-gray-800 mb-3">Type Rules & Strategy Overrides</div>
           <div class="space-y-3">
             <template x-for="t in configDraft.types" :key="t.name">
               <div class="border border-gray-100 rounded-lg p-3">
                 <div class="flex items-center justify-between mb-2">
                   <div class="font-medium text-gray-900 text-sm" x-text="t.name"></div>
-                  <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-3 flex-wrap">
                     <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
-                      <input type="checkbox" x-model="t.hasIndicators"
-                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      <input type="checkbox" x-model="t.isBudgetable" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
+                      Budgetable
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.isTrackable" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
+                      Trackable
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.isVisionAligned" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
+                      Vision
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.hasIndicators" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
                       KPIs
                     </label>
                     <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
-                      <input type="checkbox" x-model="t.hasRisks"
-                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      <input type="checkbox" x-model="t.hasRisks" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
                       Risks
                     </label>
                     <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
-                      <input type="checkbox" x-model="t.isQuarterlyMeasurable"
-                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      <input type="checkbox" x-model="t.linkableWithProject" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
+                      Project Link
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                      <input type="checkbox" x-model="t.isQuarterlyMeasurable" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
                       Quarterly
                     </label>
                     <label class="inline-flex items-center gap-1.5 text-xs text-gray-600">
-                      <input type="checkbox" x-model="t.canBeRoot"
-                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                      <input type="checkbox" x-model="t.canBeRoot" :disabled="configLocked()"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60" />
                       Root
                     </label>
                   </div>
@@ -1009,9 +1111,10 @@
                 <div class="text-xs text-gray-500 mb-1.5">Can be placed under:</div>
                 <div class="flex flex-wrap gap-1.5">
                   <template x-for="p in configDraft.types.filter(x => x.name !== t.name)" :key="p.name">
-                    <button @click="toggleDraftParentRule(t.name, p.name)"
+                    <button @click="if(!configLocked()) toggleDraftParentRule(t.name, p.name)"
+                      :disabled="configLocked()"
                       :class="t.allowedParentTypeNames.includes(p.name) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'"
-                      class="text-xs px-2.5 py-1 rounded-lg border transition" x-text="p.name"></button>
+                      class="text-xs px-2.5 py-1 rounded-lg border transition disabled:opacity-60" x-text="p.name"></button>
                   </template>
                 </div>
               </div>
@@ -1031,8 +1134,9 @@
                 </div>
                 <div class="col-span-5">
                   <select :value="configDraft.edgeMethods[pair.key] || configDraft.defaultWeightType"
-                    @change="configDraft.edgeMethods[pair.key] = $event.target.value"
-                    class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+                    @change="if(!configLocked()) configDraft.edgeMethods[pair.key] = $event.target.value"
+                    :disabled="configLocked()"
+                    class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none disabled:opacity-60">
                     <option value="IMPACT">IMPACT</option>
                     <option value="PERCENT">PERCENT</option>
                     <option value="EQUAL">EQUAL</option>
@@ -1047,11 +1151,11 @@
       </div>
 
       <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
-        <div class="text-xs text-gray-500" x-text="'Calculated max levels: ' + previewMaxLevels()"></div>
+        <div class="text-xs text-gray-500" x-text="'Longest configured path: ' + previewMaxLevels()"></div>
         <div class="flex items-center gap-3">
           <button @click="configOpen=false"
             class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
-          <button @click="saveConfig()"
+          <button x-show="!configLocked()" @click="saveConfig()"
             class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium">Save
             Configuration</button>
         </div>
@@ -1099,7 +1203,7 @@
             </template>
           </div>
           <div x-show="filteredAddTypeOptions.length===0" class="text-xs text-gray-500 italic mt-2">
-            No allowed child types for this level based on strategy configuration.
+            No element types are allowed in this parent context based on strategy configuration.
           </div>
         </div>
         <div>
@@ -1147,7 +1251,7 @@
             </button>
           </template>
           <div x-show="filteredLibraryModal.length===0" class="text-xs text-gray-500 italic px-1">
-            No library elements match the allowed types for this level.
+            No library elements match the allowed types for this parent context.
           </div>
         </div>
       </div>
@@ -1252,11 +1356,11 @@
 
     function app() {
       const defaultTypes = [
-        { id: 1, name: 'Pillar', icon: '🏛️', color: '#6366f1', canBeRoot: true, parentTypeIds: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false },
-        { id: 2, name: 'Goal', icon: '🎯', color: '#10b981', canBeRoot: false, parentTypeIds: [1], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
-        { id: 3, name: 'Initiative', icon: '⚡', color: '#f59e0b', canBeRoot: false, parentTypeIds: [2], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
-        { id: 4, name: 'Program', icon: '📦', color: '#8b5cf6', canBeRoot: false, parentTypeIds: [2], hasIndicators: false, hasRisks: true, isQuarterlyMeasurable: false },
-        { id: 5, name: 'Milestone', icon: '🚩', color: '#ec4899', canBeRoot: false, parentTypeIds: [3], hasIndicators: false, hasRisks: false, isQuarterlyMeasurable: false },
+        { id: 1, name: 'Pillar', icon: '🏛️', color: '#6366f1', canBeRoot: true, parentTypeIds: [], isBudgetable: false, isTrackable: false, isVisionAligned: true, hasIndicators: true, hasRisks: true, linkableWithProject: false, isQuarterlyMeasurable: false },
+        { id: 2, name: 'Goal', icon: '🎯', color: '#10b981', canBeRoot: false, parentTypeIds: [1], isBudgetable: false, isTrackable: true, isVisionAligned: true, hasIndicators: true, hasRisks: true, linkableWithProject: false, isQuarterlyMeasurable: true },
+        { id: 3, name: 'Initiative', icon: '⚡', color: '#f59e0b', canBeRoot: false, parentTypeIds: [2], isBudgetable: true, isTrackable: true, isVisionAligned: false, hasIndicators: true, hasRisks: true, linkableWithProject: true, isQuarterlyMeasurable: true },
+        { id: 4, name: 'Program', icon: '📦', color: '#8b5cf6', canBeRoot: false, parentTypeIds: [2], isBudgetable: true, isTrackable: true, isVisionAligned: false, hasIndicators: false, hasRisks: true, linkableWithProject: true, isQuarterlyMeasurable: false },
+        { id: 5, name: 'Milestone', icon: '🚩', color: '#ec4899', canBeRoot: false, parentTypeIds: [3], isBudgetable: false, isTrackable: true, isVisionAligned: false, hasIndicators: false, hasRisks: false, linkableWithProject: false, isQuarterlyMeasurable: false },
       ];
 
       const defaultElements = [
@@ -1300,6 +1404,9 @@
           id: 'default-strategy',
           name: 'National Digital Transformation 2025–2030',
           status: 'ACTIVE',
+          creationMode: 'scratch',
+          templateId: null,
+          templateName: null,
           weightType: 'IMPACT',
           discrepancyThreshold: 5,
           strictHierarchy: true,
@@ -1317,6 +1424,7 @@
         graphRenderKey: 0,
         typesRenderKey: 0,
         selections: [],
+        parentMenuFor: null,
         selectedElement: null,
         detailOpen: false,
         detailTab: 'Details',
@@ -1535,7 +1643,60 @@
           return this.elements.find(e => e.id === parentId)?.name || '';
         },
 
+        ancestorPathTo(elementId, trail = new Set()) {
+          if (trail.has(elementId)) return [];
+          const parentIds = this.parentsOf(elementId);
+          if (parentIds.length === 0) return [elementId];
+          trail.add(elementId);
+          for (const parentId of parentIds) {
+            const path = this.ancestorPathTo(parentId, new Set(trail));
+            if (path.length > 0) return [...path, elementId];
+          }
+          return [elementId];
+        },
+        navigateToElement(elementId) {
+          const path = this.ancestorPathTo(elementId);
+          this.parentMenuFor = null;
+          this.view = 'tree';
+          this.selectedElement = this.elements.find(e => e.id === elementId) || null;
+          this.detailOpen = !!this.selectedElement;
+          this.detailTab = 'Details';
+          this.selections = path;
+        },
+        parentEntries(childId) {
+          return this.links
+            .filter(l => l.child === childId)
+            .map(l => {
+              const parent = this.elements.find(e => e.id === l.parent);
+              if (!parent) return null;
+              return {
+                id: parent.id,
+                name: parent.name,
+                type: parent.type,
+                weight: l.weight,
+                weightType: l.weightType || 'IMPACT',
+              };
+            })
+            .filter(Boolean);
+        },
+        toggleParentMenu(elementId) {
+          this.parentMenuFor = this.parentMenuFor === elementId ? null : elementId;
+        },
+        closeParentMenu() {
+          this.parentMenuFor = null;
+        },
+        hasMultipleParents(childId) {
+          return this.parentsOf(childId).length > 1;
+        },
+        parentSummaryText(childId) {
+          const count = this.parentsOf(childId).length;
+          if (count === 0) return 'Root in map';
+          if (count === 1) return '1 parent';
+          return `${count} parents`;
+        },
+
         selectAt(depth, element) {
+          this.parentMenuFor = null;
           this.selectedElement = element;
           this.detailOpen = true;
           this.detailTab = 'Details';
@@ -1618,20 +1779,17 @@
           return ((target - actual) / Math.abs(target)) * 100 > threshold;
         },
         parentName(id) { return this.elements.find(e => e.id === id)?.name || 'Unknown parent'; },
+        parentsOf(childId) {
+          return this.links.filter(l => l.child === childId).map(l => l.parent);
+        },
         parentOf(childId) {
           const edge = this.links.find(l => l.child === childId);
           return edge ? edge.parent : null;
         },
         depthOf(elementId) {
-          let depth = 0;
-          let current = elementId;
-          let guard = 0;
-          while (this.parentOf(current) !== null && guard < 200) {
-            depth += 1;
-            current = this.parentOf(current);
-            guard += 1;
-          }
-          return depth;
+          const parentIds = this.parentsOf(elementId);
+          if (parentIds.length === 0) return 0;
+          return 1 + Math.max(...parentIds.map(pid => this.depthOf(pid)));
         },
         subtreeHeight(elementId) {
           const children = this.links.filter(l => l.parent === elementId).map(l => l.child);
@@ -1922,9 +2080,9 @@
           const inStrategy = this.isElementInStrategy(elementId);
 
           if (parentId === null) {
-            const existingParent = this.parentOf(elementId);
-            if (existingParent !== null) {
-              return { ok: false, error: 'This element is already linked under a parent in this strategy.' };
+            const existingParents = this.parentsOf(elementId);
+            if (existingParents.length > 0) {
+              return { ok: false, error: 'This element already has incoming links in this strategy.' };
             }
             if (!this.canTypeBeRoot(libraryElement.type)) {
               return { ok: false, error: `${libraryElement.type} cannot be added as root in this strategy configuration.` };
@@ -1946,11 +2104,8 @@
             return { ok: false, error: 'This link would create a cycle in the strategy graph.' };
           }
 
-          const existingParent = this.parentOf(elementId);
-          if (existingParent !== null && existingParent !== parentId) {
-            return { ok: false, error: 'This element already has a parent in this strategy. Remove existing link first.' };
-          }
-          if (existingParent === parentId) {
+          const existingParents = this.parentsOf(elementId);
+          if (existingParents.includes(parentId)) {
             return { ok: false, error: 'This link already exists.' };
           }
 
@@ -2036,19 +2191,26 @@
             strictHierarchy: this.strategy.strictHierarchy !== false,
             edgeMethods: { ...(this.strategy.edgeMethods || {}) },
             types: this.elementTypes.map(t => {
-              const r = this.typeRulesByChildName[t.name] || { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false };
+              const r = this.typeRulesByChildName[t.name] || { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false, isBudgetable: false, isTrackable: false, isVisionAligned: false, linkableWithProject: false };
               return {
                 name: t.name,
                 canBeRoot: !!r.canBeRoot,
                 allowedParentTypeNames: [...(r.allowedParentTypeNames || [])],
+                isBudgetable: t.isBudgetable === true || r.isBudgetable === true,
+                isTrackable: t.isTrackable === true || r.isTrackable === true,
+                isVisionAligned: t.isVisionAligned === true || r.isVisionAligned === true,
                 hasIndicators: r.hasIndicators !== false,
                 hasRisks: r.hasRisks !== false,
+                linkableWithProject: t.linkableWithProject === true || r.linkableWithProject === true,
                 isQuarterlyMeasurable: r.isQuarterlyMeasurable === true,
               };
             }),
           };
           this.configStructureBaseline = this.structureSignatureForDraft(this.configDraft.types, this.configDraft.strictHierarchy);
           this.configOpen = true;
+        },
+        configLocked() {
+          return !!this.strategy.templateId;
         },
         toggleDraftParentRule(childName, parentName) {
           const row = this.configDraft.types.find(t => t.name === childName);
@@ -2094,26 +2256,6 @@
           };
           return this.configDraft.types.some(t => dfs(t.name));
         },
-        hasDraftMultipleTypesPerLevel() {
-          const depthOfDraftType = (typeName, stack = new Set()) => {
-            if (stack.has(typeName)) return 999;
-            const row = this.configDraft.types.find(t => t.name === typeName);
-            if (!row) return 0;
-            const parents = row.allowedParentTypeNames || [];
-            if (row.canBeRoot || parents.length === 0) return 0;
-            stack.add(typeName);
-            const d = 1 + Math.min(...parents.map(p => depthOfDraftType(p, stack)));
-            stack.delete(typeName);
-            return d;
-          };
-          const buckets = {};
-          this.configDraft.types.forEach(t => {
-            const d = depthOfDraftType(t.name);
-            if (!buckets[d]) buckets[d] = [];
-            buckets[d].push(t.name);
-          });
-          return Object.values(buckets).some(arr => arr.length > 1);
-        },
         previewMaxLevels() {
           const roots = this.configDraft.types.filter(t => t.canBeRoot).map(t => t.name);
           if (roots.length === 0) return 0;
@@ -2154,6 +2296,10 @@
           return currentSig !== this.configStructureBaseline;
         },
         saveConfig() {
+          if (this.configLocked()) {
+            this.configOpen = false;
+            return;
+          }
           if (this.configDraft.strictHierarchy) {
             if (this.configDraft.types.filter(t => t.canBeRoot).length === 0) {
               this.showNotice('Configuration must define at least one root type.', 'error');
@@ -2168,10 +2314,6 @@
               this.showNotice('Type hierarchy contains a cycle. Please remove cyclic parent-child rules.', 'error');
               return;
             }
-            if (this.hasDraftMultipleTypesPerLevel()) {
-              this.showNotice('One level, one type rule violated. Each level must contain exactly one type.', 'error');
-              return;
-            }
           }
 
           const nextRules = {};
@@ -2179,8 +2321,12 @@
             nextRules[t.name] = {
               canBeRoot: !!t.canBeRoot,
               allowedParentTypeNames: [...(t.allowedParentTypeNames || [])],
+              isBudgetable: t.isBudgetable === true,
+              isTrackable: t.isTrackable === true,
+              isVisionAligned: t.isVisionAligned === true,
               hasIndicators: t.hasIndicators !== false,
               hasRisks: t.hasRisks !== false,
+              linkableWithProject: t.linkableWithProject === true,
               isQuarterlyMeasurable: t.isQuarterlyMeasurable === true,
             };
           });
@@ -2193,12 +2339,12 @@
                 this.showNotice(`Existing element type "${e.type}" is no longer configured.`, 'error');
                 return;
               }
-              const parentId = this.parentOf(e.id);
-              if (parentId === null && !nextRules[e.type].canBeRoot) {
+              const parentIds = this.parentsOf(e.id);
+              if (parentIds.length === 0 && !nextRules[e.type].canBeRoot) {
                 this.showNotice(`"${e.name}" is root but "${e.type}" is not allowed as root in new config.`, 'error');
                 return;
               }
-              if (parentId !== null) {
+              for (const parentId of parentIds) {
                 const parentType = this.elements.find(x => x.id === parentId)?.type;
                 if (!nextRules[e.type].allowedParentTypeNames.includes(parentType)) {
                   this.showNotice(`Existing link ${parentType} → ${e.type} violates new config.`, 'error');
@@ -2220,8 +2366,12 @@
             return {
               ...t,
               canBeRoot: !!draftType.canBeRoot,
+              isBudgetable: draftType.isBudgetable === true,
+              isTrackable: draftType.isTrackable === true,
+              isVisionAligned: draftType.isVisionAligned === true,
               hasIndicators: draftType.hasIndicators !== false,
               hasRisks: draftType.hasRisks !== false,
+              linkableWithProject: draftType.linkableWithProject === true,
               isQuarterlyMeasurable: draftType.isQuarterlyMeasurable === true,
             };
           });
@@ -2334,6 +2484,9 @@
               id: draft.id || `strategy-${Date.now()}`,
               name: draft.name || 'New Strategy',
               status: draft.status || 'DRAFT',
+              creationMode: draft.creationMode || 'scratch',
+              templateId: draft.templateId || null,
+              templateName: draft.templateName || null,
               weightType: draft.weightType || 'IMPACT',
               discrepancyThreshold: draft.discrepancyThreshold || 5,
               strictHierarchy: draft.strictHierarchy !== false,
@@ -2347,6 +2500,9 @@
               id: urlStrategyId,
               name: meta.name || this.strategy.name,
               status: meta.status || this.strategy.status,
+              creationMode: this.strategy.creationMode || 'scratch',
+              templateId: this.strategy.templateId || null,
+              templateName: this.strategy.templateName || null,
             };
           }
 
@@ -2357,8 +2513,12 @@
               icon: t.icon || '◆',
               color: t.color || '#64748b',
               canBeRoot: !!t.canBeRoot,
+              isBudgetable: t.isBudgetable === true,
+              isTrackable: t.isTrackable === true,
+              isVisionAligned: t.isVisionAligned === true,
               hasIndicators: t.hasIndicators !== false,
               hasRisks: t.hasRisks !== false,
+              linkableWithProject: t.linkableWithProject === true,
               isQuarterlyMeasurable: t.isQuarterlyMeasurable === true,
             }));
 
@@ -2371,8 +2531,12 @@
               this.typeRulesByChildName[t.name] = {
                 canBeRoot: !!t.canBeRoot,
                 allowedParentTypeNames,
+                isBudgetable: t.isBudgetable === true,
+                isTrackable: t.isTrackable === true,
+                isVisionAligned: t.isVisionAligned === true,
                 hasIndicators: t.hasIndicators !== false,
                 hasRisks: t.hasRisks !== false,
+                linkableWithProject: t.linkableWithProject === true,
                 isQuarterlyMeasurable: t.isQuarterlyMeasurable === true,
               };
             });
@@ -2391,11 +2555,11 @@
           } else {
             this.elementTypes = clone(defaultTypes);
             this.typeRulesByChildName = {
-              Pillar: { canBeRoot: true, allowedParentTypeNames: [], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: false },
-              Goal: { canBeRoot: false, allowedParentTypeNames: ['Pillar'], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
-              Initiative: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: true, hasRisks: true, isQuarterlyMeasurable: true },
-              Program: { canBeRoot: false, allowedParentTypeNames: ['Goal'], hasIndicators: false, hasRisks: true, isQuarterlyMeasurable: false },
-              Milestone: { canBeRoot: false, allowedParentTypeNames: ['Initiative'], hasIndicators: false, hasRisks: false, isQuarterlyMeasurable: false },
+              Pillar: { canBeRoot: true, allowedParentTypeNames: [], isBudgetable: false, isTrackable: false, isVisionAligned: true, hasIndicators: true, hasRisks: true, linkableWithProject: false, isQuarterlyMeasurable: false },
+              Goal: { canBeRoot: false, allowedParentTypeNames: ['Pillar'], isBudgetable: false, isTrackable: true, isVisionAligned: true, hasIndicators: true, hasRisks: true, linkableWithProject: false, isQuarterlyMeasurable: true },
+              Initiative: { canBeRoot: false, allowedParentTypeNames: ['Goal'], isBudgetable: true, isTrackable: true, isVisionAligned: false, hasIndicators: true, hasRisks: true, linkableWithProject: true, isQuarterlyMeasurable: true },
+              Program: { canBeRoot: false, allowedParentTypeNames: ['Goal'], isBudgetable: true, isTrackable: true, isVisionAligned: false, hasIndicators: false, hasRisks: true, linkableWithProject: true, isQuarterlyMeasurable: false },
+              Milestone: { canBeRoot: false, allowedParentTypeNames: ['Initiative'], isBudgetable: false, isTrackable: true, isVisionAligned: false, hasIndicators: false, hasRisks: false, linkableWithProject: false, isQuarterlyMeasurable: false },
             };
             this.strategy.edgeMethods = {
               'Pillar>Goal': 'IMPACT',
@@ -2437,8 +2601,12 @@
                   icon: '◆',
                   color: '#64748b',
                   canBeRoot: this.typeRulesByChildName[name]?.canBeRoot !== false,
+                  isBudgetable: this.typeRulesByChildName[name]?.isBudgetable === true,
+                  isTrackable: this.typeRulesByChildName[name]?.isTrackable === true,
+                  isVisionAligned: this.typeRulesByChildName[name]?.isVisionAligned === true,
                   hasIndicators: this.typeRulesByChildName[name]?.hasIndicators !== false,
                   hasRisks: this.typeRulesByChildName[name]?.hasRisks !== false,
+                  linkableWithProject: this.typeRulesByChildName[name]?.linkableWithProject === true,
                   isQuarterlyMeasurable: this.typeRulesByChildName[name]?.isQuarterlyMeasurable === true,
                 }));
               }

@@ -49,7 +49,44 @@
   <!-- ======= STEP 1: Basic Info ======= -->
   <div x-show="step===1" class="bg-white rounded-2xl border border-gray-200 p-8">
     <h2 class="text-xl font-bold text-gray-900 mb-1">Strategy Details</h2>
-    <p class="text-gray-500 text-sm mb-6">Basic information about this strategy.</p>
+    <p class="text-gray-500 text-sm mb-6">Choose whether to start from a reusable template or build from scratch, then complete the basic information.</p>
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-3">How do you want to start?</label>
+      <div class="grid grid-cols-2 gap-3">
+        <button @click="form.creationMode='template'"
+                :class="form.creationMode==='template' ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : 'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-base font-semibold text-gray-800">Use Template</div>
+          <div class="text-xs text-gray-500 mt-1">Start from a common strategy pattern with preconfigured type rules and defaults.</div>
+        </button>
+        <button @click="form.creationMode='scratch'"
+                :class="form.creationMode==='scratch' ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : 'border-gray-200'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+          <div class="text-base font-semibold text-gray-800">Start From Scratch</div>
+          <div class="text-xs text-gray-500 mt-1">Create a fully custom strategy and define every rule manually.</div>
+        </button>
+      </div>
+    </div>
+    <div x-show="form.creationMode==='template'" class="mb-6 border border-indigo-100 bg-indigo-50/60 rounded-2xl p-4">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div>
+          <div class="text-sm font-semibold text-indigo-900">Strategy Templates</div>
+          <div class="text-xs text-indigo-700">Templates prefill type selection, capability defaults, allowed parent combinations, and weight methods.</div>
+        </div>
+        <div class="text-xs text-indigo-600 font-medium" x-text="(selectedTemplateName || 'None selected')"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <template x-for="tpl in strategyTemplates" :key="tpl.id">
+          <button @click="applyTemplate(tpl)"
+                  :class="form.templateId===tpl.id ? 'border-indigo-500 bg-white ring-2 ring-indigo-200' : 'border-indigo-100 bg-white/80'"
+                  class="border rounded-xl p-3 text-left transition hover:border-indigo-300">
+            <div class="text-sm font-semibold text-gray-800" x-text="tpl.name"></div>
+            <div class="text-xs text-gray-500 mt-1" x-text="tpl.description"></div>
+            <div class="text-[11px] text-indigo-600 mt-2" x-text="tpl.summary"></div>
+          </button>
+        </template>
+      </div>
+    </div>
     <div class="space-y-5">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Strategy Name <span class="text-red-500">*</span></label>
@@ -94,17 +131,18 @@
     <div class="bg-white rounded-2xl border border-gray-200 p-6">
       <h2 class="text-xl font-bold text-gray-900 mb-1">Element Types & Hierarchy</h2>
       <p class="text-gray-500 text-sm mb-1">Choose which element types will be used in this strategy.</p>
-      <p class="text-gray-500 text-sm mb-5">Then for each type, define <strong>what it can be placed under</strong>. This becomes the allowed structure.</p>
+      <p class="text-gray-500 text-sm mb-5">Then for each type, define <strong>what it can be placed under</strong> and which defaults should apply in this strategy. Multiple parents are allowed as long as the graph stays acyclic.</p>
 
       <!-- Type selection pills -->
       <div class="mb-5">
         <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Select element types to include</label>
         <div class="flex flex-wrap gap-2">
           <template x-for="t in availableTypes" :key="t.id">
-            <button @click="toggleTypeSelection(t)"
+            <button @click="if(form.creationMode!=='template') toggleTypeSelection(t)"
                     :class="isTypeSelected(t.id) ? 'ring-2 ring-offset-1 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'"
                     :style="isTypeSelected(t.id) ? `background:${t.color}; ring-color:${t.color}` : ''"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all">
+                    :disabled="form.creationMode==='template'"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-60">
               <span x-text="t.icon"></span>
               <span x-text="t.name"></span>
               <span x-show="isTypeSelected(t.id)" class="text-xs opacity-75">✓</span>
@@ -121,6 +159,9 @@
         <!-- Left: Configuration panel (3 cols) -->
         <div class="col-span-3 space-y-3">
           <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">Configure: what each type can be placed under</div>
+          <div x-show="form.creationMode==='template'" class="px-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            This strategy is being created from a template. Element type configuration is shown for review but locked during creation.
+          </div>
 
           <template x-for="t in selectedTypes" :key="t.id">
             <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -142,23 +183,40 @@
               <div class="border-t border-gray-100 px-4 py-3 bg-gray-50">
                 <div class="grid grid-cols-2 gap-2 mb-3">
                   <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    <span class="text-gray-600">Budgetable</span>
+                    <input type="checkbox" x-model="t.isBudgetable" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
+                  </label>
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    <span class="text-gray-600">Trackable</span>
+                    <input type="checkbox" x-model="t.isTrackable" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
+                  </label>
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs col-span-2">
+                    <span class="text-gray-600">Vision Alignment</span>
+                    <input type="checkbox" x-model="t.isVisionAligned" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
+                  </label>
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
                     <span class="text-gray-600">KPIs</span>
-                    <input type="checkbox" x-model="t.hasKPIs" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                    <input type="checkbox" x-model="t.hasKPIs" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
                   </label>
                   <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
                     <span class="text-gray-600">Risks</span>
-                    <input type="checkbox" x-model="t.hasRisks" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                    <input type="checkbox" x-model="t.hasRisks" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
+                  </label>
+                  <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs col-span-2">
+                    <span class="text-gray-600">Linkable With Project</span>
+                    <input type="checkbox" x-model="t.linkableWithProject" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
                   </label>
                   <label class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs col-span-2">
                     <span class="text-gray-600">Quarterly Measurable</span>
-                    <input type="checkbox" x-model="t.isQuarterlyMeasurable" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                    <input type="checkbox" x-model="t.isQuarterlyMeasurable" :disabled="form.creationMode==='template'" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
                   </label>
                 </div>
                 <!-- Can be root -->
                 <div class="flex items-center gap-2 mb-3">
-                  <button @click="t.canBeRoot = !t.canBeRoot"
+                  <button @click="if(form.creationMode!=='template') t.canBeRoot = !t.canBeRoot"
                           :class="t.canBeRoot ? 'bg-indigo-600' : 'bg-gray-200'"
-                          class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0">
+                          :disabled="form.creationMode==='template'"
+                          class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0 disabled:opacity-50">
                     <span :class="t.canBeRoot ? 'translate-x-4' : 'translate-x-0.5'"
                           class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
                   </button>
@@ -172,12 +230,13 @@
                   <div class="text-xs text-gray-500 mb-2 font-medium">Can be placed under:</div>
                   <div class="flex flex-wrap gap-1.5">
                     <template x-for="other in selectedTypes.filter(o => o.id !== t.id)" :key="other.id">
-                      <button @click="toggleParentRule(t.id, other.id)"
+                      <button @click="if(form.creationMode!=='template') toggleParentRule(t.id, other.id)"
                               :class="hasParentRule(t.id, other.id)
                                 ? 'text-white'
                                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'"
                               :style="hasParentRule(t.id, other.id) ? `background:${other.color}` : ''"
-                              class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all">
+                              :disabled="form.creationMode==='template'"
+                              class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all disabled:opacity-50">
                         <span x-text="other.icon"></span>
                         <span x-text="other.name"></span>
                       </button>
@@ -281,37 +340,42 @@
     <div class="mb-6">
       <label class="block text-sm font-medium text-gray-700 mb-3">Default Weight Input Method <span class="text-gray-400 font-normal">(used when a pair has no override)</span></label>
       <div class="grid grid-cols-5 gap-3">
-        <button @click="form.weightType='IMPACT'"
+        <button @click="if(form.creationMode!=='template') form.weightType='IMPACT'"
                 :class="form.weightType==='IMPACT'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
-                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+                :disabled="form.creationMode==='template'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300 disabled:opacity-60">
           <div class="text-2xl mb-2">🎚️</div>
           <div class="font-semibold text-gray-800 text-sm">Impact Score</div>
           <div class="text-xs text-gray-500 mt-1">Rate 1–10. Normalized relative to siblings.</div>
         </button>
-        <button @click="form.weightType='PERCENT'"
+        <button @click="if(form.creationMode!=='template') form.weightType='PERCENT'"
                 :class="form.weightType==='PERCENT'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
-                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+                :disabled="form.creationMode==='template'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300 disabled:opacity-60">
           <div class="text-2xl mb-2">📊</div>
           <div class="font-semibold text-gray-800 text-sm">Percentage</div>
           <div class="text-xs text-gray-500 mt-1">Enter % directly. Siblings sum to 100%.</div>
         </button>
-        <button @click="form.weightType='EQUAL'"
+        <button @click="if(form.creationMode!=='template') form.weightType='EQUAL'"
                 :class="form.weightType==='EQUAL'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
-                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+                :disabled="form.creationMode==='template'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300 disabled:opacity-60">
           <div class="text-2xl mb-2">⚖️</div>
           <div class="font-semibold text-gray-800 text-sm">Equal Weight</div>
           <div class="text-xs text-gray-500 mt-1">All siblings get equal weight automatically.</div>
         </button>
-        <button @click="form.weightType='BUSINESS_VALUE'"
+        <button @click="if(form.creationMode!=='template') form.weightType='BUSINESS_VALUE'"
                 :class="form.weightType==='BUSINESS_VALUE'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
-                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+                :disabled="form.creationMode==='template'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300 disabled:opacity-60">
           <div class="text-2xl mb-2">💼</div>
           <div class="font-semibold text-gray-800 text-sm">Business Value</div>
           <div class="text-xs text-gray-500 mt-1">Auto weight from each child element business value.</div>
         </button>
-        <button @click="form.weightType='BUDGETABLE'"
+        <button @click="if(form.creationMode!=='template') form.weightType='BUDGETABLE'"
                 :class="form.weightType==='BUDGETABLE'?'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200':'border-gray-200'"
-                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300">
+                :disabled="form.creationMode==='template'"
+                class="border-2 rounded-xl p-4 text-left transition hover:border-indigo-300 disabled:opacity-60">
           <div class="text-2xl mb-2">💰</div>
           <div class="font-semibold text-gray-800 text-sm">Planned Budget</div>
           <div class="text-xs text-gray-500 mt-1">Auto weight from planned budget of each child element.</div>
@@ -337,8 +401,9 @@
             </div>
             <div class="col-span-6">
               <select :value="getEdgeMethod(pair.parent.id, pair.child.id)"
-                      @change="setEdgeMethod(pair.parent.id, pair.child.id, $event.target.value)"
-                      class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none">
+                      @change="if(form.creationMode!=='template') setEdgeMethod(pair.parent.id, pair.child.id, $event.target.value)"
+                      :disabled="form.creationMode==='template'"
+                      class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:ring-2 focus:ring-indigo-300 outline-none disabled:opacity-60">
                 <option value="IMPACT">IMPACT (1-10)</option>
                 <option value="PERCENT">PERCENT (0-100%)</option>
                 <option value="EQUAL">EQUAL (auto)</option>
@@ -359,7 +424,7 @@
       <label class="block text-sm font-medium text-gray-700 mb-1">Progress Discrepancy Alert Threshold</label>
       <p class="text-xs text-gray-400 mb-3">When manual progress and calculated-from-children differ by more than this, a warning flag appears.</p>
       <div class="flex items-center gap-4">
-        <input type="range" min="1" max="30" x-model.number="form.discrepancyThreshold" class="flex-1 accent-indigo-600" />
+        <input type="range" min="1" max="30" x-model.number="form.discrepancyThreshold" :disabled="form.creationMode==='template'" class="flex-1 accent-indigo-600 disabled:opacity-60" />
         <div class="bg-indigo-50 text-indigo-700 font-bold text-lg rounded-xl px-4 py-2 w-20 text-center" x-text="form.discrepancyThreshold + '%'"></div>
       </div>
     </div>
@@ -411,23 +476,44 @@ function app() {
     steps: ['Basic Details', 'Element Hierarchy', 'Weight & Progress'],
     form: {
       name: '', description: '', startDate: '2025-01-01', endDate: '2030-12-31',
-      budget: '', unit: '', weightType: 'IMPACT', discrepancyThreshold: 5,
+      budget: '', unit: '', creationMode: 'template', templateId: null, weightType: 'IMPACT', discrepancyThreshold: 5,
     },
     // parentRules[childTypeId] = Set of parentTypeIds that child can appear under
     parentRules: {},
     edgeMethods: {},
 
     availableTypes: [
-      { id:1, name:'Pillar',     icon:'🏛️', color:'#6366f1', isBudgetable:false, isTrackable:false, isVisionAligned:true,  canBeRoot:true,  hasKPIs:true, hasRisks:true, isQuarterlyMeasurable:false  },
-      { id:2, name:'Goal',       icon:'🎯', color:'#10b981', isBudgetable:false, isTrackable:true,  isVisionAligned:true,  canBeRoot:false, hasKPIs:true, hasRisks:true, isQuarterlyMeasurable:true },
-      { id:3, name:'Initiative', icon:'⚡', color:'#f59e0b', isBudgetable:true,  isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:true, hasRisks:true, isQuarterlyMeasurable:true },
-      { id:4, name:'Program',    icon:'📦', color:'#8b5cf6', isBudgetable:true,  isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:false,hasRisks:true, isQuarterlyMeasurable:false },
-      { id:5, name:'Milestone',  icon:'🚩', color:'#ec4899', isBudgetable:false, isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:false,hasRisks:false, isQuarterlyMeasurable:false },
+      { id:1, name:'Pillar',     icon:'🏛️', color:'#6366f1', isBudgetable:false, isTrackable:false, isVisionAligned:true,  canBeRoot:true,  hasKPIs:true, hasRisks:true, linkableWithProject:false, isQuarterlyMeasurable:false  },
+      { id:2, name:'Goal',       icon:'🎯', color:'#10b981', isBudgetable:false, isTrackable:true,  isVisionAligned:true,  canBeRoot:false, hasKPIs:true, hasRisks:true, linkableWithProject:false, isQuarterlyMeasurable:true },
+      { id:3, name:'Initiative', icon:'⚡', color:'#f59e0b', isBudgetable:true,  isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:true, hasRisks:true, linkableWithProject:true, isQuarterlyMeasurable:true },
+      { id:4, name:'Program',    icon:'📦', color:'#8b5cf6', isBudgetable:true,  isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:false,hasRisks:true, linkableWithProject:true, isQuarterlyMeasurable:false },
+      { id:5, name:'Milestone',  icon:'🚩', color:'#ec4899', isBudgetable:false, isTrackable:true,  isVisionAligned:false, canBeRoot:false, hasKPIs:false,hasRisks:false, linkableWithProject:false, isQuarterlyMeasurable:false },
+    ],
+    strategyTemplates: [
+      { id: 1, name: 'National Outcome Map', description: 'Pillar > Goal > Initiative with KPI-led goals and project-linked initiatives.', summary: '3 types · multi-parent initiatives enabled', typeIds: [1,2,3], parentRules: { 2: [1], 3: [2,1] }, edgeMethods: { '1>2': 'IMPACT', '2>3': 'PERCENT', '1>3': 'BUSINESS_VALUE' } },
+      { id: 2, name: 'Program Delivery Model', description: 'Goal > Program > Initiative with budget-aware delivery rollups.', summary: '3 types · budgetable delivery model', typeIds: [2,4,3], parentRules: { 4: [2], 3: [4,2] }, edgeMethods: { '2>4': 'BUSINESS_VALUE', '4>3': 'BUDGETABLE', '2>3': 'IMPACT' } },
+      { id: 3, name: 'Execution Cascade', description: 'Goal > Initiative > Milestone for operational execution plans.', summary: '3 types · quarterly execution focus', typeIds: [2,3,5], parentRules: { 3: [2], 5: [3] }, edgeMethods: { '2>3': 'PERCENT', '3>5': 'EQUAL' } },
     ],
     selectedTypeIds: [1, 2, 3],
 
     get selectedTypes() {
       return this.availableTypes.filter(t => this.selectedTypeIds.includes(t.id));
+    },
+
+    get selectedTemplateName() {
+      return this.strategyTemplates.find(t => t.id === this.form.templateId)?.name || '';
+    },
+
+    applyTemplate(tpl) {
+      this.form.creationMode = 'template';
+      this.form.templateId = tpl.id;
+      this.selectedTypeIds = [...tpl.typeIds];
+      this.parentRules = JSON.parse(JSON.stringify(tpl.parentRules));
+      this.edgeMethods = { ...tpl.edgeMethods };
+      this.availableTypes = this.availableTypes.map(t => ({
+        ...t,
+        linkableWithProject: t.linkableWithProject ?? (t.name === 'Initiative' || t.name === 'Program')
+      }));
     },
 
     isTypeSelected(id) { return this.selectedTypeIds.includes(id); },
@@ -568,17 +654,6 @@ function app() {
       if (this.hasTypeCycle()) {
         warnings.push('Type hierarchy contains a cycle. A strict build requires an acyclic hierarchy.');
       }
-      const depthBuckets = {};
-      this.selectedTypes.forEach(t => {
-        const d = this.typeDepthForValidation(t.id);
-        if (!depthBuckets[d]) depthBuckets[d] = [];
-        depthBuckets[d].push(t.name);
-      });
-      Object.entries(depthBuckets).forEach(([depth, names]) => {
-        if (names.length > 1) {
-          warnings.push(`One level, one type rule violated at level ${Number(depth) + 1}: ${names.join(', ')}`);
-        }
-      });
       return warnings;
     },
     typeDepthForValidation(typeId, stack = new Set()) {
@@ -614,6 +689,7 @@ function app() {
         hasKPIs: !!t.hasKPIs,
         hasIndicators: !!t.hasKPIs,
         hasRisks: !!t.hasRisks,
+        linkableWithProject: !!t.linkableWithProject,
         isQuarterlyMeasurable: !!t.isQuarterlyMeasurable,
       }));
 
@@ -625,6 +701,9 @@ function app() {
         endDate: this.form.endDate,
         budget: this.form.budget,
         unit: this.form.unit,
+        creationMode: this.form.creationMode,
+        templateId: this.form.templateId,
+        templateName: this.selectedTemplateName || null,
         weightType: this.form.weightType,
         discrepancyThreshold: this.form.discrepancyThreshold,
         status: 'DRAFT',

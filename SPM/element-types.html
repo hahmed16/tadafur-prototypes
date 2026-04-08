@@ -8,7 +8,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>[x-cloak]{display:none!important}</style>
 </head>
-<body class="bg-gray-50 min-h-screen" x-data="app()">
+<body class="bg-gray-50 min-h-screen" x-data="app()" x-init="init()">
 
 <!-- NAV -->
 <nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
@@ -48,14 +48,14 @@
   <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 flex gap-3 text-sm text-blue-800">
     <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <div>
-      <strong>How element types work:</strong> Each type defines what capabilities its elements have (Budget tracking, Progress tracking, Vision alignment).
-      When building a strategy, you choose which types appear and at which levels of the graph. The same type can appear at different levels in different strategies.
+      <strong>How element types work:</strong> Each type defines the default starting values its elements have inside a strategy.
+      When building a strategy, these defaults are copied first, then strategy owners can override them for that strategy without changing the master type.
     </div>
   </div>
 
   <!-- Capability legend -->
-  <div class="flex items-center gap-6 mb-6 text-xs text-gray-500">
-    <span class="font-semibold text-gray-700">Capabilities:</span>
+  <div class="flex items-center gap-6 mb-6 text-xs text-gray-500 flex-wrap">
+    <span class="font-semibold text-gray-700">Defaults copied into strategy:</span>
     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Budgetable — tracks planned & actual budget + payments</span>
     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-violet-500 inline-block"></span> Trackable — has progress log &amp; milestone tracking</span>
     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> VisionAligned — can be linked to a Vision Priority</span>
@@ -106,6 +106,36 @@
                     class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
             </button>
             <span class="text-xs" :class="t.isTrackable ? 'text-violet-600 font-medium' : 'text-gray-400'">Trackable</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1">
+            <button @click="t.hasKPIs = !t.hasKPIs; showSaved(t.id)"
+                    :class="t.hasKPIs ? 'bg-sky-500' : 'bg-gray-200'"
+                    class="relative w-10 h-6 rounded-full transition-colors focus:outline-none">
+              <span :class="t.hasKPIs ? 'translate-x-5' : 'translate-x-1'"
+                    class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+            <span class="text-xs" :class="t.hasKPIs ? 'text-sky-600 font-medium' : 'text-gray-400'">KPIs</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1">
+            <button @click="t.hasRisks = !t.hasRisks; showSaved(t.id)"
+                    :class="t.hasRisks ? 'bg-rose-500' : 'bg-gray-200'"
+                    class="relative w-10 h-6 rounded-full transition-colors focus:outline-none">
+              <span :class="t.hasRisks ? 'translate-x-5' : 'translate-x-1'"
+                    class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+            <span class="text-xs" :class="t.hasRisks ? 'text-rose-600 font-medium' : 'text-gray-400'">Risks</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1">
+            <button @click="t.linkableWithProject = !t.linkableWithProject; showSaved(t.id)"
+                    :class="t.linkableWithProject ? 'bg-teal-500' : 'bg-gray-200'"
+                    class="relative w-10 h-6 rounded-full transition-colors focus:outline-none">
+              <span :class="t.linkableWithProject ? 'translate-x-5' : 'translate-x-1'"
+                    class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+            <span class="text-xs" :class="t.linkableWithProject ? 'text-teal-600 font-medium' : 'text-gray-400'">Project</span>
           </div>
 
           <!-- VisionAligned -->
@@ -229,6 +259,27 @@
             </div>
           </label>
           <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" x-model="modal.form.hasKPIs" class="w-4 h-4 text-sky-500 rounded" />
+            <div>
+              <span class="text-sm font-medium text-gray-700">Has KPIs</span>
+              <p class="text-xs text-gray-400">Default KPI visibility when this type is included in a strategy</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" x-model="modal.form.hasRisks" class="w-4 h-4 text-rose-500 rounded" />
+            <div>
+              <span class="text-sm font-medium text-gray-700">Has Risks</span>
+              <p class="text-xs text-gray-400">Default risk visibility when this type is included in a strategy</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" x-model="modal.form.linkableWithProject" class="w-4 h-4 text-teal-500 rounded" />
+            <div>
+              <span class="text-sm font-medium text-gray-700">Linkable With Project</span>
+              <p class="text-xs text-gray-400">Allow project linkage by default when this type is used in a strategy</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
             <input type="checkbox" x-model="modal.form.isVisionAligned" class="w-4 h-4 text-amber-500 rounded" />
             <div>
               <span class="text-sm font-medium text-gray-700">VisionAligned</span>
@@ -288,6 +339,17 @@ function app() {
       { id: 4, name: 'Program', icon: '📦', color: '#8b5cf6', description: 'A group of related initiatives managed together', isSystem: false, isCustom: true, isBudgetable: true, isTrackable: true, isVisionAligned: false, isQuarterlyMeasurable: false, usedIn: 2, elementCount: 7 },
       { id: 5, name: 'Milestone', icon: '🚩', color: '#ec4899', description: 'A key checkpoint or deliverable within an initiative', isSystem: false, isCustom: true, isBudgetable: false, isTrackable: true, isVisionAligned: false, isQuarterlyMeasurable: false, usedIn: 2, elementCount: 14 },
     ],
+    init() {
+      this.types = this.types.map(t => ({
+        hasKPIs: false,
+        hasRisks: false,
+        linkableWithProject: false,
+        ...t,
+        hasKPIs: t.hasKPIs ?? (t.name === 'Pillar' || t.name === 'Goal' || t.name === 'Initiative'),
+        hasRisks: t.hasRisks ?? (t.name !== 'Milestone'),
+        linkableWithProject: t.linkableWithProject ?? (t.name === 'Initiative' || t.name === 'Program'),
+      }));
+    },
     showSaved(id) {
       this.savedId = id;
       setTimeout(() => { this.savedId = null; }, 1800);

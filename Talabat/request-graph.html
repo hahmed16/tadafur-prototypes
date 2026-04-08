@@ -263,39 +263,8 @@
       color: var(--muted);
     }
 
-    .linked-list,
-    .ranking-list {
+    .search-input {
       display: grid;
-      gap: 8px;
-      max-height: 220px;
-      overflow: auto;
-    }
-
-    .linked-row,
-    .ranking-row {
-      display: grid;
-      gap: 4px;
-      padding: 10px 12px;
-      background: #fff;
-      border-radius: 12px;
-      border: 1px solid rgba(214, 198, 175, 0.8);
-    }
-
-    .ranking-row strong,
-    .linked-row strong {
-      font-size: 0.92rem;
-    }
-
-    .pill {
-      display: inline-block;
-      margin-right: 6px;
-      margin-top: 6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: #15514d;
-      font-size: 0.75rem;
-      font-weight: 600;
     }
 
     .actions {
@@ -415,19 +384,16 @@
       </section>
 
       <section class="section">
-        <h2>Top Dependency Ranking</h2>
-        <div id="ranking" class="ranking-list"></div>
-      </section>
-
-      <section class="section">
         <h2>Edit Relations</h2>
         <div class="field">
-          <label for="sourceSelect">Source Process</label>
-          <select id="sourceSelect"></select>
+          <label for="sourceInput">Source Process</label>
+          <input id="sourceInput" class="search-input" list="sourceOptions" type="text" placeholder="Search source request">
+          <datalist id="sourceOptions"></datalist>
         </div>
         <div class="field">
-          <label for="targetSelect">Target Process</label>
-          <select id="targetSelect"></select>
+          <label for="targetInput">Target Process</label>
+          <input id="targetInput" class="search-input" list="targetOptions" type="text" placeholder="Search target request">
+          <datalist id="targetOptions"></datalist>
         </div>
         <div class="field">
           <label for="relationInput">Edge Label</label>
@@ -438,21 +404,6 @@
           <button id="deleteEdgeButton" class="danger" type="button">Delete Selected Edge</button>
         </div>
         <div id="editorStatus" class="status">No pending issues.</div>
-      </section>
-
-      <section class="section">
-        <h2>Editable JSON</h2>
-        <div class="field">
-          <label for="jsonEditor">Data Model</label>
-          <textarea id="jsonEditor" spellcheck="false"></textarea>
-        </div>
-        <div class="actions">
-          <button id="applyJsonButton" type="button">Apply JSON</button>
-          <button id="exportJsonButton" class="secondary" type="button">Download JSON</button>
-          <button id="resetButton" class="secondary" type="button">Reset Seed</button>
-          <button id="importButton" class="secondary" type="button">Import JSON</button>
-        </div>
-        <input id="fileInput" type="file" accept=".json,application/json" hidden>
       </section>
     </aside>
   </div>
@@ -466,22 +417,17 @@
       categoryFilter: document.getElementById("categoryFilter"),
       layoutSelect: document.getElementById("layoutSelect"),
       details: document.getElementById("details"),
-      ranking: document.getElementById("ranking"),
       nodeCount: document.getElementById("nodeCount"),
       edgeCount: document.getElementById("edgeCount"),
       highDependencyCount: document.getElementById("highDependencyCount"),
       requestRange: document.getElementById("requestRange"),
-      sourceSelect: document.getElementById("sourceSelect"),
-      targetSelect: document.getElementById("targetSelect"),
+      sourceInput: document.getElementById("sourceInput"),
+      targetInput: document.getElementById("targetInput"),
+      sourceOptions: document.getElementById("sourceOptions"),
+      targetOptions: document.getElementById("targetOptions"),
       relationInput: document.getElementById("relationInput"),
       addEdgeButton: document.getElementById("addEdgeButton"),
       deleteEdgeButton: document.getElementById("deleteEdgeButton"),
-      jsonEditor: document.getElementById("jsonEditor"),
-      applyJsonButton: document.getElementById("applyJsonButton"),
-      exportJsonButton: document.getElementById("exportJsonButton"),
-      resetButton: document.getElementById("resetButton"),
-      importButton: document.getElementById("importButton"),
-      fileInput: document.getElementById("fileInput"),
       editorStatus: document.getElementById("editorStatus"),
       sidebarToggle: document.getElementById("sidebarToggle"),
       layout: document.querySelector(".layout"),
@@ -596,7 +542,6 @@
 
     function persistState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      elements.jsonEditor.value = JSON.stringify(state, null, 2);
     }
 
     function buildLookups(data) {
@@ -650,18 +595,44 @@
       elements.categoryFilter.value = categories.includes(currentCategory) ? currentCategory : "__all__";
     }
 
+    function formatProcessOption(node) {
+      return `${node.id} - ${node.label}`;
+    }
+
+    function setProcessInputValue(input, processId) {
+      const node = state.nodes.find(item => item.id === processId);
+      input.value = node ? formatProcessOption(node) : "";
+    }
+
+    function getProcessIdFromInput(input) {
+      const raw = input.value.trim();
+      if (!raw) {
+        return "";
+      }
+      const exact = state.nodes.find(node => formatProcessOption(node) === raw);
+      if (exact) {
+        return exact.id;
+      }
+      const prefix = raw.match(/^(\d+)\s*-/);
+      if (prefix) {
+        return prefix[1];
+      }
+      const byLabel = state.nodes.find(node => node.label.toLowerCase() === raw.toLowerCase());
+      return byLabel ? byLabel.id : "";
+    }
+
     function populateProcessSelectors() {
       const options = state.nodes
         .slice()
         .sort((a, b) => Number(a.id) - Number(b.id))
-        .map(node => optionMarkup(node.id, `${node.id} - ${node.label}`))
+        .map(node => `<option value="${escapeHtml(formatProcessOption(node))}"></option>`)
         .join("");
 
-      elements.sourceSelect.innerHTML = options;
-      elements.targetSelect.innerHTML = options;
+      elements.sourceOptions.innerHTML = options;
+      elements.targetOptions.innerHTML = options;
 
       if (selectedNodeId) {
-        elements.sourceSelect.value = selectedNodeId;
+        setProcessInputValue(elements.sourceInput, selectedNodeId);
       }
     }
 
@@ -799,7 +770,7 @@
           const node = event.target.data();
           selectedNodeId = node.id;
           selectedEdgeId = null;
-          elements.sourceSelect.value = node.id;
+          setProcessInputValue(elements.sourceInput, node.id);
           renderDetails(node.id);
         });
 
@@ -807,8 +778,8 @@
           const edge = event.target.data();
           selectedEdgeId = edge.id;
           selectedNodeId = null;
-          elements.sourceSelect.value = edge.source;
-          elements.targetSelect.value = edge.target;
+          setProcessInputValue(elements.sourceInput, edge.source);
+          setProcessInputValue(elements.targetInput, edge.target);
           elements.relationInput.value = edge.relation;
           renderEdgeDetails(edge);
         });
@@ -837,30 +808,8 @@
         return;
       }
 
-      const { nodesById, incoming, outgoing } = buildLookups(state);
+      const { nodesById } = buildLookups(state);
       const node = nodesById[nodeId];
-      const links = [
-        ...(incoming.get(nodeId) || []).map(edge => ({
-          direction: "Depends On",
-          relation: edge.relation,
-          node: nodesById[edge.source]
-        })),
-        ...(outgoing.get(nodeId) || []).map(edge => ({
-          direction: "Supports",
-          relation: edge.relation,
-          node: nodesById[edge.target]
-        }))
-      ];
-
-      const linkedMarkup = links.length
-        ? `<div class="linked-list">${links.map(link => `
-            <div class="linked-row">
-              <strong>${escapeHtml(link.node?.label || "Unknown process")}</strong>
-              <span>${escapeHtml(link.direction)} | ${escapeHtml(link.relation)}</span>
-              <span>${escapeHtml(link.node?.domain || "")} / ${escapeHtml(link.node?.category || "")}</span>
-            </div>
-          `).join("")}</div>`
-        : `<div class="detail-item">No linked processes yet for this request.</div>`;
 
       elements.details.innerHTML = `
         <div class="detail-item"><b>ID</b>${escapeHtml(node.id)}</div>
@@ -868,7 +817,6 @@
         <div class="detail-item"><b>Category</b>${escapeHtml(node.category)}</div>
         <div class="detail-item"><b>Service Request Type</b>${escapeHtml(node.requestType)}</div>
         <div class="detail-item"><b>Arabic</b>${escapeHtml(node.arabicLabel || "-")}</div>
-        <div class="detail-item"><b>Linked Points</b>${linkedMarkup}</div>
       `;
     }
 
@@ -880,24 +828,6 @@
         <div class="detail-item"><b>Target</b>${escapeHtml(nodesById[edge.target]?.label || edge.target)}</div>
         <div class="detail-item"><b>Confidence</b>${escapeHtml(edge.confidence || "manual")}</div>
       `;
-    }
-
-    function renderRanking() {
-      const ranked = enrichNodes(state)
-        .sort((a, b) => b.totalLinks - a.totalLinks || Number(a.id) - Number(b.id))
-        .slice(0, 12);
-
-      elements.ranking.innerHTML = ranked.map((node, index) => `
-        <div class="ranking-row">
-          <strong>${index + 1}. ${escapeHtml(node.label)}</strong>
-          <span>${escapeHtml(node.domain)} / ${escapeHtml(node.category)}</span>
-          <span>
-            <span class="pill">In ${node.inCount}</span>
-            <span class="pill">Out ${node.outCount}</span>
-            <span class="pill">Total ${node.totalLinks}</span>
-          </span>
-        </div>
-      `).join("");
     }
 
     function renderSnapshot() {
@@ -924,7 +854,6 @@
 
     function renderSidebar() {
       renderSnapshot();
-      renderRanking();
       if (selectedNodeId) {
         renderDetails(selectedNodeId);
       } else if (!selectedEdgeId) {
@@ -941,8 +870,8 @@
     }
 
     function addOrUpdateEdge() {
-      const source = elements.sourceSelect.value;
-      const target = elements.targetSelect.value;
+      const source = getProcessIdFromInput(elements.sourceInput);
+      const target = getProcessIdFromInput(elements.targetInput);
       const relation = normalizeRelation(elements.relationInput.value);
 
       if (!source || !target || !relation) {
@@ -1020,54 +949,6 @@
       });
     }
 
-    function applyJson() {
-      try {
-        const parsed = JSON.parse(elements.jsonEditor.value);
-        validateData(parsed);
-        state = normalizeData(parsed);
-        persistState();
-        populateFilters();
-        populateProcessSelectors();
-        renderGraph();
-        setStatus("JSON applied successfully.", "ok");
-      } catch (error) {
-        setStatus(error.message, "error");
-      }
-    }
-
-    function exportJson() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "request-graph-data.updated.json";
-      link.click();
-      URL.revokeObjectURL(url);
-      setStatus("JSON downloaded.", "ok");
-    }
-
-    function resetState() {
-      state = normalizeData(seedData);
-      localStorage.removeItem(STORAGE_KEY);
-      persistState();
-      populateFilters();
-      populateProcessSelectors();
-      renderGraph();
-      setStatus("Reset to original extracted seed.", "ok");
-    }
-
-    function importJsonFile(file) {
-      if (!file) {
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        elements.jsonEditor.value = reader.result;
-        applyJson();
-      };
-      reader.readAsText(file, "utf-8");
-    }
-
     function attachEvents() {
       elements.searchInput.addEventListener("input", renderGraph);
       elements.domainFilter.addEventListener("change", () => {
@@ -1078,11 +959,6 @@
       elements.layoutSelect.addEventListener("change", runLayout);
       elements.addEdgeButton.addEventListener("click", addOrUpdateEdge);
       elements.deleteEdgeButton.addEventListener("click", deleteSelectedEdge);
-      elements.applyJsonButton.addEventListener("click", applyJson);
-      elements.exportJsonButton.addEventListener("click", exportJson);
-      elements.resetButton.addEventListener("click", resetState);
-      elements.importButton.addEventListener("click", () => elements.fileInput.click());
-      elements.fileInput.addEventListener("change", event => importJsonFile(event.target.files[0]));
       elements.sidebarToggle.addEventListener("click", toggleSidebar);
     }
 

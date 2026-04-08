@@ -47,7 +47,7 @@
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div class="text-sm font-semibold">Expected Navigation Options</div>
-          <div class="text-xs text-gray-500">Derived from strategy type configuration and KPI-enabled types.</div>
+          <div class="text-xs text-gray-500">Derived from strategy type configuration, template defaults, and KPI-enabled types.</div>
         </div>
         <div class="text-xs text-gray-500">Debug: <span id="dbg"></span></div>
       </div>
@@ -136,7 +136,7 @@
             <div id="vpType" class="font-semibold text-gray-800 mt-1">-</div>
           </div>
           <div class="border border-gray-200 rounded-xl p-2.5">
-            <div class="text-[11px] text-gray-500">Parent</div>
+            <div class="text-[11px] text-gray-500">Parents</div>
             <div id="vpParent" class="font-semibold text-gray-800 mt-1">-</div>
           </div>
           <div class="border border-gray-200 rounded-xl p-2.5">
@@ -423,9 +423,8 @@
     return app.state.strategy.edgeMethods?.[`${parentType}>${childType}`] || app.state.strategy.weightType || 'IMPACT';
   }
 
-  function parentOf(childId){
-    const edge = app.state.links.find(l => l.child === childId);
-    return edge ? edge.parent : null;
+  function parentsOf(childId){
+    return app.state.links.filter(l => l.child === childId).map(l => l.parent);
   }
 
   function isElementInStrategy(id){
@@ -467,8 +466,8 @@
     document.getElementById('viewPanelTitle').textContent = el.name;
     document.getElementById('vpStatus').textContent = el.status || 'DRAFT';
     document.getElementById('vpType').textContent = el.type || '-';
-    const pid = parentOf(el.id);
-    document.getElementById('vpParent').textContent = pid ? (elementById(pid)?.name || ('#' + pid)) : 'Root';
+    const pids = parentsOf(el.id);
+    document.getElementById('vpParent').textContent = pids.length ? pids.map(pid => elementById(pid)?.name || ('#' + pid)).join(', ') : 'Root';
     const children = childrenOf(el.id);
     document.getElementById('vpChildrenCount').textContent = String(children.length);
     const cl = document.getElementById('vpChildrenList');
@@ -872,9 +871,9 @@
       if (parentId === null) {
         const rule = typeRule(elementType);
         if (!rule.canBeRoot) return `${elementType} cannot be root based on configuration.`;
-        const existingParent = parentOf(elementId);
-        if (existingParent !== null) return 'This element already has a parent and cannot be promoted to root.';
-        if (isElementInStrategy(elementId) && existingParent === null) return 'This element is already a root in this strategy.';
+        const existingParents = parentsOf(elementId);
+        if (existingParents.length > 0) return 'This element already has incoming links and cannot be promoted to root.';
+        if (isElementInStrategy(elementId) && existingParents.length === 0) return 'This element is already a root in this strategy.';
       } else {
         const parent = app.state.elements.find(e => e.id === parentId);
         if (!parent) return 'Parent element was not found.';
@@ -882,11 +881,8 @@
         if (!rule.allowedParentTypeNames.includes(parent.type)) {
           return elementType + ' cannot be linked under ' + parent.type + ' based on configuration.';
         }
-        const existingParent = parentOf(elementId);
-        if (existingParent !== null && existingParent !== parentId) {
-          return 'This element already has a parent in strategy.';
-        }
-        if (existingParent === parentId) {
+        const existingParents = parentsOf(elementId);
+        if (existingParents.includes(parentId)) {
           return 'This link already exists.';
         }
         if (wouldCreateCycle(parentId, elementId)) {

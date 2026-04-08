@@ -91,7 +91,7 @@
             <div id="vpType" class="font-semibold text-gray-800 mt-1">-</div>
           </div>
           <div class="border border-gray-200 rounded-xl p-2.5">
-            <div class="text-[11px] text-gray-500">Parent</div>
+            <div class="text-[11px] text-gray-500">Parents</div>
             <div id="vpParent" class="font-semibold text-gray-800 mt-1">-</div>
           </div>
           <div class="border border-gray-200 rounded-xl p-2.5">
@@ -273,9 +273,8 @@
     return 'Impact ' + (ind.contributionValue || 0) + '/10';
   }
 
-  function parentOf(state, childId){
-    const edge = state.links.find(l => l.child === childId);
-    return edge ? edge.parent : null;
+  function parentsOf(state, childId){
+    return state.links.filter(l => l.child === childId).map(l => l.parent);
   }
 
   function childrenOf(state, id){
@@ -290,8 +289,10 @@
     document.getElementById('vpTitle').textContent = el.name;
     document.getElementById('vpStatus').textContent = el.status || 'DRAFT';
     document.getElementById('vpType').textContent = el.type || '-';
-    const pid = parentOf(state, el.id);
-    document.getElementById('vpParent').textContent = pid ? (state.elements.find(e => e.id === pid)?.name || ('#' + pid)) : 'Root';
+    const pids = parentsOf(state, el.id);
+    document.getElementById('vpParent').textContent = pids.length
+      ? pids.map(pid => state.elements.find(e => e.id === pid)?.name || ('#' + pid)).join(', ')
+      : 'Root';
     const children = childrenOf(state, el.id);
     document.getElementById('vpChildrenCount').textContent = String(children.length);
     const cl = document.getElementById('vpChildrenList');
@@ -371,9 +372,8 @@
     return state.elements.some(e => e.id === id);
   }
 
-  function parentElementId(childId){
-    const edge = state.links.find(l => l.child === childId);
-    return edge ? edge.parent : null;
+  function parentElementIds(childId){
+    return state.links.filter(l => l.child === childId).map(l => l.parent);
   }
 
   function depthOf(elementId){
@@ -513,17 +513,16 @@
       if (parentId === null || parentId === undefined) {
         const rule = typeRule(elementType);
         if (!rule.canBeRoot) return `${elementType} cannot be root based on configuration.`;
-        const existingParent = parentElementId(elementId);
-        if (existingParent !== null) return 'This element already has a parent and cannot be promoted to root.';
-        if (isElementInStrategy(elementId) && existingParent === null) return 'This element is already a root in this strategy.';
+        const existingParents = parentElementIds(elementId);
+        if (existingParents.length > 0) return 'This element already has incoming links and cannot be promoted to root.';
+        if (isElementInStrategy(elementId) && existingParents.length === 0) return 'This element is already a root in this strategy.';
       } else {
         const parent = state.elements.find(e => e.id === parentId);
         if (!parent) return 'Parent element not found.';
         const rule = typeRule(elementType);
         if (!rule.allowedParentTypeNames.includes(parent.type)) return `${elementType} cannot be linked under ${parent.type} based on configuration.`;
-        const existingParent = parentElementId(elementId);
-        if (existingParent !== null && existingParent !== parentId) return 'This element already has a parent in strategy.';
-        if (existingParent === parentId) return 'This link already exists.';
+        const existingParents = parentElementIds(elementId);
+        if (existingParents.includes(parentId)) return 'This link already exists.';
         if (wouldCreateCycle(parentId, elementId)) return 'This link would create a cycle.';
         if (state.strategy.strictHierarchy !== false && state.strategy.maxLevels > 0) {
           const newLevel = depthOf(parent.id) + 2;
