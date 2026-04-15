@@ -1,0 +1,980 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام تقارير الأداء المؤسسي</title>
+<link href="https://fonts.googleapis.com/css2?family=Zain:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--pr:#1e3a8a;--prl:#2563eb;--prxl:#dbeafe;--sc:#0e7490;--scl:#06b6d4;--scxl:#cffafe;--su:#065f46;--sul:#059669;--suxl:#d1fae5;--wn:#92400e;--wnl:#d97706;--wnxl:#fef3c7;--dn:#991b1b;--dnl:#dc2626;--dnxl:#fee2e2;--pu:#5b21b6;--pul:#7c3aed;--puxl:#ede9fe;--bg:#f0f4f8;--cd:#fff;--br:#e2e8f0;--tx:#1e293b;--txm:#64748b;--txl:#94a3b8;--sw:264px;--hh:64px;--rd:12px;--sh:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);--shm:0 4px 12px rgba(0,0,0,.08),0 8px 32px rgba(0,0,0,.06)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Zain',sans-serif}
+html,body{height:100%;background:var(--bg);color:var(--tx);direction:rtl}
+#app{display:flex;min-height:100vh}
+.sb{display:none}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.11)}
+.sb-logo .ico{width:38px;height:38px;background:rgba(255,255,255,.16);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;margin-bottom:9px}
+.sb-logo h1{font-size:13px;font-weight:800;color:#fff;line-height:1.45}
+.sb-logo p{font-size:10px;color:rgba(255,255,255,.48);margin-top:2px}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.nst{font-size:9px;font-weight:800;color:rgba(255,255,255,.32);letter-spacing:1.2px;padding:8px 10px 4px;margin-top:4px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:500;transition:all .17s;margin-bottom:1px;text-decoration:none}
+.ni:hover{background:rgba(255,255,255,.12);color:#fff}
+.ni.act{background:rgba(255,255,255,.2);color:#fff;font-weight:700}
+.ni .ic{width:16px;text-align:center;font-size:13px}
+.ni .nb2{margin-right:auto;background:rgba(255,255,255,.2);color:#fff;font-size:10px;padding:1px 7px;border-radius:20px;font-weight:700}
+.sb-ft{padding:10px;border-top:1px solid rgba(255,255,255,.1)}
+.uc{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
+.uav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11.5px;flex-shrink:0}
+.main{margin-right:0;flex:1;display:flex;flex-direction:column;min-height:100vh;width:100%}
+.topbar{height:var(--hh);background:var(--cd);border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 14px;gap:10px;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.04);flex-wrap:nowrap}
+.bc{display:flex;align-items:center;gap:6px;font-size:12.5px}
+.bci{color:var(--txm);cursor:pointer;transition:color .15s}.bci:hover{color:var(--prl)}.bci.on{color:var(--tx);font-weight:700;cursor:default}
+.hm{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ht{font-size:13px;font-weight:900;color:var(--tx)}
+.hnv{display:flex;align-items:center;gap:6px;min-width:0;overflow:auto;padding-bottom:2px}
+.hn{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--br);border-radius:8px;background:#fff;color:var(--txm);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.hn:hover{border-color:var(--prl);color:var(--prl);background:var(--prxl)}
+.hn.on{background:var(--prxl);border-color:var(--prl);color:var(--pr)}
+.tb-r{margin-right:auto;display:flex;align-items:center;gap:6px}
+.pc{padding:16px 14px;flex:1;width:100%;max-width:none}
+.gcard{background:#f8fafc;border-radius:8px;padding:9px 11px;border:1.5px solid var(--br);cursor:pointer;transition:all .15s}
+.gcard:hover{border-color:var(--prl);background:#f1f8ff}
+.gcard.on{border-color:var(--prl);background:var(--prxl);box-shadow:0 0 0 2px rgba(37,99,235,.08) inset}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:14px;flex-wrap:wrap}
+.ph h2{font-size:21px;font-weight:900}.ph p{font-size:12.5px;color:var(--txm);margin-top:2px}
+.card{background:var(--cd);border-radius:var(--rd);box-shadow:var(--sh);border:1px solid var(--br)}
+.ch{padding:14px 18px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ct2{font-size:14px;font-weight:800}.cb2{padding:18px}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.sc2{background:var(--cd);border-radius:var(--rd);padding:16px 18px;border:1px solid var(--br);box-shadow:var(--sh);display:flex;align-items:center;gap:13px;transition:transform .18s,box-shadow .18s}
+.sc2:hover{transform:translateY(-2px);box-shadow:var(--shm)}
+.si{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sv{font-size:26px;font-weight:900;line-height:1}.sl2{font-size:11px;color:var(--txm);margin-top:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;border:none;transition:all .17s;font-family:'Zain',sans-serif;text-decoration:none;white-space:nowrap;line-height:1.2}
+.bsm{padding:5px 10px;font-size:11.5px;border-radius:6px}.bxs{padding:3px 8px;font-size:11px;border-radius:5px}.blg{padding:9px 20px;font-size:13.5px}
+.bpr{background:var(--prl);color:#fff}.bpr:hover{background:var(--pr)}
+.bsc{background:var(--scl);color:#fff}.bsc:hover{background:var(--sc)}
+.bsu{background:var(--sul);color:#fff}.bsu:hover{background:var(--su)}
+.bdn{background:var(--dnl);color:#fff}.bdn:hover{background:var(--dn)}
+.bwn{background:var(--wnl);color:#fff}.bwn:hover{background:var(--wn)}
+.bou{background:transparent;border:1.5px solid var(--br);color:var(--txm)}.bou:hover{border-color:var(--prl);color:var(--prl);background:var(--prxl)}
+.bgh{background:transparent;color:var(--txm)}.bgh:hover{background:var(--bg);color:var(--tx)}
+.bic{width:30px;height:30px;padding:0;border-radius:7px}
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.bdt{width:5px;height:5px;border-radius:50%}
+.bd-dr{background:#f1f5f9;color:#475569}.bd-pb{background:#dbeafe;color:#1d4ed8}.bd-rv{background:#d1fae5;color:#065f46}.bd-ev{background:#ede9fe;color:#5b21b6}
+.bd-pe{background:#fef3c7;color:#92400e}.bd-sb{background:#dbeafe;color:#1d4ed8}.bd-ps{background:#d1fae5;color:#065f46}.bd-nu{background:#fee2e2;color:#991b1b}
+.dt{width:100%;border-collapse:collapse;table-layout:fixed}
+.dt th{text-align:right;padding:10px 13px;background:#f8fafc;color:var(--txm);font-size:11.5px;font-weight:700;border-bottom:2px solid var(--br);white-space:normal}
+.dt td{padding:10px 13px;border-bottom:1px solid var(--br);font-size:12.5px;vertical-align:middle;word-break:break-word}
+.dt tr:last-child td{border-bottom:none}.dt tbody tr:hover{background:#f8fafc}
+.tw{overflow-x:auto;max-width:100%;border-radius:var(--rd);border:1px solid var(--br)}
+.fg{margin-bottom:13px}
+.fl{display:block;font-size:12.5px;font-weight:700;margin-bottom:5px}.fl .rq{color:var(--dnl);margin-right:2px}
+.fc{width:100%;padding:8px 11px;border:1.5px solid var(--br);border-radius:8px;font-size:12.5px;color:var(--tx);background:#fff;transition:border-color .17s,box-shadow .17s;font-family:'Zain',sans-serif}
+.fc:focus{outline:none;border-color:var(--prl);box-shadow:0 0 0 3px rgba(37,99,235,.1)}.fc::placeholder{color:var(--txl)}
+select.fc{cursor:pointer}textarea.fc{resize:vertical;min-height:70px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:13px}.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--br);margin-bottom:18px;overflow-x:auto;scrollbar-width:thin}
+.tab{padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--txm);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .17s;white-space:nowrap;font-family:'Zain',sans-serif;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--prl);background:var(--prxl);border-radius:8px 8px 0 0}.tab.on{color:var(--prl);border-bottom-color:var(--prl)}
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;backdrop-filter:blur(4px)}
+.mdl{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.22);width:100%;max-width:680px;animation:mIn .18s ease}
+.mlg{max-width:880px}.mxl{max-width:1050px}.msm{max-width:460px}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(-8px)}to{opacity:1;transform:none}}
+.mh{padding:18px 22px 14px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between}
+.mt2{font-size:15px;font-weight:900}.mb2{padding:20px 22px}.mf{padding:14px 22px;border-top:1px solid var(--br);display:flex;justify-content:flex-end;gap:9px}
+.pb{height:5px;background:var(--br);border-radius:3px;overflow:hidden}.pf{height:100%;border-radius:3px;transition:width .4s}
+.notif{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 18px;border-radius:10px;font-size:12.5px;font-weight:700;z-index:9999;animation:nIn .22s ease;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:7px;pointer-events:none}
+@keyframes nIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%)}}
+.ns{background:#065f46}.ne{background:#991b1b}.nw{background:#92400e}
+.cba{background:var(--prxl);color:var(--pr);padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:800}
+.es{text-align:center;padding:44px 18px;color:var(--txm)}.es i{font-size:42px;margin-bottom:13px;opacity:.22;display:block}.es h3{font-size:15px;font-weight:800;color:var(--tx);margin-bottom:5px}.es p{font-size:12.5px}
+.al{padding:10px 13px;border-radius:8px;font-size:12.5px;display:flex;align-items:flex-start;gap:8px;margin-bottom:13px}
+.al-i{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}.al-w{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.al-s{background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46}.al-d{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}
+.gc{border:1.5px solid var(--br);border-radius:var(--rd);margin-bottom:10px;overflow:hidden}
+.gc-h{padding:12px 13px;background:#f8fafc;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.gc-b{padding:13px;border-top:1px solid var(--br)}
+.lsc{border:1.5px solid var(--br);border-radius:9px;margin-bottom:9px;overflow:hidden}
+.lsc-h{padding:9px 12px;background:#f8fafc;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.cp2{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1.5px solid var(--br);border-radius:7px;background:#fff;margin-bottom:5px}
+.ct3{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px}
+.tl-lb{background:#f1f5f9;color:#475569}.tl-tx{background:#dbeafe;color:#1d4ed8}.tl-nm{background:#d1fae5;color:#065f46}.tl-ta{background:#ede9fe;color:#5b21b6}.tl-dt{background:#fef3c7;color:#92400e}.tl-pc{background:#d1fae5;color:#047857}
+.ft{width:100%;border-collapse:collapse}
+.ft th{text-align:right;padding:8px 9px;background:linear-gradient(to bottom,#f1f5f9,#e9eef4);color:var(--tx);font-size:11.5px;font-weight:800;border:1px solid #d1d9e0;white-space:nowrap}
+.ft td{padding:6px 8px;border:1px solid #e2e8f0;vertical-align:top;font-size:11.5px}
+.ft tr:nth-child(even){background:#fafbfc}.ft tr:hover{background:#f0f7ff}
+.fi{width:100%;padding:4px 6px;border:1.5px solid transparent;border-radius:4px;font-size:11.5px;background:transparent;font-family:'Zain',sans-serif;color:var(--tx)}
+.fi:focus{outline:none;border-color:var(--prl);background:#fff;box-shadow:0 0 0 2px rgba(37,99,235,.1)}
+.lbc{font-weight:700!important;background:#f8fafc!important;color:var(--txm)!important}
+.ri{display:flex;gap:3px}
+.rb{width:30px;height:30px;border-radius:6px;border:1.5px solid var(--br);background:#fff;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--txm);transition:all .13s;font-family:'Zain',sans-serif}
+.rb:hover{border-color:var(--wnl);background:var(--wnxl);color:#92400e}.rb.sel{background:#f59e0b;border-color:#f59e0b;color:#fff}
+.tg{width:40px;height:22px;border-radius:11px;background:#e2e8f0;cursor:pointer;position:relative;transition:background .18s;flex-shrink:0}
+.tg.on{background:var(--prl)}.tg::after{content:'';position:absolute;width:16px;height:16px;border-radius:8px;background:#fff;top:3px;right:3px;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.tg.on::after{transform:translateX(-18px)}
+.mr{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid var(--br);margin-bottom:6px;flex-wrap:wrap}
+.mav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.pchip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:10.5px;font-weight:700;border:1.5px solid}
+.pv{border-color:#0ea5e9;color:#0284c7;background:#f0f9ff}.pe{border-color:#8b5cf6;color:#7c3aed;background:#f5f3ff}
+.pa{border-color:#059669;color:#047857;background:#f0fdf4}.pev{border-color:#f59e0b;color:#d97706;background:#fffbeb}
+.slab{font-size:10px;font-weight:800;color:var(--txl);text-transform:uppercase;letter-spacing:.9px;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.slab::after{content:'';flex:1;height:1px;background:var(--br)}
+.nbdg{width:20px;height:20px;border-radius:5px;background:var(--prxl);color:var(--pr);font-size:10px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.dh{color:var(--txl);cursor:grab;padding:2px;font-size:11px}
+.sbox{position:relative;display:flex;align-items:center}
+.sbox .si2{position:absolute;right:9px;color:var(--txl);font-size:12px;pointer-events:none}
+.sbox input{padding-right:30px}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+@media(max-width:1100px){.sg{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.topbar{height:auto;padding:8px 10px;gap:8px;flex-wrap:wrap}.hm{order:1}.hnv{order:2;width:100%}.tb-r{order:3}.sg{grid-template-columns:1fr}.fr,.fr3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app"><div style="display:flex;align-items:center;justify-content:center;height:100vh;gap:12px"><div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:sp .7s linear infinite"></div><style>@keyframes sp{to{transform:rotate(360deg)}}</style><span style="font-family:Zain,sans-serif;color:#64748b;font-size:14px">جاري التحميل...</span></div></div>
+<div id="modals"></div>
+<script>
+const SK='ipr_v5';
+let CU=null,ATAB=0;
+const STATUSES={DRAFT:{l:'مسودة',c:'bd-dr'},PUBLISHED:{l:'منشور',c:'bd-pb'},REVIEWED:{l:'تمت المراجعة',c:'bd-rv'},EVALUATED:{l:'مُقيَّم',c:'bd-ev'}};
+const GS={PENDING:{l:'قيد الانتظار',c:'bd-pe'},DATA_SUBMITTED:{l:'البيانات مقدمة',c:'bd-sb'},DATA_REVIEWED_PASSED:{l:'مراجعة ومقبولة',c:'bd-ps'},DATA_REVIEWED_NEED_UPDATE:{l:'تحتاج تحديث',c:'bd-nu'}};
+const CTYPES={label:{l:'تسمية',i:'fa-tag',c:'tl-lb'},text:{l:'نص',i:'fa-font',c:'tl-tx'},number:{l:'رقمي',i:'fa-hashtag',c:'tl-nm'},textarea:{l:'نص طويل',i:'fa-align-right',c:'tl-ta'},date:{l:'تاريخ',i:'fa-calendar',c:'tl-dt'},percent:{l:'نسبة %',i:'fa-percent',c:'tl-pc'}};
+const PERMS=['view','edit','approve','evaluate'];
+const PL={view:'عرض',edit:'تحرير',approve:'اعتماد',evaluate:'تقييم'};
+const PC={view:'pv',edit:'pe',approve:'pa',evaluate:'pev'};
+const USERS=[{id:'u1',n:'أحمد الرحبي',r:'مدير النظام',cl:'#6366f1'},{id:'u2',n:'سالم البلوشي',r:'محلل بيانات',cl:'#0891b2'},{id:'u3',n:'خالد المعمري',r:'مشرف التقييم',cl:'#059669'},{id:'u4',n:'فاطمة الهاشمية',r:'مدير القسم',cl:'#e11d48'},{id:'u5',n:'محمد الشحي',r:'محلل أول',cl:'#d97706'},{id:'u6',n:'نورة الكندية',r:'مستشار',cl:'#7c3aed'},{id:'u7',n:'يوسف الظاهري',r:'مراقب',cl:'#0e7490'},{id:'u8',n:'ريم الوهيبية',r:'منسق',cl:'#be185d'}];
+
+function uid(){return 'x'+Math.random().toString(36).substr(2,8)}
+function gu(id){return USERS.find(u=>u.id===id)}
+function ini(n){return n?n.split(' ').slice(0,2).map(w=>w[0]).join(''):'?'}
+function fdt(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('ar-OM',{year:'numeric',month:'short',day:'numeric'})}catch{return d}}
+function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function scC(s){if(s==null)return'#94a3b8';if(s>=5)return'#059669';if(s>=4)return'#0891b2';if(s>=3)return'#d97706';return'#dc2626'}
+function scL(s){if(s==null)return'غير مقيّم';if(s>=5.5)return'ممتاز';if(s>=4.5)return'جيد جداً';if(s>=3.5)return'جيد';if(s>=2.5)return'مقبول';return'ضعيف'}
+function calcRptScore(r){const gs=r.groups.filter(g=>g.es!=null);if(!gs.length)return null;let t=0,tw=0;gs.forEach(g=>{t+=g.es*g.cp;tw+=g.cp});return tw?t/tw:null}
+
+const SEED_T=[{id:'t1',name:'استمارة تقييم المؤسسات الحكومية لعام 2026م',desc:'الاستمارة الرئيسية لتقييم أداء المؤسسات الحكومية وفق المؤشرات المعتمدة لرؤية عُمان 2040',sd:'2026-01-01',ed:'2026-12-31',ca:'2025-12-01',members:[{uid:'u1',p:['view','edit','approve','evaluate']},{uid:'u3',p:['view','evaluate']}],
+groups:[
+{id:'g1',name:'المؤشر الأول: الأوامر السامية وقرارات مجلس الوزراء',cp:15,members:[{uid:'u2',p:['view','edit']},{uid:'u4',p:['view']}],lists:[
+{id:'l1a',name:'أ. الأوامر السامية — الوزن النسبي (7.5%)',cp:50,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'الأمر أو التوجيه السامي الكريم',t:'text'},{id:'c3',h:'تاريخ الصدور والجهة الناقلة',t:'text'},{id:'c4',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c5',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c6',h:'موعد استكمال التنفيذ الفعلي',t:'date'},{id:'c7',h:'أسباب التأخير (إن وجد)',t:'textarea'},{id:'c8',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]},
+{id:'l1b',name:'ب. قرارات مجلس الوزراء واللجان الدائمة — الوزن النسبي (7.5%)',cp:50,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'القرار / الموضوع',t:'text'},{id:'c3',h:'رقم المحضر وتاريخ الصدور',t:'text'},{id:'c4',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c5',h:'موعد الاستكمال وفق الخطة',t:'date'},{id:'c6',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c7',h:'موعد الاستكمال الفعلي',t:'date'},{id:'c8',h:'أسباب التأخير',t:'textarea'},{id:'c9',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]}]},
+{id:'g2',name:'المؤشر الثاني: أهداف الخطط السنوية — الوزن النسبي (40%)',cp:40,members:[{uid:'u5',p:['view','edit']}],lists:[
+{id:'l2a',name:'أ. الأهداف ذات الأهمية المرحلية',cp:25,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'الهدف',t:'text'},{id:'c3',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c4',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c5',h:'المستهدف 2026',t:'text'},{id:'c6',h:'النسبة المتحققة',t:'percent'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]},
+{id:'l2b',name:'ب. الأهداف الرئيسية',cp:25,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'الهدف',t:'text'},{id:'c3',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c4',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c5',h:'المستهدف 2026',t:'text'},{id:'c6',h:'النسبة المتحققة',t:'percent'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]},
+{id:'l2c',name:'ثانياً: المشاريع والمبادرات ذات الأثر الاستراتيجي',cp:25,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المشروع / المبادرة',t:'text'},{id:'c3',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c4',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c5',h:'المستهدف 2026',t:'text'},{id:'c6',h:'النسبة المتحققة',t:'percent'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]},
+{id:'l2d',name:'ثالثاً: الأهداف الفرعية',cp:15,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'الهدف',t:'text'},{id:'c3',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c4',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c5',h:'المستهدف 2026',t:'text'},{id:'c6',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]},
+{id:'l2e',name:'رابعاً: أهداف المعايرة الدولية',cp:10,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المؤشر الدولي',t:'text'},{id:'c3',h:'المستهدف 2026',t:'text'},{id:'c4',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c5',h:'النسبة المتحققة',t:'percent'},{id:'c6',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]}]},
+{id:'g3',name:'المؤشر الثالث: الإجادة المؤسسية — الوزن النسبي (10%)',cp:10,members:[],lists:[
+{id:'l3a',name:'مؤشرات الإجادة المؤسسية',cp:100,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'مؤشرات الإجادة المؤسسية',t:'label'},{id:'c3',h:'المستهدفات التفصيلية',t:'textarea'},{id:'c4',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c5',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c6',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'1',c2:'القيادة والتخطيط الاستراتيجي',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr2',cells:{c1:'2',c2:'رأس المال البشري والثقافة المؤسسية',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr3',cells:{c1:'3',c2:'الشراكة والتشغيل',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr4',cells:{c1:'4',c2:'الابتكار',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr5',cells:{c1:'5',c2:'رضا المستفيدين',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr6',cells:{c1:'6',c2:'الحوكمة',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr7',cells:{c1:'7',c2:'البيئة والمجتمع',c3:'',c4:'',c5:'',c6:''},es:null,en:''}]}]},
+{id:'g4',name:'المؤشر الرابع: الالتزام المؤسسي والرقابة — الوزن النسبي (5%)',cp:5,members:[],lists:[
+{id:'l4a',name:'أداء الجهة في مجلس الوزراء وكفاءة الخطط السنوية',cp:20,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المواضيع المرفوعة',t:'text'},{id:'c3',h:'التاريخ',t:'date'},{id:'c4',h:'تاريخ المناقشة',t:'date'},{id:'c5',h:'الهدف من رفع الموضوع',t:'textarea'},{id:'c6',h:'التوصيات',t:'textarea'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],prows:[]},
+{id:'l4b',name:'مؤشرات ضبط الأداء المالي',cp:30,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المحور',t:'label'},{id:'c3',h:'المؤشر',t:'label'},{id:'c4',h:'القيمة المستهدفة',t:'text'},{id:'c5',h:'القيمة المخططة',t:'text'},{id:'c6',h:'القيمة المتحققة',t:'text'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'أ',c2:'الخطط المالية',c3:'نسبة الصرف الفعلي للميزانية الجارية والرأسمالية',c4:'1',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr2',cells:{c1:'ب',c2:'الإيرادات',c3:'تحقيق ما لا يقل عن 90% من الإيرادات المعتمدة',c4:'1',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr3',cells:{c1:'ج',c2:'الخزينة',c3:'كشوفات الحسابات البنكية الشهرية قبل اليوم الخامس عشر',c4:'12',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr4',cells:{c1:'د',c2:'التدقيق والرقابة',c3:'التزام دوائر التدقيق بموافاة وزارة المالية بالتقارير الربع سنوية',c4:'4',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr5',cells:{c1:'ه',c2:'النظم المالية',c3:'نسبة التزام الوحدة الحكومية بموافاة وزارة المالية بالبيانات المحدثة',c4:'1',c5:'',c6:'',c7:''},es:null,en:''}]},
+{id:'l4c',name:'مؤشرات التشغيل',cp:20,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المؤشر',t:'label'},{id:'c3',h:'الموظفون العمانيون',t:'number'},{id:'c4',h:'الموظفون الوافدون',t:'number'},{id:'c5',h:'المستهدف',t:'percent'},{id:'c6',h:'المتحقق',t:'percent'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'أ',c2:'بيانات الموظفين',c3:'',c4:'',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr2',cells:{c1:'ب',c2:'التوظيف',c3:'',c4:'',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr3',cells:{c1:'ج',c2:'الإحلال',c3:'',c4:'',c5:'',c6:'',c7:''},es:null,en:''},{id:'pr4',cells:{c1:'د',c2:'نسبة التعمين في القطاعات',c3:'',c4:'',c5:'',c6:'',c7:''},es:null,en:''}]},
+{id:'l4d',name:'مؤشرات التدقيق الداخلي',cp:15,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المؤشر',t:'label'},{id:'c3',h:'القياس',t:'text'},{id:'c4',h:'النتيجة',t:'text'},{id:'c5',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'1',c2:'وجود مهام / اختصاصات إحصائية ضمن الهيكل التنظيمي',c3:'لا يوجد/ جزئي/ كلي',c4:'',c5:''},es:null,en:''},{id:'pr2',cells:{c1:'2',c2:'وجود نظام إلكتروني لتبادل البيانات',c3:'لا يوجد/ جزئي/ كلي',c4:'',c5:''},es:null,en:''},{id:'pr3',cells:{c1:'3',c2:'الالتزام بحوكمة العمل الإحصائي',c3:'غير ملتزم / ملتزم جزئي / ملتزم كلي',c4:'',c5:''},es:null,en:''}]},
+{id:'l4e',name:'جودة البيانات المقدمة لوحدة قياس أداء المؤسسات',cp:15,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المعيار',t:'label'},{id:'c3',h:'مستوى الإنجاز (نسبة)',t:'percent'},{id:'c4',h:'أسباب عدم الإنجاز',t:'textarea'},{id:'c5',h:'الإجراءات اللازمة',t:'textarea'}],
+prows:[{id:'pr1',cells:{c1:'أ',c2:'تسليم البيانات في الموعد المحدد',c3:'',c4:'',c5:''},es:null,en:''},{id:'pr2',cells:{c1:'ب',c2:'صياغة الأمر السامي / القرار / الهدف بشكل مفهوم وواضح',c3:'',c4:'',c5:''},es:null,en:''},{id:'pr3',cells:{c1:'ج',c2:'حوكمة ووضوح الآليات المخططة ومواعيد التنفيذ',c3:'',c4:'',c5:''},es:null,en:''},{id:'pr4',cells:{c1:'د',c2:'حوكمة ووضوح الآليات الفعلية ومواعيد التنفيذ',c3:'',c4:'',c5:''},es:null,en:''},{id:'pr5',cells:{c1:'ه',c2:'تضمين بيانات كل الاستمارات بشكل كامل',c3:'',c4:'',c5:''},es:null,en:''},{id:'pr6',cells:{c1:'و',c2:'حيادية التقييم الذاتي للمؤسسة',c3:'',c4:'',c5:''},es:null,en:''}]}]},
+{id:'g5',name:'المؤشر الخامس: التواصل ورضا المستفيدين — الوزن النسبي (10%)',cp:10,members:[],lists:[
+{id:'l5a',name:'أولاً: التواصل والتفاعل (30%)',cp:30,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المؤشر',t:'label'},{id:'c3',h:'المعايير',t:'label'},{id:'c4',h:'التقييم لكل معيار',t:'number'},{id:'c5',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'1',c2:'سرعة الاستجابة تجاه ما يثار حول المؤسسة',c3:'سرعة الاستجابة / الشمولية / الوضوح / ردود الفعل المجتمعية',c4:'',c5:''},es:null,en:''},{id:'pr2',cells:{c1:'2',c2:'فاعلية انتشار البيانات الإعلامية لدى الرأي العام',c3:'تنوع وسائل الانتشار / توقيت النشر',c4:'',c5:''},es:null,en:''},{id:'pr3',cells:{c1:'3',c2:'مدى احتواء الموقع الإلكتروني على المعلومات والأخبار',c3:'صفحة الأخبار / الوضوح / تحديث المعلومات',c4:'',c5:''},es:null,en:''},{id:'pr4',cells:{c1:'4',c2:'ظهور المسؤول الحكومي',c3:'عدد مرات الظهور / تنوع القنوات / كفاءة الظهور',c4:'',c5:''},es:null,en:''},{id:'pr5',cells:{c1:'5',c2:'المتحدث الرسمي (إن تم تعيينه)',c3:'تفعيل الممارسة / كفاءة التفعيل',c4:'',c5:''},es:null,en:''},{id:'pr6',cells:{c1:'6',c2:'الحضور في وسائل التواصل الاجتماعي',c3:'وجود الحسابات / نشاط الحساب / الهوية الحكومية',c4:'',c5:''},es:null,en:''},{id:'pr7',cells:{c1:'7',c2:'التفاعل مع الجمهور والرد على الاستفسارات',c3:'وضوح سياسة الرد / معايير إعادة المشاركة',c4:'',c5:''},es:null,en:''}]},
+{id:'l5b',name:'ثانياً: رضا المستفيدين (70%)',cp:70,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المؤشر',t:'label'},{id:'c3',h:'المستهدف لعام 2026م',t:'text'},{id:'c4',h:'المبادرات والمشاريع',t:'textarea'},{id:'c5',h:'الموقف التنفيذي',t:'textarea'},{id:'c6',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'1',c2:'الرضا عن سهولة الإجراءات',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr2',cells:{c1:'2',c2:'الرضا عن سرعة إنجاز المعاملات',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr3',cells:{c1:'3',c2:'الرضا عن تكلفة الخدمة',c3:'',c4:'',c5:'',c6:''},es:null,en:''},{id:'pr4',cells:{c1:'4',c2:'الرضا عن جودة الخدمة',c3:'',c4:'',c5:'',c6:''},es:null,en:''}]}]},
+{id:'g6',name:'المؤشر السادس: التحول الرقمي — الوزن النسبي (20%)',cp:20,members:[],lists:[
+{id:'l6a',name:'محاور التحول الرقمي',cp:100,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'المنظور',t:'label'},{id:'c3',h:'المحور',t:'label'},{id:'c4',h:'نسبة الإنجاز المستهدفة',t:'percent'},{id:'c5',h:'النسبة المخطط للوصول إليها',t:'percent'},{id:'c6',h:'النسبة المتحققة',t:'percent'},{id:'c7',h:'أسباب التأخير (إن وجدت)',t:'textarea'},{id:'c8',h:'نسبة الإنجاز (%)',t:'percent'}],
+prows:[{id:'pr1',cells:{c1:'1',c2:'الجاهزية المؤسسية للتحول الرقمي',c3:'ثقافة المؤسسة',c4:'',c5:'',c6:'',c7:'',c8:''},es:null,en:''},{id:'pr2',cells:{c1:'',c2:'',c3:'التمكين الرقمي',c4:'',c5:'',c6:'',c7:'',c8:''},es:null,en:''},{id:'pr3',cells:{c1:'',c2:'',c3:'الكفاءة التشغيلية',c4:'',c5:'',c6:'',c7:'',c8:''},es:null,en:''},{id:'pr4',cells:{c1:'2',c2:'نضج الخدمات الرقمية',c3:'التحديث والتطوير',c4:'',c5:'',c6:'',c7:'',c8:''},es:null,en:''},{id:'pr5',cells:{c1:'',c2:'',c3:'تجربة المستخدم',c4:'',c5:'',c6:'',c7:'',c8:''},es:null,en:''},{id:'pr6',cells:{c1:'3',c2:'أثر التحول الرقمي الفعلي',c3:'التطبيق الفعلي',c4:'',c5:'',c6:'',c7:'',c8:''},es:null,en:''}]}]}
+]}];
+
+const SEED_R=[{id:'r1',name:'تقرير أداء وزارة الصحة — الربع الأول 2026',tid:'t1',sd:'2026-01-01',ed:'2026-06-30',status:'PUBLISHED',ca:'2026-01-15',cby:'u1',clonedFrom:null,
+members:[{uid:'u1',p:['view','edit','approve','evaluate']},{uid:'u2',p:['view','edit']},{uid:'u3',p:['view','evaluate']}],
+groups:[
+{id:'rg1',tgid:'g1',name:'المؤشر الأول: الأوامر السامية وقرارات مجلس الوزراء',cp:15,status:'DATA_SUBMITTED',es:null,en:'',members:[{uid:'u2',p:['view','edit']}],lists:[
+{id:'rl1',tlid:'l1a',name:'أ. الأوامر السامية',cp:50,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'الأمر أو التوجيه السامي الكريم',t:'text'},{id:'c3',h:'تاريخ الصدور والجهة الناقلة',t:'text'},{id:'c4',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c5',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c6',h:'موعد استكمال التنفيذ الفعلي',t:'date'},{id:'c7',h:'أسباب التأخير (إن وجد)',t:'textarea'},{id:'c8',h:'نسبة الإنجاز (%)',t:'percent'}],
+rows:[
+{id:'row1',cells:{c1:'1',c2:'الأمر السامي رقم 1/2024 بشأن تطوير الخدمات الصحية',c3:'2024-01-15 — ديوان البلاط السلطاني',c4:'1- تشكيل لجنة التنفيذ (يناير 2024)\n2- إعداد الخطة التنفيذية (مارس 2024)\n3- البدء في التنفيذ (مايو 2024)',c5:'1- تشكيل اللجنة (يناير 2024) ✓\n2- إعداد الخطة (أبريل 2024) ✓\n3- البدء في التنفيذ (مايو 2024) ✓',c6:'2024-09-30',c7:'',c8:'95'},es:null,en:''},
+{id:'row2',cells:{c1:'2',c2:'الأمر السامي رقم 5/2024 بشأن رفع كفاءة المستشفيات الحكومية',c3:'2024-03-20 — وزارة المالية',c4:'1- مراجعة الأنظمة الصحية (أبريل 2024)\n2- تطوير البنية التحتية (يوليو 2024)\n3- التطبيق الفعلي (أكتوبر 2024)',c5:'1- المراجعة (أبريل 2024) ✓\n2- التطوير (سبتمبر 2024)\n3- التطبيق (يناير 2025)',c6:'2025-03-31',c7:'تأخر بسبب استكمال المشاورات الفنية مع الجهات ذات العلاقة',c8:'80'},es:null,en:''}]},
+{id:'rl2',tlid:'l1b',name:'ب. قرارات مجلس الوزراء',cp:50,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'القرار / الموضوع',t:'text'},{id:'c3',h:'رقم المحضر وتاريخ الصدور',t:'text'},{id:'c4',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c5',h:'موعد الاستكمال وفق الخطة',t:'date'},{id:'c6',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c7',h:'موعد الاستكمال الفعلي',t:'date'},{id:'c8',h:'أسباب التأخير',t:'textarea'},{id:'c9',h:'نسبة الإنجاز (%)',t:'percent'}],
+rows:[{id:'row3',cells:{c1:'1',c2:'قرار بشأن تطوير الخدمات الصحية في المحافظات',c3:'م/1/2024 — 2024-02-10',c4:'إعداد الدراسات التفصيلية وتحديد المستشفيات المستهدفة',c5:'2024-06-30',c6:'الدراسات جارية وتم التعاقد مع الاستشاريين',c7:'2024-09-30',c8:'',c9:'70'},es:null,en:''}]}]},
+{id:'rg2',tgid:'g2',name:'المؤشر الثاني: أهداف الخطط السنوية',cp:40,status:'PENDING',es:null,en:'',members:[],lists:[
+{id:'rl3',tlid:'l2a',name:'أ. الأهداف ذات الأهمية المرحلية',cp:25,hasPR:false,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'الهدف',t:'text'},{id:'c3',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c4',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c5',h:'المستهدف 2026',t:'text'},{id:'c6',h:'النسبة المتحققة',t:'percent'},{id:'c7',h:'نسبة الإنجاز (%)',t:'percent'}],rows:[]}]},
+{id:'rg3',tgid:'g3',name:'المؤشر الثالث: الإجادة المؤسسية',cp:10,status:'DATA_REVIEWED_PASSED',es:4.4,en:'أداء جيد جداً في معظم مؤشرات الإجادة المؤسسية',members:[],lists:[
+{id:'rl8',tlid:'l3a',name:'مؤشرات الإجادة المؤسسية',cp:100,hasPR:true,cols:[{id:'c1',h:'ت',t:'label'},{id:'c2',h:'مؤشرات الإجادة المؤسسية',t:'label'},{id:'c3',h:'المستهدفات التفصيلية',t:'textarea'},{id:'c4',h:'آليات التنفيذ وفق الخطة',t:'textarea'},{id:'c5',h:'آليات التنفيذ الفعلية',t:'textarea'},{id:'c6',h:'نسبة الإنجاز (%)',t:'percent'}],
+rows:[{id:'pr1',cells:{c1:'1',c2:'القيادة والتخطيط الاستراتيجي',c3:'تحقيق 90% من الأهداف الاستراتيجية للعام',c4:'مراجعات ربع سنوية مع القيادة',c5:'3 مراجعات منجزة حسب الخطة',c6:'90'},es:5,en:'أداء ممتاز وقيادة فعّالة'},{id:'pr2',cells:{c1:'2',c2:'رأس المال البشري والثقافة المؤسسية',c3:'رفع كفاءة الموظفين من خلال برامج تدريبية',c4:'25 برنامج تدريبي سنوياً',c5:'تم تنفيذ 20 برنامج (80%)',c6:'80'},es:4,en:''},{id:'pr3',cells:{c1:'3',c2:'الشراكة والتشغيل',c3:'تعزيز الشراكات مع القطاع الخاص',c4:'إبرام 5 اتفاقيات شراكة',c5:'3 اتفاقيات موقعة',c6:'60'},es:4,en:''},{id:'pr4',cells:{c1:'4',c2:'الابتكار',c3:'تطوير 5 مبادرات مبتكرة',c4:'برنامج الابتكار السنوي',c5:'5 مبادرات منفذة وتم اعتمادها',c6:'100'},es:5,en:'تجاوز الهدف المحدد'},{id:'pr5',cells:{c1:'5',c2:'رضا المستفيدين',c3:'تحقيق 85% رضا من المستفيدين',c4:'مسوحات ربع سنوية',c5:'88% رضا محقق — تجاوز المستهدف',c6:'100'},es:5,en:'تجاوز الهدف'},{id:'pr6',cells:{c1:'6',c2:'الحوكمة',c3:'تطبيق معايير الحوكمة الرشيدة',c4:'مراجعة الأنظمة والتشريعات',c5:'جارية — 70% من الأنظمة تمت مراجعتها',c6:'70'},es:4,en:''},{id:'pr7',cells:{c1:'7',c2:'البيئة والمجتمع',c3:'تنفيذ برامج المسؤولية الاجتماعية',c4:'4 برامج سنوية',c5:'4 برامج منفذة بالكامل',c6:'100'},es:4,en:''}]}]},
+{id:'rg4',tgid:'g4',name:'المؤشر الرابع: الالتزام المؤسسي والرقابة',cp:5,status:'PENDING',es:null,en:'',members:[],lists:[]},
+{id:'rg5',tgid:'g5',name:'المؤشر الخامس: التواصل ورضا المستفيدين',cp:10,status:'PENDING',es:null,en:'',members:[],lists:[]},
+{id:'rg6',tgid:'g6',name:'المؤشر السادس: التحول الرقمي',cp:20,status:'PENDING',es:null,en:'',members:[],lists:[]}]}];
+
+function loadST(){try{const s=localStorage.getItem(SK);if(s)return JSON.parse(s)}catch{}return{T:JSON.parse(JSON.stringify(SEED_T)),R:JSON.parse(JSON.stringify(SEED_R))};}
+function saveST(){try{localStorage.setItem(SK,JSON.stringify(ST))}catch{}}
+let ST=loadST();CU=USERS[0];
+
+// Modal
+let mStk=[];
+function showModal({title,body,footer,size='mdl',onClose}){
+  const id='m'+uid();
+  const ov=document.createElement('div');ov.className='mov';ov.id=id;
+  ov.innerHTML=`<div class="${size}"><div class="mh"><div class="mt2">${title}</div><button class="btn bgh bic" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="mb2">${body}</div>${footer?`<div class="mf">${footer}</div>`:''}</div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)closeModal()});
+  document.getElementById('modals').appendChild(ov);mStk.push({id,onClose});
+}
+function closeModal(){
+  const it=mStk.pop();if(!it)return;
+  const el=document.getElementById(it.id);
+  if(el){el.style.opacity='0';el.style.transition='opacity .18s';setTimeout(()=>el.remove(),180)}
+  if(it.onClose)it.onClose();
+}
+function showConfirm(msg,cb,type='dn'){
+  showModal({title:'تأكيد الإجراء',size:'msm',
+    body:`<div class="al ${type==='dn'?'al-d':'al-w'}"><i class="fas fa-exclamation-triangle"></i><span>${esc(msg)}</span></div>`,
+    footer:`<button class="btn bou" onclick="closeModal()">إلغاء</button><button class="btn b${type}" id="cy">تأكيد</button>`});
+  setTimeout(()=>{const b=document.getElementById('cy');if(b)b.onclick=()=>{closeModal();cb()}},50);
+}
+
+function notify(msg,t='s'){
+  const n=document.createElement('div');n.className=`notif n${t}`;
+  n.innerHTML=`<i class="fas fa-${t==='s'?'check-circle':t==='e'?'times-circle':'exclamation-circle'}"></i> ${esc(msg)}`;
+  document.body.appendChild(n);
+  setTimeout(()=>{n.style.opacity='0';n.style.transition='opacity .28s';setTimeout(()=>n.remove(),280)},3000);
+}
+
+// Router
+const routes={};
+function route(p,fn){routes[p]=fn}
+function navigate(p){window.location.hash=p}
+function resolveRoute(){
+  const hash=window.location.hash.slice(1)||'/reports';
+  for(const pat of Object.keys(routes)){
+    const re=new RegExp('^'+pat.replace(/:[^/]+/g,'([^/]+)')+'$');
+    const m=hash.match(re);
+    if(m){const pn=[...pat.matchAll(/:([^/]+)/g)].map(x=>x[1]);const ps={};pn.forEach((n,i)=>ps[n]=m[i+1]);routes[pat](ps);return}
+  }
+  renderLayout('<div class="es"><i class="fas fa-search"></i><h3>الصفحة غير موجودة</h3></div>',[],'/reports');
+}
+window.addEventListener('hashchange',resolveRoute);
+
+function renderLayout(content,bc=[],activeNav=''){
+  document.getElementById('app').innerHTML=`
+  <div class="main">
+    <div class="topbar">
+      <div class="hm"><i class="fas fa-chart-line" style="color:var(--prl)"></i><span class="ht">نظام تقارير الأداء المؤسسي</span></div>
+      <nav class="hnv">
+        <button class="hn ${activeNav==='/reports'?'on':''}" onclick="navigate('/reports')"><i class="fas fa-file-chart-column"></i> التقارير <span class="cba">${ST.R.length}</span></button>
+        <button class="hn ${activeNav==='/templates'?'on':''}" onclick="navigate('/templates')"><i class="fas fa-layer-group"></i> القوالب <span class="cba">${ST.T.length}</span></button>
+        <button class="hn ${activeNav==='/users'?'on':''}" onclick="navigate('/users')"><i class="fas fa-users"></i> المستخدمون</button>
+      </nav>
+      <div class="tb-r">
+        <div class="chip" style="display:flex;align-items:center;gap:7px">
+          <span class="uav" style="background:${CU.cl};width:24px;height:24px;font-size:10px">${ini(CU.n)}</span>
+          <span style="font-size:11px;font-weight:700">${esc(CU.n)}</span>
+        </div>
+        <button class="btn bgh bic" title="الإعدادات" onclick="navigate('/users')"><i class="fas fa-gear"></i></button>
+      </div>
+    </div>
+    <div class="pc" id="pc">${content}</div>
+  </div>`;
+}
+
+// ============================================================
+// REPORTS LIST
+// ============================================================
+route('/reports',()=>{
+  const R=ST.R;
+  const tot=R.length,dr=R.filter(r=>r.status==='DRAFT').length,pb=R.filter(r=>r.status==='PUBLISHED').length,rv=R.filter(r=>r.status==='REVIEWED'||r.status==='EVALUATED').length;
+  renderLayout(`
+  <div class="ph"><div><h2><i class="fas fa-file-chart-column" style="color:var(--prl);margin-left:8px"></i>التقارير المؤسسية</h2><p>إدارة تقارير الأداء المؤسسي ومتابعة حالة تنفيذها</p></div>
+    <button class="btn bpr blg" onclick="navigate('/reports/create')"><i class="fas fa-plus"></i> إنشاء تقرير جديد</button></div>
+  <div class="sg">
+    <div class="sc2"><div class="si" style="background:#dbeafe;color:#1d4ed8"><i class="fas fa-file-alt"></i></div><div><div class="sv" style="color:#1d4ed8">${tot}</div><div class="sl2">إجمالي التقارير</div></div></div>
+    <div class="sc2"><div class="si" style="background:#f1f5f9;color:#475569"><i class="fas fa-pencil"></i></div><div><div class="sv" style="color:#475569">${dr}</div><div class="sl2">مسودات</div></div></div>
+    <div class="sc2"><div class="si" style="background:#dbeafe;color:#1d4ed8"><i class="fas fa-globe"></i></div><div><div class="sv" style="color:#1d4ed8">${pb}</div><div class="sl2">منشورة</div></div></div>
+    <div class="sc2"><div class="si" style="background:#d1fae5;color:#065f46"><i class="fas fa-check-double"></i></div><div><div class="sv" style="color:#065f46">${rv}</div><div class="sl2">مراجعة / تقييم</div></div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct2"><i class="fas fa-list" style="color:var(--prl);margin-left:6px"></i>قائمة التقارير</div>
+      <div style="display:flex;gap:9px;align-items:center">
+        <div class="sbox"><span class="si2"><i class="fas fa-search"></i></span><input class="fc" id="rsch" placeholder="بحث بالاسم..." style="width:210px" oninput="filterR()"/></div>
+        <select class="fc" id="rflt" style="width:155px" onchange="filterR()">
+          <option value="">كل الحالات</option><option value="DRAFT">مسودة</option><option value="PUBLISHED">منشور</option><option value="REVIEWED">تمت المراجعة</option><option value="EVALUATED">مُقيَّم</option>
+        </select>
+      </div>
+    </div>
+    <div id="rtbl">${renderRTable(R)}</div>
+  </div>`,[{l:'التقارير'}],'/reports');
+});
+
+function filterR(){
+  const s=(document.getElementById('rsch')?.value||'').toLowerCase();
+  const f=document.getElementById('rflt')?.value||'';
+  let R=ST.R;if(s)R=R.filter(r=>r.name.toLowerCase().includes(s));if(f)R=R.filter(r=>r.status===f);
+  const el=document.getElementById('rtbl');if(el)el.innerHTML=renderRTable(R);
+}
+function renderReportActions(r){
+  const ops=[`<option value="">إجراءات إضافية</option>`];
+  if(r.status==='DRAFT')ops.push(`<option value="publish">نشر</option>`);
+  if(r.status==='PUBLISHED'){ops.push(`<option value="approve">اعتماد</option>`);ops.push(`<option value="evaluate">تقييم</option>`);}
+  ops.push(`<option value="clone">نسخ</option>`);
+  ops.push(`<option value="delete">حذف</option>`);
+  return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+    <button class="btn bgh bic" title="عرض" onclick="navigate('/reports/view/${r.id}')"><i class="fas fa-eye" style="color:#0891b2"></i></button>
+    ${r.status!=='EVALUATED'?`<button class="btn bgh bic" title="تحرير" onclick="navigate('/reports/edit/${r.id}')"><i class="fas fa-pen" style="color:#7c3aed"></i></button>`:''}
+    <select class="fc" style="min-width:132px;padding:6px 8px" onchange="handleReportAction(this,'${r.id}')">${ops.join('')}</select>
+  </div>`;
+}
+function handleReportAction(el,id){
+  const act=el.value;el.value='';
+  if(!act)return;
+  if(act==='publish')return pubReport(id);
+  if(act==='approve')return approveReport(id);
+  if(act==='evaluate')return navigate('/reports/evaluate/'+id);
+  if(act==='clone')return cloneRpt(id);
+  if(act==='delete')return deleteRpt(id);
+}
+function renderRTable(R){
+  if(!R.length)return`<div class="es"><i class="fas fa-folder-open"></i><h3>لا توجد تقارير</h3><p>انقر على "إنشاء تقرير جديد" للبدء</p></div>`;
+  return`<div class="tw"><table class="dt"><thead><tr><th style="width:36px">#</th><th>اسم التقرير</th><th>القالب</th><th>الفترة</th><th>الحالة</th><th>التقدم</th><th>الدرجة</th><th style="width:170px">الإجراءات</th></tr></thead><tbody>
+  ${R.map((r,i)=>{
+    const tmpl=ST.T.find(t=>t.id===r.tid);const st=STATUSES[r.status]||STATUSES.DRAFT;
+    const passed=r.groups.filter(g=>g.status==='DATA_REVIEWED_PASSED').length;const prog=r.groups.length?Math.round(passed/r.groups.length*100):0;
+    const score=calcRptScore(r);
+    return`<tr>
+      <td style="color:var(--txm);font-weight:700">${i+1}</td>
+      <td><div style="font-weight:700">${esc(r.name)}</div><div style="font-size:11px;color:var(--txm);margin-top:2px"><i class="fas fa-calendar-alt" style="margin-left:3px"></i>${fdt(r.ca)} · <i class="fas fa-user" style="margin-left:3px"></i>${esc(gu(r.cby)?.n||'—')}</div></td>
+      <td style="font-size:11px;color:var(--txm);max-width:170px;white-space:normal;line-height:1.4">${esc(tmpl?.name||'—')}</td>
+      <td style="font-size:12px">${fdt(r.sd)}<br><span style="color:var(--txl);font-size:11px">← ${fdt(r.ed)}</span></td>
+      <td><span class="bdg ${st.c}"><span class="bdt" style="background:currentColor"></span>${st.l}</span></td>
+      <td style="min-width:96px">
+        <div style="display:flex;align-items:center;gap:6px"><div class="pb" style="flex:1"><div class="pf" style="width:${prog}%;background:${prog===100?'var(--sul)':'var(--prl)'}"></div></div><span style="font-size:11px;font-weight:700;color:var(--txm);min-width:28px">${prog}%</span></div>
+        <div style="font-size:10px;color:var(--txl);margin-top:1px">${passed}/${r.groups.length} مجموعة</div>
+      </td>
+      <td>${score!=null?`<div style="display:flex;align-items:center;gap:5px"><div style="width:28px;height:28px;border-radius:50%;background:${scC(score)}18;color:${scC(score)};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;border:1.5px solid ${scC(score)}">${score.toFixed(1)}</div><div style="font-size:10px;font-weight:700;color:${scC(score)}">${scL(score)}</div></div>`:`<span style="font-size:11px;color:var(--txl)">—</span>`}</td>
+      <td>${renderReportActions(r)}</td>
+    </tr>`;}).join('')}
+  </tbody></table></div>`;
+}
+function pubReport(id){showConfirm('هل تريد نشر هذا التقرير؟',()=>{const r=ST.R.find(x=>x.id===id);if(r){r.status='PUBLISHED';saveST();notify('تم نشر التقرير بنجاح');resolveRoute()}},'wn');}
+function approveReport(id){showConfirm('هل تريد اعتماد التقرير نهائياً؟',()=>{const r=ST.R.find(x=>x.id===id);if(r){r.status='REVIEWED';saveST();notify('تم اعتماد التقرير');resolveRoute()}},'wn');}
+function deleteRpt(id){showConfirm('هل تريد حذف هذا التقرير نهائياً؟ لا يمكن التراجع.',()=>{ST.R=ST.R.filter(r=>r.id!==id);saveST();notify('تم حذف التقرير','w');resolveRoute();});}
+function cloneRpt(id){
+  const src=ST.R.find(r=>r.id===id);if(!src)return;
+  showModal({title:'نسخ التقرير',
+    body:`<div class="al al-i"><i class="fas fa-info-circle"></i>سيتم إنشاء نسخة جديدة مع إعادة تعيين الحالات والدرجات.</div>
+    <div class="fg"><label class="fl">اسم التقرير الجديد <span class="rq">*</span></label><input class="fc" id="cl-n" value="${esc(src.name)} — نسخة"/></div>
+    <div class="fr"><div class="fg"><label class="fl">تاريخ البدء</label><input type="date" class="fc" id="cl-sd" value="${src.sd}"/></div><div class="fg"><label class="fl">تاريخ الانتهاء</label><input type="date" class="fc" id="cl-ed" value="${src.ed}"/></div></div>`,
+    footer:`<button class="btn bou" onclick="closeModal()">إلغاء</button><button class="btn bpr" onclick="doClone('${id}')">إنشاء النسخة</button>`});
+}
+function doClone(id){
+  const src=ST.R.find(r=>r.id===id);const name=document.getElementById('cl-n')?.value?.trim();
+  const sd=document.getElementById('cl-sd')?.value;const ed=document.getElementById('cl-ed')?.value;
+  if(!name){notify('يرجى إدخال الاسم','e');return}
+  const nr=JSON.parse(JSON.stringify(src));
+  nr.id='r'+uid();nr.name=name;nr.sd=sd;nr.ed=ed;nr.status='DRAFT';nr.ca=new Date().toISOString().split('T')[0];nr.clonedFrom=id;
+  nr.groups.forEach(g=>{g.id='rg'+uid();g.status='PENDING';g.es=null;g.en='';g.lists.forEach(l=>{l.id='rl'+uid();l.rows.forEach(rw=>{rw.id='rw'+uid();rw.es=null;rw.en=''})})});
+  ST.R.push(nr);saveST();closeModal();notify('تم إنشاء النسخة');navigate('/reports/edit/'+nr.id);
+}
+
+// ============================================================
+// CREATE REPORT
+// ============================================================
+route('/reports/create',()=>{
+  window._nm=[];
+  renderLayout(`
+  <div class="ph"><div><h2><i class="fas fa-plus-circle" style="color:var(--prl);margin-left:8px"></i>إنشاء تقرير جديد</h2><p>قم بتعبئة بيانات التقرير واختيار القالب المناسب</p></div>
+    <button class="btn bou" onclick="navigate('/reports')"><i class="fas fa-arrow-right"></i> رجوع</button></div>
+  <div style="width:100%">
+    <div class="card" style="margin-bottom:14px">
+      <div class="ch"><div class="ct2"><i class="fas fa-info-circle" style="color:var(--prl);margin-left:6px"></i>معلومات التقرير</div></div>
+      <div class="cb2">
+        <div class="fg"><label class="fl">اسم التقرير <span class="rq">*</span></label><input class="fc" id="rn" placeholder="أدخل اسم التقرير..."/></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">القالب <span class="rq">*</span></label>
+            <select class="fc" id="rt"><option value="">-- اختر القالب --</option>${ST.T.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div>
+          <div></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label class="fl">تاريخ البدء <span class="rq">*</span></label><input type="date" class="fc" id="rsd"/></div>
+          <div class="fg"><label class="fl">تاريخ الانتهاء <span class="rq">*</span></label><input type="date" class="fc" id="red"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="ch"><div class="ct2"><i class="fas fa-users" style="color:var(--scl);margin-left:6px"></i>أعضاء الفريق</div>
+        <button class="btn bou bsm" onclick="addRptMember()"><i class="fas fa-user-plus"></i> إضافة عضو</button></div>
+      <div class="cb2"><div id="rml"><div class="es" style="padding:16px"><i class="fas fa-user-plus" style="font-size:28px"></i><p>أضف أعضاء الفريق لمنحهم صلاحيات على التقرير</p></div></div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">
+      <button class="btn bou" onclick="navigate('/reports')">إلغاء</button>
+      <button class="btn bou blg" onclick="saveRpt('DRAFT')"><i class="fas fa-save"></i> حفظ كمسودة</button>
+      <button class="btn bpr blg" onclick="saveRpt('PUBLISHED')"><i class="fas fa-globe"></i> حفظ ونشر</button>
+    </div>
+  </div>`,[{l:'التقارير',href:'/reports'},{l:'إنشاء تقرير جديد'}],'/reports');
+});
+function addRptMember(){
+  const ex=(window._nm||[]).map(m=>m.uid);const av=USERS.filter(u=>!ex.includes(u.id));
+  showModal({title:'إضافة عضو للتقرير',
+    body:`<div class="fg"><label class="fl">المستخدم <span class="rq">*</span></label><select class="fc" id="mu"><option value="">-- اختر --</option>${av.map(u=>`<option value="${u.id}">${esc(u.n)} (${esc(u.r)})</option>`).join('')}</select></div>
+    <div class="fg"><label class="fl">الصلاحيات</label><div style="display:flex;gap:12px;flex-wrap:wrap">${PERMS.map(p=>`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="checkbox" name="mp" value="${p}" ${p==='view'?'checked':''}/>${PL[p]}</label>`).join('')}</div></div>`,
+    footer:`<button class="btn bou" onclick="closeModal()">إلغاء</button><button class="btn bpr" onclick="confAddRptM()">إضافة</button>`});
+}
+function confAddRptM(){
+  const u=document.getElementById('mu')?.value;if(!u){notify('يرجى اختيار مستخدم','e');return}
+  const p=[...document.querySelectorAll('input[name="mp"]:checked')].map(x=>x.value);
+  if(!window._nm)window._nm=[];window._nm.push({uid:u,p});closeModal();
+  const el=document.getElementById('rml');if(el)el.innerHTML=renderMembersList(window._nm,true,null,'rpt');
+}
+function saveRpt(status){
+  const name=document.getElementById('rn')?.value?.trim();
+  const tid=document.getElementById('rt')?.value;
+  const sd=document.getElementById('rsd')?.value;const ed=document.getElementById('red')?.value;
+  if(!name){notify('يرجى إدخال اسم التقرير','e');return}
+  if(!tid){notify('يرجى اختيار القالب','e');return}
+  if(!sd||!ed){notify('يرجى تحديد تواريخ التقرير','e');return}
+  const tmpl=ST.T.find(t=>t.id===tid);if(!tmpl)return;
+  const groups=tmpl.groups.map(g=>({
+    id:'rg'+uid(),tgid:g.id,name:g.name,cp:g.cp,status:'PENDING',es:null,en:'',
+    members:JSON.parse(JSON.stringify(g.members||[])),
+    lists:g.lists.map(l=>({id:'rl'+uid(),tlid:l.id,name:l.name,cp:l.cp,hasPR:l.hasPR,cols:JSON.parse(JSON.stringify(l.cols)),
+      rows:l.hasPR?l.prows.map(pr=>({...JSON.parse(JSON.stringify(pr)),es:null,en:''})):[]}))}));
+  const rpt={id:'r'+uid(),name,tid,sd,ed,status,ca:new Date().toISOString().split('T')[0],cby:CU.id,clonedFrom:null,members:window._nm||[],groups};
+  ST.R.push(rpt);saveST();notify(status==='PUBLISHED'?'تم إنشاء التقرير ونشره':'تم حفظ التقرير كمسودة');navigate('/reports/view/'+rpt.id);
+}
+
+// ============================================================
+// VIEW / EDIT REPORT
+// ============================================================
+route('/reports/view/:id',({id})=>renderRptDetail(id,false));
+route('/reports/edit/:id',({id})=>renderRptDetail(id,true));
+function renderRptDetail(rid,editMode){
+  const r=ST.R.find(x=>x.id===rid);if(!r){navigate('/reports');return}
+  const tmpl=ST.T.find(t=>t.id===r.tid);const st=STATUSES[r.status]||STATUSES.DRAFT;
+  const score=calcRptScore(r);if(ATAB>=r.groups.length)ATAB=0;
+  const passed=r.groups.filter(g=>g.status==='DATA_REVIEWED_PASSED').length;
+  const prog=r.groups.length?Math.round(passed/r.groups.length*100):0;
+  renderLayout(`
+  <!-- Header Card -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="cb2">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <span class="bdg ${st.c}" style="font-size:11.5px;padding:4px 11px"><span class="bdt" style="background:currentColor"></span>${st.l}</span>
+            ${score!=null?`<div style="display:flex;align-items:center;gap:5px;background:#f8fafc;padding:4px 12px;border-radius:20px;border:1px solid var(--br)"><i class="fas fa-star" style="color:${scC(score)};font-size:10px"></i><span style="font-size:12px;font-weight:800;color:${scC(score)}">${score.toFixed(2)}/6</span><span style="font-size:11px;color:var(--txm)">(${scL(score)})</span></div>`:''}
+            ${r.clonedFrom?`<span style="font-size:10.5px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:5px;border:1px solid #fde68a"><i class="fas fa-copy" style="margin-left:3px"></i>منسوخ</span>`:''}
+          </div>
+          <h2 style="font-size:19px;font-weight:900;margin-bottom:7px">${esc(r.name)}</h2>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--txm)">
+            <span><i class="fas fa-layer-group" style="margin-left:4px"></i>${esc(tmpl?.name||'—')}</span>
+            <span><i class="fas fa-calendar-alt" style="margin-left:4px"></i>${fdt(r.sd)} — ${fdt(r.ed)}</span>
+            <span><i class="fas fa-user" style="margin-left:4px"></i>${esc(gu(r.cby)?.n||'—')}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
+          ${!editMode&&r.status!=='EVALUATED'?`<button class="btn bpr bsm" onclick="navigate('/reports/edit/${rid}')"><i class="fas fa-pen"></i> تحرير</button>`:''}
+          ${r.status==='PUBLISHED'?`<button class="btn bwn bsm" onclick="navigate('/reports/evaluate/${rid}')"><i class="fas fa-star"></i> تقييم</button><button class="btn bsc bsm" onclick="approveReport('${rid}')"><i class="fas fa-check-double"></i> اعتماد</button>`:''}
+          ${r.status==='DRAFT'?`<button class="btn bsu bsm" onclick="pubReport('${rid}')"><i class="fas fa-globe"></i> نشر</button>`:''}
+          <button class="btn bou bsm" onclick="navigate('/reports')"><i class="fas fa-arrow-right"></i> رجوع</button>
+        </div>
+      </div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--txm);white-space:nowrap">التقدم الكلي:</div>
+        <div class="pb" style="flex:1;height:8px"><div class="pf" style="width:${prog}%;background:${prog===100?'var(--sul)':'var(--prl)'}"></div></div>
+        <span style="font-size:12px;font-weight:800;color:${prog===100?'var(--sul)':'var(--prl)'}">${prog}%</span>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
+        ${r.groups.map((g,i)=>{const gs=GS[g.status]||GS.PENDING;return`<div class="gcard ${ATAB===i?'on':''}" data-gidx="${i}" onclick="switchTab(${i},'${rid}',${editMode})">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span class="cba">${g.cp}%</span><span class="bdg ${gs.c}" style="font-size:9.5px;padding:1px 6px">${gs.l}</span>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--tx);line-height:1.4">${esc(g.name.replace(/المؤشر[^:]+:/,'').trim())}</div>
+          ${g.es!=null?`<div style="font-size:10px;font-weight:800;color:${scC(g.es)};margin-top:3px"><i class="fas fa-star" style="font-size:9px"></i> ${g.es.toFixed(1)}/6</div>`:''}
+        </div>`;}).join('')}
+      </div>
+    </div>
+  </div>
+  <div id="tc">${renderGroupTab(r,ATAB,editMode)}</div>`,
+  [{l:'التقارير',href:'/reports'},{l:esc(r.name),href:`/reports/${editMode?'edit':'view'}/${rid}`},{l:editMode?'تحرير':'عرض'}],'/reports');
+  initAutoGrowTextareas();
+}
+function switchTab(idx,rid,editMode){
+  ATAB=idx;
+  document.querySelectorAll('.gcard').forEach((c,i)=>c.classList.toggle('on',i===idx));
+  const r=ST.R.find(x=>x.id===rid);if(!r)return;const el=document.getElementById('tc');if(el)el.innerHTML=renderGroupTab(r,idx,editMode);
+  initAutoGrowTextareas();
+}
+function renderGroupTab(r,ti,editMode){
+  const g=r.groups[ti];if(!g)return'';const gs=GS[g.status]||GS.PENDING;
+  return`
+  <div class="card" style="margin-bottom:14px"><div class="cb2" style="padding:14px 18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:42px;height:42px;border-radius:11px;background:var(--prxl);color:var(--pr);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900">${g.cp}%</div>
+        <div><h3 style="font-size:14.5px;font-weight:800">${esc(g.name)}</h3><div style="font-size:11px;color:var(--txm);margin-top:2px">${g.lists.length} قائمة · ${g.lists.reduce((s,l)=>s+(l.rows?.length||0),0)} سجل</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        ${g.es!=null?`<div style="display:flex;align-items:center;gap:5px;background:#f8fafc;padding:5px 12px;border-radius:20px;border:1px solid var(--br)"><i class="fas fa-star" style="color:${scC(g.es)};font-size:11px"></i><span style="font-size:13px;font-weight:900;color:${scC(g.es)}">${g.es.toFixed(1)}/6</span><span style="font-size:11px;color:var(--txm)">${scL(g.es)}</span></div>`:''}
+        <span class="bdg ${gs.c}" style="font-size:11.5px;padding:4px 12px">${gs.l}</span>
+        ${editMode?`<select class="fc" style="width:195px;font-size:11.5px" onchange="updGrpStatus('${r.id}','${g.id}',this.value)">${Object.entries(GS).map(([k,v])=>`<option value="${k}" ${g.status===k?'selected':''}>${v.l}</option>`).join('')}</select>`:''}
+      </div>
+    </div>
+    ${g.en?`<div class="al al-s" style="margin-top:12px;margin-bottom:0"><i class="fas fa-comment-dots"></i><span style="font-size:12px">${esc(g.en)}</span></div>`:''}
+  </div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="ch"><div class="ct2" style="font-size:13px"><i class="fas fa-users" style="color:var(--scl);margin-left:6px"></i>أعضاء المجموعة</div>
+      ${editMode?`<button class="btn bou bsm" onclick="addGrpMember('${r.id}','${g.id}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}
+    </div>
+    <div class="cb2" style="padding:12px 16px">${g.members?.length?renderMembersList(g.members,editMode,{rid:r.id,gid:g.id},'grp'):`<div style="color:var(--txm);font-size:12px;text-align:center;padding:8px;opacity:.6"><i class="fas fa-user-slash" style="margin-left:5px"></i>لا يوجد أعضاء محددون لهذه المجموعة</div>`}</div>
+  </div>
+  ${g.lists.length?g.lists.map(l=>`
+  <div class="card" style="margin-bottom:14px">
+    <div class="ch"><div><div class="ct2">${esc(l.name)}</div><div style="font-size:11px;color:var(--txm);margin-top:2px">الوزن: <strong>${l.cp}%</strong> · ${l.hasPR?`<span style="color:var(--sul)"><i class="fas fa-lock" style="font-size:9px;margin-left:2px"></i>صفوف ثابتة</span>`:`<span style="color:var(--pul)"><i class="fas fa-table" style="font-size:9px;margin-left:2px"></i>صفوف مفتوحة</span>`} · ${l.rows.length} سجل</div></div>
+      ${editMode&&!l.hasPR?`<button class="btn bpr bsm" onclick="addRow('${r.id}','${g.id}','${l.id}')"><i class="fas fa-plus"></i> إضافة سجل</button>`:''}
+    </div>
+    <div style="overflow-x:auto">${renderFillTable(l,editMode,r.id,g.id)}</div>
+  </div>`).join(''):`<div class="card"><div class="es"><i class="fas fa-table"></i><h3>لا توجد قوائم</h3><p>لم يتم تعريف قوائم لهذه المجموعة في القالب</p></div></div>`}`;
+}
+function renderFillTable(l,editMode,rid,gid){
+  if(!l.cols||!l.cols.length)return`<div style="padding:16px;color:var(--txm);text-align:center">لا توجد أعمدة</div>`;
+  const ha=editMode&&!l.hasPR;
+  return`<table class="ft"><thead><tr>${l.cols.map(c=>`<th>${esc(c.h)}</th>`).join('')}${ha?'<th style="width:46px"></th>':''}</tr></thead><tbody>
+  ${l.rows.map(row=>`<tr>
+    ${l.cols.map(c=>`<td class="${c.t==='label'?'lbc':''}">${c.t==='label'?`<strong>${esc(row.cells[c.id]||'')}</strong>`:editMode?renderCell(c,row,rid,gid,l.id):`<div style="${c.t==='textarea'?'white-space:pre-wrap;':''}font-size:11px;padding:6px 4px">${esc(row.cells[c.id]||'—')}</div>`}</td>`).join('')}
+    ${ha?`<td><button class="btn bgh bxs" style="color:var(--dnl)" onclick="delRow('${rid}','${gid}','${l.id}','${row.id}')"><i class="fas fa-trash"></i></button></td>`:''}
+  </tr>`).join('')}
+  ${!l.rows.length?`<tr><td colspan="${l.cols.length+(ha?1:0)}" style="text-align:center;padding:22px;color:var(--txm);font-size:12px"><i class="fas fa-inbox" style="font-size:22px;display:block;margin-bottom:8px;opacity:.25"></i>${editMode&&!l.hasPR?'انقر على "إضافة سجل" لإدراج البيانات':'لا توجد بيانات بعد'}</td></tr>`:''}
+  </tbody></table>`;
+}
+function renderCell(c,row,rid,gid,lid){
+  const v=row.cells[c.id]||'';const k=`${rid}|${gid}|${lid}|${row.id}|${c.id}`;
+  if(c.t==='textarea')return`<textarea class="fi tafi" style="min-height:54px;resize:none;overflow:hidden" data-k="${k}" oninput="autoGrow(this)" onchange="updCell(this)">${esc(v)}</textarea>`;
+  if(c.t==='date')return`<input type="date" class="fi" value="${esc(v)}" data-k="${k}" onchange="updCell(this)"/>`;
+  if(c.t==='percent'||c.t==='number')return`<input type="number" class="fi" value="${esc(v)}" placeholder="0" min="0"${c.t==='percent'?' max="100"':''} data-k="${k}" onchange="updCell(this)" style="text-align:center"/>`;
+  return`<input type="text" class="fi" value="${esc(v)}" data-k="${k}" onchange="updCell(this)"/>`;
+}
+function autoGrow(el){
+  if(!el)return;
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight+2)+'px';
+}
+function initAutoGrowTextareas(){
+  document.querySelectorAll('textarea.tafi').forEach(autoGrow);
+}
+function updCell(el){
+  const[rid,gid,lid,rwid,cid]=el.getAttribute('data-k').split('|');
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const rw=l?.rows.find(x=>x.id===rwid);
+  if(rw){rw.cells[cid]=el.value;saveST()}
+}
+function updGrpStatus(rid,gid,ns){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  g.status=ns;
+  if(r.groups.every(g2=>g2.status==='DATA_REVIEWED_PASSED')){r.status='REVIEWED';notify('تم اعتماد جميع المجموعات — حالة التقرير: تمت المراجعة');}
+  saveST();notify('تم تحديث حالة المجموعة');
+  const h=window.location.hash.slice(1);const tc=document.getElementById('tc');
+  if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
+  initAutoGrowTextareas();
+}
+function addRow(rid,gid,lid){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;
+  const nr={id:'rw'+uid(),cells:{},es:null,en:''};
+  l.cols.filter(c=>c.t==='label').slice(0,1).forEach(c=>{nr.cells[c.id]=String(l.rows.length+1)});
+  l.rows.push(nr);saveST();
+  const h=window.location.hash.slice(1);const tc=document.getElementById('tc');if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
+  initAutoGrowTextareas();
+}
+function delRow(rid,gid,lid,rwid){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;
+  l.rows=l.rows.filter(x=>x.id!==rwid);saveST();notify('تم حذف السجل','w');
+  const h=window.location.hash.slice(1);const tc=document.getElementById('tc');if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
+  initAutoGrowTextareas();
+}
+function addGrpMember(rid,gid){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  const ex=(g.members||[]).map(m=>m.uid);const av=USERS.filter(u=>!ex.includes(u.id));
+  showModal({title:'إضافة عضو للمجموعة',
+    body:`<div class="fg"><label class="fl">المستخدم <span class="rq">*</span></label><select class="fc" id="gmu"><option value="">-- اختر --</option>${av.map(u=>`<option value="${u.id}">${esc(u.n)} (${esc(u.r)})</option>`).join('')}</select></div>
+    <div class="fg"><label class="fl">الصلاحيات</label><div style="display:flex;gap:12px;flex-wrap:wrap">${PERMS.map(p=>`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="checkbox" name="gmp" value="${p}" ${p==='view'?'checked':''}/>${PL[p]}</label>`).join('')}</div></div>`,
+    footer:`<button class="btn bou" onclick="closeModal()">إلغاء</button><button class="btn bpr" onclick="confAddGM('${rid}','${gid}')">إضافة</button>`});
+}
+function confAddGM(rid,gid){
+  const u=document.getElementById('gmu')?.value;if(!u){notify('يرجى اختيار مستخدم','e');return}
+  const p=[...document.querySelectorAll('input[name="gmp"]:checked')].map(x=>x.value);
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  if(!g.members)g.members=[];g.members.push({uid:u,p});saveST();closeModal();notify('تم إضافة العضو');
+  const h=window.location.hash.slice(1);const tc=document.getElementById('tc');if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
+}
+function renderMembersList(members,canEdit,ctx,ctxType){
+  if(!members||!members.length)return'';
+  return members.map(m=>{const u=gu(m.uid);if(!u)return'';
+    return`<div class="mr"><div class="mav" style="background:${u.cl}">${ini(u.n)}</div>
+      <div><div style="font-size:12.5px;font-weight:700">${esc(u.n)}</div><div style="font-size:11px;color:var(--txm)">${esc(u.r)}</div></div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap">${m.p.map(p=>`<span class="pchip ${PC[p]}">${PL[p]}</span>`).join('')}</div>
+      ${canEdit&&ctx?`<button class="btn bgh bxs" style="color:var(--dnl);margin-right:auto" onclick="removeMember('${ctx.rid||''}','${ctx.gid||''}','${m.uid}','${ctxType}')"><i class="fas fa-times"></i></button>`:''}
+    </div>`;}).join('');
+}
+function removeMember(rid,gid,userId,ctxType){
+  const r=ST.R.find(x=>x.id===rid);if(!r)return;
+  if(gid&&ctxType==='grp'){const g=r.groups.find(x=>x.id===gid);if(g)g.members=g.members.filter(m=>m.uid!==userId);}
+  else{r.members=r.members.filter(m=>m.uid!==userId)}
+  saveST();notify('تم إزالة العضو','w');
+  const h=window.location.hash.slice(1);const tc=document.getElementById('tc');if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
+}
+
+// ============================================================
+// EVALUATE REPORT
+// ============================================================
+route('/reports/evaluate/:id',({id})=>{
+  const r=ST.R.find(x=>x.id===id);if(!r){navigate('/reports');return}
+  const score=calcRptScore(r);
+  renderLayout(`
+  <div class="ph"><div><h2><i class="fas fa-star" style="color:#d97706;margin-left:8px"></i>تقييم التقرير</h2><p>${esc(r.name)}</p></div>
+    <div style="display:flex;gap:7px">
+      <button class="btn bsu" onclick="saveEval('${id}')"><i class="fas fa-save"></i> حفظ التقييم</button>
+      <button class="btn bou" onclick="navigate('/reports/view/${id}')"><i class="fas fa-arrow-right"></i> رجوع</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:18px"><div class="cb2">
+    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+      <div style="text-align:center;padding:14px 24px;border-radius:12px;background:${score!=null?scC(score)+'18':'#f8fafc'};border:2px solid ${score!=null?scC(score):'var(--br)'}">
+        <div style="font-size:38px;font-weight:900;color:${score!=null?scC(score):'var(--txm)'}" id="ov-sc">${score!=null?score.toFixed(2):'—'}</div>
+        <div style="font-size:11px;color:var(--txm)">/ 6 (الدرجة الكلية)</div>
+        <div style="font-size:12px;font-weight:800;color:${scC(score)};margin-top:2px" id="ov-lb">${scL(score)}</div>
+      </div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:9px">توزيع الدرجات حسب المؤشرات</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:7px">
+          ${r.groups.map(g=>`<div id="gsc-${g.id}" style="background:#f8fafc;border-radius:8px;padding:8px 10px;border:1px solid var(--br)">
+            <div style="font-size:10px;color:var(--txm);margin-bottom:3px">${esc(g.name.replace(/المؤشر[^:]+:/,'').trim())}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div id="gsn-${g.id}" style="font-size:15px;font-weight:900;color:${scC(g.es)}">${g.es!=null?g.es.toFixed(1):'—'}</div>
+              <div style="flex:1"><div class="pb" style="height:4px"><div class="pf" id="gspf-${g.id}" style="width:${g.es!=null?(g.es/6*100):0}%;background:${scC(g.es)}"></div></div></div>
+              <span class="cba">${g.cp}%</span>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="tabs" id="et">${r.groups.map((g,i)=>`<button class="tab ${i===0?'on':''}" onclick="switchEvalTab(${i},'${id}')">
+    <span class="cba" style="font-size:10px">${g.cp}%</span>${esc(g.name)}
+    ${g.es!=null?`<span style="font-size:11px;font-weight:800;color:${scC(g.es)}">${g.es.toFixed(1)}</span>`:''}
+  </button>`).join('')}</div>
+  <div id="ec">${renderEvalTab(r,0)}</div>`,
+  [{l:'التقارير',href:'/reports'},{l:esc(r.name),href:`/reports/view/${id}`},{l:'التقييم'}],'/reports');
+});
+function switchEvalTab(idx,rid){
+  document.querySelectorAll('#et .tab').forEach((b,i)=>b.classList.toggle('on',i===idx));
+  const r=ST.R.find(x=>x.id===rid);if(!r)return;document.getElementById('ec').innerHTML=renderEvalTab(r,idx);
+}
+function renderEvalTab(r,ti){
+  const g=r.groups[ti];if(!g)return'';
+  return`<div class="card" style="margin-bottom:14px">
+    <div class="ch"><div><div class="ct2">${esc(g.name)}</div><div style="font-size:11px;color:var(--txm)">الوزن النسبي: ${g.cp}%</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--txm)">درجة المجموعة:</span>
+        <div style="font-size:22px;font-weight:900;color:${scC(g.es)}" id="gd-${g.id}">${g.es!=null?g.es.toFixed(1):'—'}</div>
+      </div>
+    </div>
+    <div class="cb2">
+      <div style="background:var(--wnxl);border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:18px">
+        <div class="slab">التقييم الكلي للمجموعة (الاستمارة رقم 2)</div>
+        <div class="fr">
+          <div class="fg"><label class="fl">التقييم الكلي (1 — 6) <span class="rq">*</span></label>
+            <div class="ri">${[1,2,3,4,5,6].map(n=>`<button class="rb ${g.es===n?'sel':''}" onclick="setGrpSc('${r.id}','${g.id}',${n})">${n}</button>`).join('')}
+              <span style="font-size:11px;color:var(--txm);margin-right:8px;align-self:center" id="glb-${g.id}">${g.es!=null?`<strong style="color:${scC(g.es)}">${scL(g.es)}</strong>`:'غير محدد'}</span>
+            </div>
+          </div>
+          <div class="fg"><label class="fl">مبررات التقييم</label>
+            <textarea class="fc" id="gen-${g.id}" style="height:62px" placeholder="مبررات التقييم...">${esc(g.en||'')}</textarea>
+          </div>
+        </div>
+      </div>
+      ${g.lists.map(l=>`<div style="margin-bottom:18px">
+        <div class="slab">${esc(l.name)} (${l.cp}%)</div>
+        <div style="overflow-x:auto"><table class="ft"><thead><tr>
+          ${l.cols.map(c=>`<th>${esc(c.h)}</th>`).join('')}
+          <th style="background:linear-gradient(to bottom,#fef3c7,#fde68a);color:#92400e;min-width:170px">التقييم (1–6)</th>
+          <th style="background:linear-gradient(to bottom,#fef3c7,#fde68a);color:#92400e;min-width:160px">مبررات التقييم</th>
+          <th style="background:linear-gradient(to bottom,#fef3c7,#fde68a);color:#92400e;min-width:100px">أسباب الأداء</th>
+        </tr></thead><tbody>
+          ${l.rows.map(row=>`<tr>
+            ${l.cols.map(c=>`<td class="${c.t==='label'?'lbc':''}">${c.t==='label'?`<strong>${esc(row.cells[c.id]||'')}</strong>`:`<div style="${c.t==='textarea'?'white-space:pre-wrap;':''}font-size:11px">${esc(row.cells[c.id]||'')}</div>`}</td>`).join('')}
+            <td style="background:#fffbeb"><div class="ri" style="justify-content:center">${[1,2,3,4,5,6].map(n=>`<button class="rb ${row.es===n?'sel':''}" style="width:26px;height:26px;font-size:11px" onclick="setRowSc('${r.id}','${g.id}','${l.id}','${row.id}',${n})">${n}</button>`).join('')}</div>${row.es!=null?`<div style="text-align:center;font-size:10px;font-weight:700;color:${scC(row.es)};margin-top:2px">${scL(row.es)}</div>`:''}</td>
+            <td style="background:#fffbeb"><input type="text" class="fi" value="${esc(row.en||'')}" placeholder="توضيح..." data-ek="${r.id}|${g.id}|${l.id}|${row.id}" onchange="updEN(this)"/></td>
+            <td style="background:#fffbeb"><select class="fi" style="cursor:pointer"><option value="">—</option><option value="i">داخلي</option><option value="e">خارجي</option><option value="b">داخلي وخارجي</option></select></td>
+          </tr>`).join('')}
+          ${!l.rows.length?`<tr><td colspan="${l.cols.length+3}" style="text-align:center;padding:20px;color:var(--txm)">لا توجد سجلات</td></tr>`:''}
+        </tbody></table></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function setGrpSc(rid,gid,score){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  g.es=score;g.en=document.getElementById('gen-'+gid)?.value||'';
+  const overall=calcRptScore(r);saveST();
+  const ti=r.groups.indexOf(g);document.getElementById('ec').innerHTML=renderEvalTab(r,ti);
+  const osc=document.getElementById('ov-sc'),olb=document.getElementById('ov-lb');
+  if(osc)osc.innerHTML=overall!=null?overall.toFixed(2):'—';if(osc)osc.style.color=scC(overall);
+  if(olb){olb.textContent=scL(overall);olb.style.color=scC(overall)}
+  const gsn=document.getElementById('gsn-'+gid),gspf=document.getElementById('gspf-'+gid);
+  if(gsn){gsn.textContent=score.toFixed(1);gsn.style.color=scC(score)}
+  if(gspf){gspf.style.width=(score/6*100)+'%';gspf.style.background=scC(score)}
+  notify(`تم تقييم المجموعة: ${score}/6`);
+}
+function setRowSc(rid,gid,lid,rwid,score){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const rw=l?.rows.find(x=>x.id===rwid);if(!rw)return;
+  rw.es=score;const allR=g.lists.flatMap(l2=>l2.rows);const sc=allR.filter(x=>x.es!=null);
+  if(sc.length){g.es=parseFloat((sc.reduce((a,x)=>a+x.es,0)/sc.length).toFixed(2))}
+  saveST();const ti=r.groups.indexOf(g);document.getElementById('ec').innerHTML=renderEvalTab(r,ti);notify(`تم تقييم السجل: ${score}/6`);
+}
+function updEN(el){
+  const[rid,gid,lid,rwid]=el.getAttribute('data-ek').split('|');
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const rw=l?.rows.find(x=>x.id===rwid);
+  if(rw){rw.en=el.value;saveST()}
+}
+function saveEval(rid){
+  const r=ST.R.find(x=>x.id===rid);if(!r)return;
+  r.groups.forEach(g=>{const el=document.getElementById('gen-'+g.id);if(el)g.en=el.value});
+  r.status='EVALUATED';saveST();notify('تم حفظ التقييم بنجاح');navigate('/reports/view/'+rid);
+}
+
+// ============================================================
+// TEMPLATES LIST
+// ============================================================
+route('/templates',()=>{
+  renderLayout(`
+  <div class="ph"><div><h2><i class="fas fa-layer-group" style="color:var(--scl);margin-left:8px"></i>قوالب التقارير</h2><p>إدارة قوالب التقارير وتعريف هيكل المؤشرات</p></div>
+    <button class="btn bpr blg" onclick="navigate('/templates/create')"><i class="fas fa-plus"></i> قالب جديد</button></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px">
+    ${ST.T.map(t=>`
+    <div class="card" style="transition:transform .18s,box-shadow .18s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div class="cb2">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px">
+          <div style="width:42px;height:42px;border-radius:11px;background:var(--scxl);color:var(--sc);display:flex;align-items:center;justify-content:center;font-size:19px"><i class="fas fa-file-contract"></i></div>
+          <div style="display:flex;gap:4px">
+            <button class="btn bgh bic" title="تعديل" onclick="navigate('/templates/edit/${t.id}')"><i class="fas fa-pen" style="color:#7c3aed;font-size:11px"></i></button>
+            <button class="btn bgh bic" title="نسخ" onclick="cloneTmpl('${t.id}')"><i class="fas fa-copy" style="color:#64748b;font-size:11px"></i></button>
+            <button class="btn bgh bic" title="حذف" onclick="delTmpl('${t.id}')"><i class="fas fa-trash" style="color:#dc2626;font-size:11px"></i></button>
+          </div>
+        </div>
+        <h3 style="font-size:13.5px;font-weight:800;margin-bottom:5px;line-height:1.5">${esc(t.name)}</h3>
+        <p style="font-size:11.5px;color:var(--txm);margin-bottom:11px;line-height:1.6">${esc(t.desc||'')}</p>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
+          <div style="background:#f8fafc;border:1px solid var(--br);border-radius:7px;padding:5px 9px;font-size:11px"><i class="fas fa-object-group" style="color:var(--prl);margin-left:3px"></i><strong>${t.groups.length}</strong> مجموعة</div>
+          <div style="background:#f8fafc;border:1px solid var(--br);border-radius:7px;padding:5px 9px;font-size:11px"><i class="fas fa-table" style="color:var(--scl);margin-left:3px"></i><strong>${t.groups.reduce((s,g)=>s+g.lists.length,0)}</strong> قائمة</div>
+          <div style="background:#f8fafc;border:1px solid var(--br);border-radius:7px;padding:5px 9px;font-size:11px"><i class="fas fa-calendar" style="color:var(--pul);margin-left:3px"></i>${fdt(t.sd)}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+          ${t.groups.map(g=>`<span class="cba" style="font-size:10px">${g.cp}%</span>`).join('')}
+          <span style="font-size:10.5px;color:var(--txl)">${t.groups.reduce((s,g)=>s+g.cp,0)}% إجمالي</span>
+        </div>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid var(--br);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--txl)"><i class="fas fa-clock" style="margin-left:3px"></i>${fdt(t.ca)}</span>
+        <button class="btn bpr bsm" onclick="createFromTmpl('${t.id}')"><i class="fas fa-plus"></i> إنشاء تقرير</button>
+      </div>
+    </div>`).join('')}
+    <div class="card" style="border:2px dashed var(--br);cursor:pointer;min-height:200px;display:flex;align-items:center;justify-content:center;transition:all .18s" onclick="navigate('/templates/create')" onmouseenter="this.style.borderColor='var(--prl)';this.style.background='var(--prxl)'" onmouseleave="this.style.borderColor='var(--br)';this.style.background=''">
+      <div style="text-align:center;color:var(--txm)"><i class="fas fa-plus" style="font-size:30px;margin-bottom:10px;display:block"></i><div style="font-weight:700">إنشاء قالب جديد</div></div>
+    </div>
+  </div>`,[{l:'القوالب'}],'/templates');
+});
+function createFromTmpl(tid){navigate('/reports/create');setTimeout(()=>{const s=document.getElementById('rt');if(s)s.value=tid},80)}
+function delTmpl(id){
+  if(ST.R.some(r=>r.tid===id)){notify('لا يمكن الحذف: القالب مستخدم في تقارير موجودة','e');return}
+  showConfirm('هل تريد حذف هذا القالب؟',()=>{ST.T=ST.T.filter(t=>t.id!==id);saveST();notify('تم الحذف','w');resolveRoute()});
+}
+function cloneTmpl(id){
+  const src=ST.T.find(t=>t.id===id);if(!src)return;
+  const nt=JSON.parse(JSON.stringify(src));nt.id='t'+uid();nt.name=src.name+' — نسخة';nt.ca=new Date().toISOString().split('T')[0];
+  nt.groups.forEach(g=>{g.id='g'+uid();g.lists.forEach(l=>{l.id='l'+uid();l.prows.forEach(pr=>{pr.id='pr'+uid()})})});
+  ST.T.push(nt);saveST();notify('تم نسخ القالب');navigate('/templates/edit/'+nt.id);
+}
+
+// ============================================================
+// TEMPLATE BUILDER (Create/Edit)
+// ============================================================
+route('/templates/create',()=>renderTmplEditor(null));
+route('/templates/edit/:id',({id})=>renderTmplEditor(id));
+let TS=null;
+function renderTmplEditor(tid){
+  const ex=tid?ST.T.find(t=>t.id===tid):null;
+  TS=ex?JSON.parse(JSON.stringify(ex)):{id:'t'+uid(),name:'',desc:'',sd:'',ed:'',ca:new Date().toISOString().split('T')[0],members:[],groups:[]};
+  const tw=TS.groups.reduce((s,g)=>s+g.cp,0);
+  renderLayout(`
+  <div class="ph"><div><h2><i class="fas fa-${ex?'pen':'plus-circle'}" style="color:var(--scl);margin-left:8px"></i>${ex?'تعديل القالب':'إنشاء قالب جديد'}</h2><p>تعريف هيكل التقرير والمجموعات والقوائم وأعمدة البيانات</p></div>
+    <button class="btn bou" onclick="navigate('/templates')"><i class="fas fa-arrow-right"></i> رجوع</button></div>
+  <div style="width:100%">
+    <div class="card" style="margin-bottom:14px">
+      <div class="ch"><div class="ct2"><i class="fas fa-info-circle" style="color:var(--scl);margin-left:6px"></i>معلومات القالب</div></div>
+      <div class="cb2">
+        <div class="fg"><label class="fl">اسم القالب <span class="rq">*</span></label><input class="fc" id="tn" value="${esc(TS.name)}" placeholder="أدخل اسم القالب..."/></div>
+        <div class="fg"><label class="fl">الوصف</label><textarea class="fc" id="td" placeholder="وصف مختصر...">${esc(TS.desc||'')}</textarea></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">تاريخ البدء</label><input type="date" class="fc" id="tsd" value="${TS.sd||''}"/></div>
+          <div class="fg"><label class="fl">تاريخ الانتهاء</label><input type="date" class="fc" id="ted" value="${TS.ed||''}"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="ch"><div><div class="ct2"><i class="fas fa-object-group" style="color:var(--prl);margin-left:6px"></i>المجموعات والمؤشرات</div>
+        <div style="font-size:11px;color:var(--txm);margin-top:2px">مجموع الأوزان: <strong id="tw" style="color:${tw===100?'var(--sul)':'var(--dnl)'}">${tw}%</strong>${tw===100?'<i class="fas fa-check" style="color:var(--sul);font-size:10px;margin-right:4px"></i>':'<span style="font-size:10px;color:var(--dnl)"> (يجب أن يكون 100%)</span>'}</div>
+      </div>
+      <button class="btn bpr bsm" onclick="addGrp()"><i class="fas fa-plus"></i> إضافة مجموعة</button></div>
+      <div class="cb2"><div id="gc">${TS.groups.length?TS.groups.map((g,i)=>renderGrpB(g,i)).join(''):`<div class="es"><i class="fas fa-object-group"></i><h3>لا توجد مجموعات</h3><p>أضف مجموعة لتعريف هيكل التقرير</p></div>`}</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn bou" onclick="navigate('/templates')">إلغاء</button>
+      <button class="btn bpr blg" onclick="saveTmpl()"><i class="fas fa-save"></i> ${ex?'حفظ التغييرات':'إنشاء القالب'}</button>
+    </div>
+  </div>`,[{l:'القوالب',href:'/templates'},{l:ex?'تعديل':'إنشاء قالب'}],'/templates');
+}
+function renderGrpB(g,gi){
+  const ltw=g.lists.reduce((s,l)=>s+l.cp,0);
+  return`<div class="gc" id="gc-${g.id}">
+  <div class="gc-h" onclick="togGC('${g.id}')">
+    <div class="dh"><i class="fas fa-grip-vertical"></i></div>
+    <div class="nbdg">${gi+1}</div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:700">${esc(g.name)||'<span style="color:var(--txl)">مجموعة جديدة</span>'}</div>
+      <div style="font-size:10.5px;color:var(--txm);margin-top:2px"><span class="cba">${g.cp}%</span> ${g.lists.length} قائمة${g.lists.length?` · أوزان القوائم: <strong style="color:${ltw===100?'var(--sul)':'var(--wnl)'}">${ltw}%</strong>`:''}</div>
+    </div>
+    <div style="display:flex;gap:5px" onclick="event.stopPropagation()">
+      <button class="btn bgh bxs" onclick="rmGrp('${g.id}')"><i class="fas fa-trash" style="color:var(--dnl)"></i></button>
+      <i class="fas fa-chevron-down" id="gar-${g.id}" style="color:var(--txl);font-size:11px;transition:transform .18s"></i>
+    </div>
+  </div>
+  <div class="gc-b" id="gb-${g.id}" style="display:none">
+    <div class="fr3">
+      <div class="fg"><label class="fl">اسم المجموعة <span class="rq">*</span></label><input class="fc" value="${esc(g.name)}" placeholder="اسم المجموعة..." oninput="updGF('${g.id}','name',this.value)"/></div>
+      <div class="fg"><label class="fl">الوزن النسبي (%)</label><input type="number" class="fc" value="${g.cp}" min="1" max="100" oninput="updGF('${g.id}','cp',+this.value)"/></div>
+      <div></div>
+    </div>
+    <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="slab" style="flex:1;margin-bottom:0">القوائم</div>
+      <button class="btn bsc bsm" style="margin-right:10px" onclick="addList('${g.id}')"><i class="fas fa-table"></i> إضافة قائمة</button></div>
+      <div id="lc-${g.id}">${g.lists.map((l,li)=>renderListB(g.id,l,li)).join('')}</div>
+    </div>
+  </div>
+  </div>`;
+}
+function renderListB(gid,l,li){
+  return`<div class="lsc" id="lsc-${l.id}">
+  <div class="lsc-h" onclick="togLC('${l.id}')">
+    <div class="nbdg" style="background:var(--scxl);color:var(--sc)">${li+1}</div>
+    <div style="flex:1"><div style="font-size:12px;font-weight:700">${esc(l.name)||'<span style="color:var(--txl)">قائمة جديدة</span>'}</div>
+      <div style="font-size:10.5px;color:var(--txm)"><span class="cba" style="background:var(--scxl);color:var(--sc)">${l.cp}%</span> ${l.cols.length} عمود · ${l.hasPR?`<span style="color:var(--sul)">صفوف ثابتة (${l.prows.length})</span>`:`<span style="color:var(--pul)">صفوف مفتوحة</span>`}</div>
+    </div>
+    <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
+      <button class="btn bgh bxs" onclick="rmList('${gid}','${l.id}')"><i class="fas fa-trash" style="color:var(--dnl);font-size:10px"></i></button>
+      <i class="fas fa-chevron-down" id="lar-${l.id}" style="color:var(--txl);font-size:10px;transition:transform .18s"></i>
+    </div>
+  </div>
+  <div id="lb-${l.id}" style="display:none;padding:13px;border-top:1px solid var(--br)">
+    <div class="fr"><div class="fg"><label class="fl">اسم القائمة</label><input class="fc" value="${esc(l.name)}" placeholder="اسم القائمة..." oninput="updLF('${gid}','${l.id}','name',this.value)"/></div>
+      <div class="fg"><label class="fl">الوزن النسبي (%)</label><input type="number" class="fc" value="${l.cp}" min="1" max="100" oninput="updLF('${gid}','${l.id}','cp',+this.value)"/></div>
+    </div>
+    <div class="fg" style="display:flex;align-items:center;gap:8px">
+      <div class="tg ${l.hasPR?'on':''}" id="tg-${l.id}" onclick="togPR('${gid}','${l.id}')"></div>
+      <label class="fl" style="margin:0;cursor:pointer" onclick="togPR('${gid}','${l.id}')">صفوف محددة مسبقاً (ثابتة — لا يمكن إضافة صفوف إضافية عند الملء)</label>
+    </div>
+    <div style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div class="slab" style="flex:1;margin-bottom:0">الأعمدة</div>
+        <button class="btn bou bsm" style="margin-right:8px" onclick="addCol('${gid}','${l.id}')"><i class="fas fa-plus"></i> عمود</button></div>
+      <div id="cols-${l.id}">${l.cols.map((c,ci)=>renderColRow(gid,l.id,c,ci)).join('')}</div>
+    </div>
+    ${l.hasPR?`<div style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div class="slab" style="flex:1;margin-bottom:0">الصفوف المحددة مسبقاً</div>
+        <button class="btn bou bsm" style="margin-right:8px" onclick="addPR('${gid}','${l.id}')"><i class="fas fa-plus"></i> صف</button></div>
+      <div id="prc-${l.id}">${l.prows.map((pr,ri)=>renderPRRow(gid,l.id,pr,ri,l.cols)).join('')}</div>
+    </div>`:''}
+  </div>
+  </div>`;
+}
+function renderColRow(gid,lid,col,ci){
+  const ct=CTYPES[col.t]||CTYPES.text;
+  return`<div class="cp2" id="cp-${col.id}">
+    <div class="dh"><i class="fas fa-grip-vertical"></i></div>
+    <span class="nbdg" style="font-size:10px">${ci+1}</span>
+    <input class="fc" style="flex:2" value="${esc(col.h)}" placeholder="رأس العمود..." oninput="updCF('${gid}','${lid}','${col.id}','h',this.value)"/>
+    <select class="fc" style="flex:1;max-width:135px" onchange="updCF('${gid}','${lid}','${col.id}','t',this.value)">${Object.entries(CTYPES).map(([k,v])=>`<option value="${k}" ${col.t===k?'selected':''}>${v.l}</option>`).join('')}</select>
+    <span class="ct3 ${ct.c}" id="ctb-${col.id}"><i class="fas ${ct.i}"></i></span>
+    <button class="btn bgh bxs" onclick="rmCol('${gid}','${lid}','${col.id}')" style="color:var(--dnl)"><i class="fas fa-times"></i></button>
+  </div>`;
+}
+function renderPRRow(gid,lid,pr,ri,cols){
+  const ec=cols.slice(0,4);
+  return`<div class="cp2" id="pr-${pr.id}" style="align-items:flex-start;flex-wrap:wrap;gap:5px">
+    <span class="nbdg" style="font-size:10px;margin-top:4px">${ri+1}</span>
+    ${ec.map(c=>`<input class="fc" style="flex:1;min-width:90px" value="${esc(pr.cells[c.id]||'')}" placeholder="${esc(c.h)}" oninput="updPC('${gid}','${lid}','${pr.id}','${c.id}',this.value)"/>`).join('')}
+    <button class="btn bgh bxs" onclick="rmPR('${gid}','${lid}','${pr.id}')" style="color:var(--dnl);margin-top:4px"><i class="fas fa-times"></i></button>
+  </div>`;
+}
+function togGC(gid){const b=document.getElementById('gb-'+gid),a=document.getElementById('gar-'+gid);if(!b)return;const o=b.style.display!=='none';b.style.display=o?'none':'';if(a)a.style.transform=o?'':'rotate(180deg)'}
+function togLC(lid){const b=document.getElementById('lb-'+lid),a=document.getElementById('lar-'+lid);if(!b)return;const o=b.style.display!=='none';b.style.display=o?'none':'block';if(a)a.style.transform=o?'':'rotate(180deg)'}
+function addGrp(){const g={id:'g'+uid(),name:'',cp:10,members:[],lists:[]};TS.groups.push(g);refGC();setTimeout(()=>{togGC(g.id);updTW()},30)}
+function rmGrp(gid){TS.groups=TS.groups.filter(g=>g.id!==gid);refGC()}
+function updGF(gid,f,v){const g=TS.groups.find(x=>x.id===gid);if(g){g[f]=v;if(f==='cp')updTW()}}
+function updTW(){const tw=TS.groups.reduce((s,g)=>s+g.cp,0);const el=document.getElementById('tw');if(el){el.textContent=tw+'%';el.style.color=tw===100?'var(--sul)':'var(--dnl)'}}
+function addList(gid){const g=TS.groups.find(x=>x.id===gid);if(!g)return;const l={id:'l'+uid(),name:'',cp:100,hasPR:false,cols:[],prows:[]};g.lists.push(l);const c=document.getElementById('lc-'+gid);if(c){const d=document.createElement('div');d.innerHTML=renderListB(gid,l,g.lists.length-1);c.appendChild(d.firstElementChild)}}
+function rmList(gid,lid){const g=TS.groups.find(x=>x.id===gid);if(!g)return;g.lists=g.lists.filter(l=>l.id!==lid);const el=document.getElementById('lsc-'+lid);if(el)el.remove()}
+function updLF(gid,lid,f,v){const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(l)l[f]=v}
+function togPR(gid,lid){
+  const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;
+  l.hasPR=!l.hasPR;const tg=document.getElementById('tg-'+lid);if(tg)tg.classList.toggle('on',l.hasPR);
+  const lb=document.getElementById('lb-'+lid);if(!lb)return;
+  const gi=TS.groups.indexOf(g);const li=g.lists.indexOf(l);
+  const d=document.createElement('div');d.innerHTML=renderListB(gid,l,li);
+  const nb=d.querySelector('#lb-'+lid);if(nb){nb.style.display='block';lb.innerHTML=nb.innerHTML;lb.style.display='block'}
+}
+function addCol(gid,lid){const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;const col={id:'c'+uid(),h:'',t:'text'};l.cols.push(col);const c=document.getElementById('cols-'+lid);if(c){const d=document.createElement('div');d.innerHTML=renderColRow(gid,lid,col,l.cols.length-1);c.appendChild(d.firstElementChild)}}
+function rmCol(gid,lid,cid){const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;l.cols=l.cols.filter(c=>c.id!==cid);const el=document.getElementById('cp-'+cid);if(el)el.remove()}
+function updCF(gid,lid,cid,f,v){
+  const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const c=l?.cols.find(x=>x.id===cid);
+  if(c){c[f]=v;if(f==='t'){const ct=CTYPES[v]||CTYPES.text;const b=document.getElementById('ctb-'+cid);if(b){b.className='ct3 '+ct.c;b.innerHTML=`<i class="fas ${ct.i}"></i>`}}}
+}
+function addPR(gid,lid){const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;const pr={id:'pr'+uid(),cells:{},es:null,en:''};l.prows.push(pr);const c=document.getElementById('prc-'+lid);if(c){const d=document.createElement('div');d.innerHTML=renderPRRow(gid,lid,pr,l.prows.length-1,l.cols);c.appendChild(d.firstElementChild)}}
+function rmPR(gid,lid,prid){const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;l.prows=l.prows.filter(r=>r.id!==prid);const el=document.getElementById('pr-'+prid);if(el)el.remove()}
+function updPC(gid,lid,prid,cid,v){const g=TS.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const pr=l?.prows.find(x=>x.id===prid);if(pr)pr.cells[cid]=v}
+function refGC(){
+  const c=document.getElementById('gc');if(!c)return;
+  c.innerHTML=TS.groups.length?TS.groups.map((g,i)=>renderGrpB(g,i)).join(''):`<div class="es"><i class="fas fa-object-group"></i><h3>لا توجد مجموعات</h3><p>أضف مجموعة لتعريف هيكل التقرير</p></div>`;
+  updTW();
+}
+function saveTmpl(){
+  TS.name=document.getElementById('tn')?.value?.trim();
+  TS.desc=document.getElementById('td')?.value?.trim();
+  TS.sd=document.getElementById('tsd')?.value;TS.ed=document.getElementById('ted')?.value;
+  if(!TS.name){notify('يرجى إدخال اسم القالب','e');return}
+  if(!TS.groups.length){notify('يرجى إضافة مجموعة واحدة على الأقل','e');return}
+  const ex=ST.T.find(t=>t.id===TS.id);
+  if(ex)Object.assign(ex,TS);else ST.T.push(TS);
+  saveST();notify('تم حفظ القالب بنجاح');navigate('/templates');
+}
+
+// ============================================================
+// USERS
+// ============================================================
+route('/users',()=>{
+  renderLayout(`
+  <div class="ph"><div><h2><i class="fas fa-users" style="color:var(--scl);margin-left:8px"></i>المستخدمون</h2><p>إدارة المستخدمين وتبديل المستخدم الحالي للاختبار</p></div></div>
+  <div class="al al-i"><i class="fas fa-info-circle"></i><span>تبديل المستخدم هنا يؤثر على الصلاحيات المعروضة في الواجهة — يُستخدم لأغراض الاختبار والمراجعة.</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+    ${USERS.map(u=>`<div class="card" style="padding:14px 18px;display:flex;align-items:center;gap:12px;transition:border-color .17s;${CU.id===u.id?'border:2px solid var(--prl);background:var(--prxl)':''}">
+      <div style="width:46px;height:46px;border-radius:50%;background:${u.cl};display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0">${ini(u.n)}</div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:800">${esc(u.n)}</div><div style="font-size:11.5px;color:var(--txm)">${esc(u.r)}</div></div>
+      ${CU.id===u.id?`<span class="bdg bd-rv" style="font-size:10px"><i class="fas fa-check" style="font-size:9px"></i> نشط</span>`:`<button class="btn bou bsm" onclick="switchUser('${u.id}')">تبديل</button>`}
+    </div>`).join('')}
+  </div>`,[{l:'المستخدمون'}],'/users');
+});
+function switchUser(uid2){CU=gu(uid2)||CU;notify('تم التبديل إلى: '+CU.n);resolveRoute()}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{ATAB=0;resolveRoute()});
+</script>
+</body>
+</html>
+
+
+

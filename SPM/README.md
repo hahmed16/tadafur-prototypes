@@ -489,7 +489,7 @@ This section defines the complete lifecycle of every SPM element and strategy �
 | **DEACTIVATED** | Element suspended indefinitely. Excluded from all calculations. Can be reactivated.                                  |
 | **DEPRECATED**  | Element is obsolete. Permanently excluded from all calculations. Cannot be linked to new strategies. Terminal state. |
 
-#### Allowed Status Transitions
+#### Allowed Status Transitions (TODO :: ADD WHO CAN DO THAT AND POST-CONDITION and PRE-CONDITION) (STATE DIAGRAM) (Permission Model, Build and Validate)
 
 ```
 DRAFT ──────→ ACTIVE ──────→ ON_HOLD ──────→ ACTIVE (resume)
@@ -1283,9 +1283,10 @@ FUNCTION aggregateBudget(elementId, strategyId):
 
 **Budget propagation principle:**
 
-- A child budget belongs to the child once
-- When that child has multiple parents, its budget is split across those parents using incoming `allocation_percent`
-- Therefore a child with `200K` budget linked `60%` to Goal X and `40%` to Goal Y contributes `120K` to X and `80K` to Y, never `200K` to both
+- Sum all contribution percentages for each node and then divide contribution percent of each edge by that sum multiplied by budget so in that case allocated budget will be calculated not defined
+- ~~A child budget belongs to the child once~~
+- ~~When that child has multiple parents, its budget is split across those parents using incoming `allocation_percent`~~
+- ~~Therefore a child with `200K` budget linked `60%` to Goal X and `40%` to Goal Y contributes `120K` to X and `80K` to Y, never `200K` to both~~
 
 ---
 
@@ -1435,6 +1436,12 @@ This means: assigning a user as editor of a Goal can automatically grant them st
 **Multi-parent rule**: If an element has multiple parents in the same strategy, inherited permissions are the **union of all active parent paths**. Removing one parent path removes only the permissions contributed by that path if no alternative path still grants them.
 
 **Imported-element rule**: Inheritance from strategy structure never upgrades a consumer of an imported element into a global owner/editor of that source element. Strategy inheritance grants strategy-scoped use rights only unless the source owner separately grants global element rights.
+
+**<u>TODO :: Ask for permission on specific spm element type</u>**
+
+**<u>Permission to approve strategy</u>**
+
+ **Permission to activate spm element one by one or all at the same time**
 
 ### Permission Matrix
 
