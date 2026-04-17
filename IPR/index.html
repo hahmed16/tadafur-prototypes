@@ -155,6 +155,20 @@ function scC(s){if(s==null)return'#94a3b8';if(s>=5)return'#059669';if(s>=4)retur
 function scL(s){if(s==null)return'غير مقيّم';if(s>=5.5)return'ممتاز';if(s>=4.5)return'جيد جداً';if(s>=3.5)return'جيد';if(s>=2.5)return'مقبول';return'ضعيف'}
 function calcRptScore(r){const gs=r.groups.filter(g=>g.es!=null);if(!gs.length)return null;let t=0,tw=0;gs.forEach(g=>{t+=g.es*g.cp;tw+=g.cp});return tw?t/tw:null}
 
+// ── Permission helpers ──────────────────────────────────────────────────────
+function rPerm(r){const m=(r.members||[]).find(m=>m.uid===CU.id);return m?m.p:[];}
+function gPerms(r,g){const rp=rPerm(r);const gm=(g.members||[]).find(m=>m.uid===CU.id);const gp=gm?gm.p:[];return[...new Set([...rp,...gp])];}
+function canViewReport(r){if(rPerm(r).length)return true;return r.groups.some(g=>(g.members||[]).some(m=>m.uid===CU.id));}
+function canViewGrp(r,g){if(rPerm(r).length)return true;return gPerms(r,g).length>0;}
+function canEditGrp(r,g){if(!gPerms(r,g).includes('edit'))return false;if(r.status==='EVALUATED')return false;return['PENDING','DATA_REVIEWED_NEED_UPDATE'].includes(g.status);}
+function canApproveGrp(r,g){return gPerms(r,g).includes('approve')&&r.status!=='EVALUATED';}
+function canEvalRpt(r){return rPerm(r).includes('evaluate');}
+function canPublishRpt(r){return rPerm(r).includes('approve')&&r.status==='DRAFT';}
+function canApproveRpt(r){return rPerm(r).includes('approve')&&r.status==='PUBLISHED';}
+function canDeleteRpt(r){return rPerm(r).includes('approve')||r.cby===CU.id;}
+function hasAnyEditOnRpt(r){return r.groups.some(g=>gPerms(r,g).includes('edit'));}
+// ────────────────────────────────────────────────────────────────────────────
+
 const SEED_T=[{id:'t1',name:'استمارة تقييم المؤسسات الحكومية لعام 2026م',desc:'الاستمارة الرئيسية لتقييم أداء المؤسسات الحكومية وفق المؤشرات المعتمدة لرؤية عُمان 2040',sd:'2026-01-01',ed:'2026-12-31',ca:'2025-12-01',members:[{uid:'u1',p:['view','edit','approve','evaluate']},{uid:'u3',p:['view','evaluate']}],
 groups:[
 {id:'g1',name:'المؤشر الأول: الأوامر السامية وقرارات مجلس الوزراء',cp:15,members:[{uid:'u2',p:['view','edit']},{uid:'u4',p:['view']}],lists:[
@@ -314,13 +328,15 @@ function filterR(){
 }
 function renderReportActions(r){
   const ops=[`<option value="">إجراءات إضافية</option>`];
-  if(r.status==='DRAFT')ops.push(`<option value="publish">نشر</option>`);
-  if(r.status==='PUBLISHED'){ops.push(`<option value="approve">اعتماد</option>`);ops.push(`<option value="evaluate">تقييم</option>`);}
+  if(canPublishRpt(r))ops.push(`<option value="publish">نشر</option>`);
+  if(canApproveRpt(r))ops.push(`<option value="approve">اعتماد</option>`);
+  if(canEvalRpt(r)&&(r.status==='PUBLISHED'||r.status==='REVIEWED'))ops.push(`<option value="evaluate">تقييم</option>`);
   ops.push(`<option value="clone">نسخ</option>`);
-  ops.push(`<option value="delete">حذف</option>`);
+  if(canDeleteRpt(r))ops.push(`<option value="delete">حذف</option>`);
+  const canV=canViewReport(r);const canE=hasAnyEditOnRpt(r)&&r.status!=='EVALUATED';
   return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-    <button class="btn bgh bic" title="عرض" onclick="navigate('/reports/view/${r.id}')"><i class="fas fa-eye" style="color:#0891b2"></i></button>
-    ${r.status!=='EVALUATED'?`<button class="btn bgh bic" title="تحرير" onclick="navigate('/reports/edit/${r.id}')"><i class="fas fa-pen" style="color:#7c3aed"></i></button>`:''}
+    ${canV?`<button class="btn bgh bic" title="عرض" onclick="navigate('/reports/view/${r.id}')"><i class="fas fa-eye" style="color:#0891b2"></i></button>`:`<span title="لا تملك صلاحية عرض هذا التقرير" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;color:var(--txl)"><i class="fas fa-lock" style="font-size:11px"></i></span>`}
+    ${canE?`<button class="btn bgh bic" title="تحرير" onclick="navigate('/reports/edit/${r.id}')"><i class="fas fa-pen" style="color:#7c3aed"></i></button>`:''}
     <select class="fc" style="min-width:132px;padding:6px 8px" onchange="handleReportAction(this,'${r.id}')">${ops.join('')}</select>
   </div>`;
 }
@@ -355,8 +371,16 @@ function renderRTable(R){
     </tr>`;}).join('')}
   </tbody></table></div>`;
 }
-function pubReport(id){showConfirm('هل تريد نشر هذا التقرير؟',()=>{const r=ST.R.find(x=>x.id===id);if(r){r.status='PUBLISHED';saveST();notify('تم نشر التقرير بنجاح');resolveRoute()}},'wn');}
-function approveReport(id){showConfirm('هل تريد اعتماد التقرير نهائياً؟',()=>{const r=ST.R.find(x=>x.id===id);if(r){r.status='REVIEWED';saveST();notify('تم اعتماد التقرير');resolveRoute()}},'wn');}
+function pubReport(id){
+  const r=ST.R.find(x=>x.id===id);if(!r)return;
+  if(!canPublishRpt(r)){notify('لا تملك صلاحية نشر هذا التقرير','e');return;}
+  showConfirm('هل تريد نشر هذا التقرير؟',()=>{r.status='PUBLISHED';saveST();notify('تم نشر التقرير بنجاح');resolveRoute()},'wn');
+}
+function approveReport(id){
+  const r=ST.R.find(x=>x.id===id);if(!r)return;
+  if(!canApproveRpt(r)){notify('لا تملك صلاحية اعتماد هذا التقرير','e');return;}
+  showConfirm('هل تريد اعتماد التقرير نهائياً؟',()=>{r.status='REVIEWED';saveST();notify('تم اعتماد التقرير');resolveRoute()},'wn');
+}
 function deleteRpt(id){showConfirm('هل تريد حذف هذا التقرير نهائياً؟ لا يمكن التراجع.',()=>{ST.R=ST.R.filter(r=>r.id!==id);saveST();notify('تم حذف التقرير','w');resolveRoute();});}
 function cloneRpt(id){
   const src=ST.R.find(r=>r.id===id);if(!src)return;
@@ -449,6 +473,8 @@ route('/reports/view/:id',({id})=>renderRptDetail(id,false));
 route('/reports/edit/:id',({id})=>renderRptDetail(id,true));
 function renderRptDetail(rid,editMode){
   const r=ST.R.find(x=>x.id===rid);if(!r){navigate('/reports');return}
+  if(!canViewReport(r)){notify('لا تملك صلاحية عرض هذا التقرير','e');navigate('/reports');return}
+  if(editMode&&!hasAnyEditOnRpt(r)){navigate('/reports/view/'+rid);return}
   const tmpl=ST.T.find(t=>t.id===r.tid);const st=STATUSES[r.status]||STATUSES.DRAFT;
   const score=calcRptScore(r);if(ATAB>=r.groups.length)ATAB=0;
   const passed=r.groups.filter(g=>g.status==='DATA_REVIEWED_PASSED').length;
@@ -472,9 +498,10 @@ function renderRptDetail(rid,editMode){
           </div>
         </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
-          ${!editMode&&r.status!=='EVALUATED'?`<button class="btn bpr bsm" onclick="navigate('/reports/edit/${rid}')"><i class="fas fa-pen"></i> تحرير</button>`:''}
-          ${r.status==='PUBLISHED'?`<button class="btn bwn bsm" onclick="navigate('/reports/evaluate/${rid}')"><i class="fas fa-star"></i> تقييم</button><button class="btn bsc bsm" onclick="approveReport('${rid}')"><i class="fas fa-check-double"></i> اعتماد</button>`:''}
-          ${r.status==='DRAFT'?`<button class="btn bsu bsm" onclick="pubReport('${rid}')"><i class="fas fa-globe"></i> نشر</button>`:''}
+          ${!editMode&&hasAnyEditOnRpt(r)&&r.status!=='EVALUATED'?`<button class="btn bpr bsm" onclick="navigate('/reports/edit/${rid}')"><i class="fas fa-pen"></i> تحرير</button>`:''}
+          ${canApproveRpt(r)?`<button class="btn bsc bsm" onclick="approveReport('${rid}')"><i class="fas fa-check-double"></i> اعتماد</button>`:''}
+          ${canEvalRpt(r)&&(r.status==='PUBLISHED'||r.status==='REVIEWED')?`<button class="btn bwn bsm" onclick="navigate('/reports/evaluate/${rid}')"><i class="fas fa-star"></i> تقييم</button>`:''}
+          ${canPublishRpt(r)?`<button class="btn bsu bsm" onclick="pubReport('${rid}')"><i class="fas fa-globe"></i> نشر</button>`:''}
           <button class="btn bou bsm" onclick="navigate('/reports')"><i class="fas fa-arrow-right"></i> رجوع</button>
         </div>
       </div>
@@ -484,12 +511,13 @@ function renderRptDetail(rid,editMode){
         <span style="font-size:12px;font-weight:800;color:${prog===100?'var(--sul)':'var(--prl)'}">${prog}%</span>
       </div>
       <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
-        ${r.groups.map((g,i)=>{const gs=GS[g.status]||GS.PENDING;return`<div class="gcard ${ATAB===i?'on':''}" data-gidx="${i}" onclick="switchTab(${i},'${rid}',${editMode})">
+        ${r.groups.map((g,i)=>{const gs=GS[g.status]||GS.PENDING;const hasV=canViewGrp(r,g);return`<div class="gcard ${ATAB===i?'on':''}" data-gidx="${i}" onclick="switchTab(${i},'${rid}',${editMode})" style="${!hasV?'opacity:.45':''}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span class="cba">${g.cp}%</span><span class="bdg ${gs.c}" style="font-size:9.5px;padding:1px 6px">${gs.l}</span>
+            <span class="cba">${g.cp}%</span>
+            ${!hasV?`<span style="font-size:9px;color:var(--txl)"><i class="fas fa-lock"></i></span>`:`<span class="bdg ${gs.c}" style="font-size:9.5px;padding:1px 6px">${gs.l}</span>`}
           </div>
           <div style="font-size:11px;font-weight:600;color:var(--tx);line-height:1.4">${esc(g.name.replace(/المؤشر[^:]+:/,'').trim())}</div>
-          ${g.es!=null?`<div style="font-size:10px;font-weight:800;color:${scC(g.es)};margin-top:3px"><i class="fas fa-star" style="font-size:9px"></i> ${g.es.toFixed(1)}/6</div>`:''}
+          ${g.es!=null&&hasV?`<div style="font-size:10px;font-weight:800;color:${scC(g.es)};margin-top:3px"><i class="fas fa-star" style="font-size:9px"></i> ${g.es.toFixed(1)}/6</div>`:''}
         </div>`;}).join('')}
       </div>
     </div>
@@ -506,6 +534,26 @@ function switchTab(idx,rid,editMode){
 }
 function renderGroupTab(r,ti,editMode){
   const g=r.groups[ti];if(!g)return'';const gs=GS[g.status]||GS.PENDING;
+  // Permission checks for this group
+  const hasView=canViewGrp(r,g);
+  const hasEdit=canEditGrp(r,g);
+  const hasApprove=canApproveGrp(r,g);
+  if(!hasView){return`<div class="card"><div class="es" style="padding:44px"><i class="fas fa-lock"></i><h3>لا تملك صلاحية الوصول</h3><p>ليس لديك صلاحية عرض بيانات هذه المجموعة</p></div></div>`;}
+  // Status control: approve perm → full dropdown; edit perm + PENDING → submit button
+  let statusCtrl='';
+  if(editMode&&hasApprove){
+    statusCtrl=`<select class="fc" style="width:200px;font-size:11.5px" onchange="updGrpStatus('${r.id}','${g.id}',this.value)">${Object.entries(GS).map(([k,v])=>`<option value="${k}" ${g.status===k?'selected':''}>${v.l}</option>`).join('')}</select>`;
+  } else if(editMode&&gPerms(r,g).includes('edit')&&g.status==='PENDING'){
+    statusCtrl=`<button class="btn bsu bsm" onclick="submitGrpData('${r.id}','${g.id}')"><i class="fas fa-paper-plane"></i> تقديم البيانات</button>`;
+  } else if(editMode&&gPerms(r,g).includes('edit')&&g.status==='DATA_REVIEWED_NEED_UPDATE'){
+    statusCtrl=`<button class="btn bwn bsm" onclick="submitGrpData('${r.id}','${g.id}')"><i class="fas fa-paper-plane"></i> إعادة تقديم البيانات</button>`;
+  }
+  // Inform user why they can't edit
+  let editAlert='';
+  if(editMode&&gPerms(r,g).includes('edit')&&!hasEdit){
+    if(g.status==='DATA_SUBMITTED')editAlert=`<div class="al al-i" style="margin-top:10px;margin-bottom:0"><i class="fas fa-hourglass-half"></i><span>البيانات مقدمة وبانتظار المراجعة — لا يمكن التعديل حالياً</span></div>`;
+    else if(g.status==='DATA_REVIEWED_PASSED')editAlert=`<div class="al al-s" style="margin-top:10px;margin-bottom:0"><i class="fas fa-check-circle"></i><span>تمت المراجعة واعتماد بيانات هذه المجموعة</span></div>`;
+  }
   return`
   <div class="card" style="margin-bottom:14px"><div class="cb2" style="padding:14px 18px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
@@ -516,23 +564,25 @@ function renderGroupTab(r,ti,editMode){
       <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
         ${g.es!=null?`<div style="display:flex;align-items:center;gap:5px;background:#f8fafc;padding:5px 12px;border-radius:20px;border:1px solid var(--br)"><i class="fas fa-star" style="color:${scC(g.es)};font-size:11px"></i><span style="font-size:13px;font-weight:900;color:${scC(g.es)}">${g.es.toFixed(1)}/6</span><span style="font-size:11px;color:var(--txm)">${scL(g.es)}</span></div>`:''}
         <span class="bdg ${gs.c}" style="font-size:11.5px;padding:4px 12px">${gs.l}</span>
-        ${editMode?`<select class="fc" style="width:195px;font-size:11.5px" onchange="updGrpStatus('${r.id}','${g.id}',this.value)">${Object.entries(GS).map(([k,v])=>`<option value="${k}" ${g.status===k?'selected':''}>${v.l}</option>`).join('')}</select>`:''}
+        ${statusCtrl}
+        ${!editMode&&hasApprove&&(g.status==='DATA_SUBMITTED')?`<button class="btn bsc bsm" onclick="navigate('/reports/edit/${r.id}')"><i class="fas fa-clipboard-check"></i> مراجعة</button>`:''}
       </div>
     </div>
+    ${editAlert}
     ${g.en?`<div class="al al-s" style="margin-top:12px;margin-bottom:0"><i class="fas fa-comment-dots"></i><span style="font-size:12px">${esc(g.en)}</span></div>`:''}
   </div></div>
   <div class="card" style="margin-bottom:14px">
     <div class="ch"><div class="ct2" style="font-size:13px"><i class="fas fa-users" style="color:var(--scl);margin-left:6px"></i>أعضاء المجموعة</div>
-      ${editMode?`<button class="btn bou bsm" onclick="addGrpMember('${r.id}','${g.id}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}
+      ${editMode&&hasApprove?`<button class="btn bou bsm" onclick="addGrpMember('${r.id}','${g.id}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}
     </div>
-    <div class="cb2" style="padding:12px 16px">${g.members?.length?renderMembersList(g.members,editMode,{rid:r.id,gid:g.id},'grp'):`<div style="color:var(--txm);font-size:12px;text-align:center;padding:8px;opacity:.6"><i class="fas fa-user-slash" style="margin-left:5px"></i>لا يوجد أعضاء محددون لهذه المجموعة</div>`}</div>
+    <div class="cb2" style="padding:12px 16px">${g.members?.length?renderMembersList(g.members,editMode&&hasApprove,{rid:r.id,gid:g.id},'grp'):`<div style="color:var(--txm);font-size:12px;text-align:center;padding:8px;opacity:.6"><i class="fas fa-user-slash" style="margin-left:5px"></i>لا يوجد أعضاء محددون لهذه المجموعة</div>`}</div>
   </div>
   ${g.lists.length?g.lists.map(l=>`
   <div class="card" style="margin-bottom:14px">
     <div class="ch"><div><div class="ct2">${esc(l.name)}</div><div style="font-size:11px;color:var(--txm);margin-top:2px">الوزن: <strong>${l.cp}%</strong> · ${l.hasPR?`<span style="color:var(--sul)"><i class="fas fa-lock" style="font-size:9px;margin-left:2px"></i>صفوف ثابتة</span>`:`<span style="color:var(--pul)"><i class="fas fa-table" style="font-size:9px;margin-left:2px"></i>صفوف مفتوحة</span>`} · ${l.rows.length} سجل</div></div>
-      ${editMode&&!l.hasPR?`<button class="btn bpr bsm" onclick="addRow('${r.id}','${g.id}','${l.id}')"><i class="fas fa-plus"></i> إضافة سجل</button>`:''}
+      ${editMode&&hasEdit&&!l.hasPR?`<button class="btn bpr bsm" onclick="addRow('${r.id}','${g.id}','${l.id}')"><i class="fas fa-plus"></i> إضافة سجل</button>`:''}
     </div>
-    <div style="overflow-x:auto">${renderFillTable(l,editMode,r.id,g.id)}</div>
+    <div style="overflow-x:auto">${renderFillTable(l,editMode&&hasEdit,r.id,g.id)}</div>
   </div>`).join(''):`<div class="card"><div class="es"><i class="fas fa-table"></i><h3>لا توجد قوائم</h3><p>لم يتم تعريف قوائم لهذه المجموعة في القالب</p></div></div>`}`;
 }
 function renderFillTable(l,editMode,rid,gid){
@@ -564,10 +614,12 @@ function initAutoGrowTextareas(){
 function updCell(el){
   const[rid,gid,lid,rwid,cid]=el.getAttribute('data-k').split('|');
   const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const rw=l?.rows.find(x=>x.id===rwid);
+  if(!canEditGrp(r,g)){el.value=rw?.cells[cid]||'';notify('لا تملك صلاحية التعديل','e');return;}
   if(rw){rw.cells[cid]=el.value;saveST()}
 }
 function updGrpStatus(rid,gid,ns){
   const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  if(!canApproveGrp(r,g)){notify('لا تملك صلاحية تغيير حالة المجموعة','e');return;}
   g.status=ns;
   if(r.groups.every(g2=>g2.status==='DATA_REVIEWED_PASSED')){r.status='REVIEWED';notify('تم اعتماد جميع المجموعات — حالة التقرير: تمت المراجعة');}
   saveST();notify('تم تحديث حالة المجموعة');
@@ -575,8 +627,19 @@ function updGrpStatus(rid,gid,ns){
   if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
   initAutoGrowTextareas();
 }
+function submitGrpData(rid,gid){
+  const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  if(!gPerms(r,g).includes('edit')){notify('لا تملك صلاحية تقديم البيانات','e');return;}
+  showConfirm('هل تريد تقديم بيانات هذه المجموعة للمراجعة؟ لن تتمكن من التعديل بعد التقديم.',()=>{
+    g.status='DATA_SUBMITTED';saveST();notify('تم تقديم البيانات للمراجعة بنجاح');
+    const h=window.location.hash.slice(1);const tc=document.getElementById('tc');
+    if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
+    initAutoGrowTextareas();
+  },'wn');
+}
 function addRow(rid,gid,lid){
   const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;
+  if(!canEditGrp(r,g)){notify('لا تملك صلاحية التعديل على هذه المجموعة','e');return;}
   const nr={id:'rw'+uid(),cells:{},es:null,en:''};
   l.cols.filter(c=>c.t==='label').slice(0,1).forEach(c=>{nr.cells[c.id]=String(l.rows.length+1)});
   l.rows.push(nr);saveST();
@@ -585,6 +648,7 @@ function addRow(rid,gid,lid){
 }
 function delRow(rid,gid,lid,rwid){
   const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);if(!l)return;
+  if(!canEditGrp(r,g)){notify('لا تملك صلاحية التعديل على هذه المجموعة','e');return;}
   l.rows=l.rows.filter(x=>x.id!==rwid);saveST();notify('تم حذف السجل','w');
   const h=window.location.hash.slice(1);const tc=document.getElementById('tc');if(tc)tc.innerHTML=renderGroupTab(r,ATAB,h.startsWith('/reports/edit/'));
   initAutoGrowTextareas();
@@ -626,6 +690,7 @@ function removeMember(rid,gid,userId,ctxType){
 // ============================================================
 route('/reports/evaluate/:id',({id})=>{
   const r=ST.R.find(x=>x.id===id);if(!r){navigate('/reports');return}
+  if(!canEvalRpt(r)){notify('لا تملك صلاحية تقييم هذا التقرير','e');navigate('/reports/view/'+id);return;}
   const score=calcRptScore(r);
   renderLayout(`
   <div class="ph"><div><h2><i class="fas fa-star" style="color:#d97706;margin-left:8px"></i>تقييم التقرير</h2><p>${esc(r.name)}</p></div>
@@ -711,6 +776,7 @@ function renderEvalTab(r,ti){
 }
 function setGrpSc(rid,gid,score){
   const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);if(!g)return;
+  if(!canEvalRpt(r)){notify('لا تملك صلاحية التقييم','e');return;}
   g.es=score;g.en=document.getElementById('gen-'+gid)?.value||'';
   const overall=calcRptScore(r);saveST();
   const ti=r.groups.indexOf(g);document.getElementById('ec').innerHTML=renderEvalTab(r,ti);
@@ -724,6 +790,7 @@ function setGrpSc(rid,gid,score){
 }
 function setRowSc(rid,gid,lid,rwid,score){
   const r=ST.R.find(x=>x.id===rid);const g=r?.groups.find(x=>x.id===gid);const l=g?.lists.find(x=>x.id===lid);const rw=l?.rows.find(x=>x.id===rwid);if(!rw)return;
+  if(!canEvalRpt(r)){notify('لا تملك صلاحية التقييم','e');return;}
   rw.es=score;const allR=g.lists.flatMap(l2=>l2.rows);const sc=allR.filter(x=>x.es!=null);
   if(sc.length){g.es=parseFloat((sc.reduce((a,x)=>a+x.es,0)/sc.length).toFixed(2))}
   saveST();const ti=r.groups.indexOf(g);document.getElementById('ec').innerHTML=renderEvalTab(r,ti);notify(`تم تقييم السجل: ${score}/6`);
@@ -735,6 +802,7 @@ function updEN(el){
 }
 function saveEval(rid){
   const r=ST.R.find(x=>x.id===rid);if(!r)return;
+  if(!canEvalRpt(r)){notify('لا تملك صلاحية حفظ التقييم','e');return;}
   r.groups.forEach(g=>{const el=document.getElementById('gen-'+g.id);if(el)g.en=el.value});
   r.status='EVALUATED';saveST();notify('تم حفظ التقييم بنجاح');navigate('/reports/view/'+rid);
 }
@@ -955,15 +1023,29 @@ function saveTmpl(){
 // USERS
 // ============================================================
 route('/users',()=>{
+  function getUserPermsOnReport(u,r){const m=(r.members||[]).find(x=>x.uid===u.id);return m?m.p:[];}
+  function getUserPermsOnGroups(u,r){const gp=[];r.groups.forEach(g=>{const m=(g.members||[]).find(x=>x.uid===u.id);if(m)gp.push({gname:g.name.replace(/المؤشر[^:]+:/,'').trim().substring(0,22)+'…',p:m.p});});return gp;}
   renderLayout(`
   <div class="ph"><div><h2><i class="fas fa-users" style="color:var(--scl);margin-left:8px"></i>المستخدمون</h2><p>إدارة المستخدمين وتبديل المستخدم الحالي للاختبار</p></div></div>
-  <div class="al al-i"><i class="fas fa-info-circle"></i><span>تبديل المستخدم هنا يؤثر على الصلاحيات المعروضة في الواجهة — يُستخدم لأغراض الاختبار والمراجعة.</span></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-    ${USERS.map(u=>`<div class="card" style="padding:14px 18px;display:flex;align-items:center;gap:12px;transition:border-color .17s;${CU.id===u.id?'border:2px solid var(--prl);background:var(--prxl)':''}">
-      <div style="width:46px;height:46px;border-radius:50%;background:${u.cl};display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0">${ini(u.n)}</div>
-      <div style="flex:1"><div style="font-size:13.5px;font-weight:800">${esc(u.n)}</div><div style="font-size:11.5px;color:var(--txm)">${esc(u.r)}</div></div>
-      ${CU.id===u.id?`<span class="bdg bd-rv" style="font-size:10px"><i class="fas fa-check" style="font-size:9px"></i> نشط</span>`:`<button class="btn bou bsm" onclick="switchUser('${u.id}')">تبديل</button>`}
-    </div>`).join('')}
+  <div class="al al-i"><i class="fas fa-info-circle"></i><span>تبديل المستخدم هنا يؤثر على الصلاحيات المعروضة في الواجهة — يُستخدم لأغراض الاختبار والمراجعة. الصلاحيات الموضحة تعكس الوصول الفعلي على التقارير والمجموعات.</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
+    ${USERS.map(u=>{
+      const rps=ST.R.map(r=>{const p=getUserPermsOnReport(u,r);const gp=getUserPermsOnGroups(u,r);return{rname:r.name.substring(0,30)+'…',p,gp};}).filter(x=>x.p.length||x.gp.length);
+      return`<div class="card" style="transition:border-color .17s;${CU.id===u.id?'border:2px solid var(--prl);background:var(--prxl)':''}">
+      <div style="padding:14px 18px;display:flex;align-items:center;gap:12px">
+        <div style="width:46px;height:46px;border-radius:50%;background:${u.cl};display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0">${ini(u.n)}</div>
+        <div style="flex:1"><div style="font-size:13.5px;font-weight:800">${esc(u.n)}</div><div style="font-size:11.5px;color:var(--txm)">${esc(u.r)}</div></div>
+        ${CU.id===u.id?`<span class="bdg bd-rv" style="font-size:10px"><i class="fas fa-check" style="font-size:9px"></i> نشط</span>`:`<button class="btn bou bsm" onclick="switchUser('${u.id}')">تبديل</button>`}
+      </div>
+      ${rps.length?`<div style="padding:0 18px 14px">
+        ${rps.slice(0,2).map(x=>`<div style="background:#f8fafc;border-radius:7px;padding:7px 10px;margin-bottom:5px;border:1px solid var(--br)">
+          <div style="font-size:10.5px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="fas fa-file-alt" style="color:var(--prl);margin-left:3px;font-size:9px"></i>${esc(x.rname)}</div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap">${x.p.map(p=>`<span class="pchip ${PC[p]}" style="font-size:9.5px">${PL[p]}</span>`).join('')}${x.p.length&&x.gp.length?`<span style="font-size:9.5px;color:var(--txl)">+ مجموعات</span>`:''}</div>
+          ${!x.p.length&&x.gp.length?`<div style="font-size:9.5px;color:var(--txm);margin-top:2px">عبر المجموعات فقط: ${x.gp.slice(0,2).map(g=>`<span style="font-size:9px">${esc(g.gname)}</span>`).join(', ')}</div>`:''}
+        </div>`).join('')}
+        ${rps.length>2?`<div style="font-size:10.5px;color:var(--txl);text-align:center">+${rps.length-2} تقارير أخرى</div>`:''}
+      </div>`:`<div style="padding:0 18px 14px;font-size:11px;color:var(--txl);text-align:center"><i class="fas fa-ban" style="margin-left:4px"></i>لا توجد صلاحيات على أي تقرير</div>`}
+    </div>`;}).join('')}
   </div>`,[{l:'المستخدمون'}],'/users');
 });
 function switchUser(uid2){CU=gu(uid2)||CU;notify('تم التبديل إلى: '+CU.n);resolveRoute()}
