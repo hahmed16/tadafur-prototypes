@@ -200,7 +200,7 @@ This section defines the complete lifecycle of every SPM element and strategy �
 
 ---
 
-### 7.1 Element Status Lifecycle
+### 6.1 Element Status Lifecycle
 
 #### Status Definitions
 
@@ -209,7 +209,7 @@ This section defines the complete lifecycle of every SPM element and strategy �
 | **DRAFT**       | Being prepared. Not operational. Editable freely. Excluded from parent calculations.                          |
 | **ACTIVE**      | Live and operational. Tracking has begun. Included in all calculations.                                       |
 | **ON_HOLD**     | Temporarily paused. Progress frozen at last value. Still counted in parent calculations at frozen value.      |
-| **COMPLETED**   | Finished successfully. All data frozen. Contributes final progress to parents permanently.                    |
+| **COMPLETED**   | Execution closed. Core planning and progress data are frozen, while allowed post-completion actions remain open (such as payment reconciliation and risk closure). Contributes final progress to parents permanently.                    |
 | **DEACTIVATED** | Suspended indefinitely. Excluded from all calculations. Can be reactivated.                                   |
 | **DEPRECATED**  | Obsolete. Permanently excluded from calculations. Cannot be linked to new strategies. **Terminal — no exit.** |
 
@@ -243,17 +243,17 @@ DRAFT ──────→ ACTIVE ──────→ ON_HOLD ─────
 | DRAFT       | ACTIVE      | Element Owner, Element Editor                                            | Name set in default org language. If Trackable: start date required. If Budgetable: planned budget recommended (warning only, not a blocker). | Start date permanently locked. Progress tracking begins (if Trackable). Element included in all parent calculations in every strategy it belongs to. Parents recalculate upward. Team members and parent owners notified.                                                            |
 | DRAFT       | DEPRECATED  | Element Owner, Module Admin                                              | Element must not have been activated.                                                                                                         | Permanently excluded from calculations. Cannot be linked to any new strategy. Hidden from default views. Terminal state.                                                                                                                                                             |
 | ACTIVE      | ON_HOLD     | Element Owner, Element Editor, Strategy Editor (any containing strategy) | None.                                                                                                                                         | Progress frozen at last recorded value. No new progress entries. Milestones suspended. Committed payments still allowed. Element remains in parent calculations using frozen value. Team members and parent owners notified.                                                         |
-| ACTIVE      | COMPLETED   | Element Owner, Element Editor                                            | If Trackable: at least one progress log entry must exist. If Budgetable: alert shown if consumed < allocated (warning only, not a blocker).   | All fields locked (read-only). End date set to today if not already provided. Progress fixed at 100% (or last logged value if lower). 30-day payment grace period for Budgetable. Final frozen progress permanently contributes to parents. Team members and parent owners notified. |
+| ACTIVE      | COMPLETED   | Element Owner, Element Editor                                            | If Trackable: at least one progress log entry must exist. If Budgetable: alert shown if consumed < allocated (warning only, not a blocker).   | Core element fields become read-only. End date set to today if not already provided. Progress fixed at 100% (or last logged value if lower). 30-day payment grace period for Budgetable. Risk closure actions remain allowed. Final frozen progress permanently contributes to parents. Team members and parent owners notified. |
 | ACTIVE      | DEACTIVATED | Element Owner, Module Admin                                              | System shows warning listing all affected parent elements across all strategies. User must confirm.                                           | All fields immediately read-only. Element removed from all parent calculations. Children are not automatically deactivated. All affected parents recalculate upward across all strategies. Team members and all parent owners in all strategies notified.                            |
 | ON_HOLD     | ACTIVE      | Element Owner, Element Editor                                            | None.                                                                                                                                         | All editing rights restored. Progress tracking resumes; expected progress recalculates for the hold period. Element rejoins active calculations; parents recalculate immediately. Team members and parent owners notified.                                                           |
 | ON_HOLD     | DEACTIVATED | Element Owner, Module Admin                                              | Same warning as ACTIVE → DEACTIVATED.                                                                                                         | Same post-conditions as ACTIVE → DEACTIVATED.                                                                                                                                                                                                                                        |
-| COMPLETED   | DEPRECATED  | Module Admin, Strategy Owner (any containing strategy)                   | Element must be in COMPLETED state.                                                                                                           | Permanently archived. Cannot be linked to new strategies. Hidden from all default views; visible only in archive/history views. Team members notified.                                                                                                                               |
+| COMPLETED   | DEPRECATED  | Element Owner, Module Admin                                              | Element must be in COMPLETED state.                                                                                                           | Permanently archived. Cannot be linked to new strategies. Hidden from all default views; visible only in archive/history views. Team members notified.                                                                                                                               |
 | DEACTIVATED | ACTIVE      | Element Owner, Module Admin                                              | None.                                                                                                                                         | Editing rights restored. Element re-enters all parent calculations; parents recalculate. Progress gap period during deactivation has no entries; expected progress adjusts. Team members and parent owners notified.                                                                 |
 | DEACTIVATED | DEPRECATED  | Module Admin                                                             | None.                                                                                                                                         | Terminal state. Permanently excluded from calculations and linking. Hidden from default views.                                                                                                                                                                                       |
 
 ---
 
-### 7.2 What Changes at Each Status Transition
+### 6.2 What Changes at Each Status Transition
 
 **DRAFT → ACTIVE**
 
@@ -297,11 +297,11 @@ DRAFT ──────→ ACTIVE ──────→ ON_HOLD ─────
 
 | Area                  | Change                                                                                                    |
 | --------------------- | --------------------------------------------------------------------------------------------------------- |
-| **All elements**      | All fields locked (read-only). End date set to today if not already provided.                             |
+| **All elements**      | Core element definition and planning fields become locked. End date set to today if not already provided. |
 | **Budgetable**        | No budget changes. 30-day payment grace period for final reconciliation; after that, all payments locked. |
-| **Trackable**         | Own progress fixed at 100% (or last logged value if lower). No new progress entries.                      |
+| **Trackable**         | Own progress is frozen at 100% or the last logged value if lower. No new progress entries.                |
 | **Indicators linked** | Final period actuals can still be recorded for the reporting period.                                      |
-| **Risks linked**      | Open risk phases must be resolved, transferred, or accepted. No new risk assessments.                     |
+| **Risks linked**      | Existing open risks may still be resolved, transferred, or accepted. No new risk assessments.             |
 | **Calculations**      | Element contributes final frozen progress to parent calculations permanently.                             |
 
 ---
@@ -336,7 +336,7 @@ DRAFT ──────→ ACTIVE ──────→ ON_HOLD ─────
 
 ---
 
-### 7.3 Strategy Status Lifecycle
+### 6.3 Strategy Status Lifecycle
 
 #### Strategy Status Definitions
 
@@ -344,8 +344,8 @@ DRAFT ──────→ ACTIVE ──────→ ON_HOLD ─────
 | ------------- | --------------------------------------------------------------------------------------------- |
 | **DRAFT**     | Being configured. Elements can be added and linked. Progress and payments cannot be recorded. |
 | **ACTIVE**    | Live. All tracking, calculations, and reporting operational.                                  |
-| **SUSPENDED** | Temporarily paused. No new tracking. Existing data read-only in this strategy context.        |
-| **COMPLETED** | Period ended. All data frozen in this context. Historical access only.                        |
+| **SUSPENDED** | Temporarily paused. No new tracking or structural changes. Existing data is read-only in this strategy context except permitted payment activity. |
+| **COMPLETED** | Period ended. Strategy planning and structure are frozen in this context. Historical access only.                        |
 | **ARCHIVED**  | Permanently archived. Read-only historical reference. **Terminal — no exit.**                 |
 
 #### State Diagram
@@ -364,8 +364,8 @@ DRAFT ──────→ ACTIVE ──────→ SUSPENDED ────�
 | From      | To        | Who Can Trigger                 | Pre-Conditions                                                | Post-Conditions                                                                          |
 | --------- | --------- | ------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | DRAFT     | ACTIVE    | Strategy Owner, Strategy Editor | At least one element linked. Type level configuration is set. | All tracking, calculations, and reporting become operational.                            |
-| ACTIVE    | SUSPENDED | Strategy Owner, Module Admin    | None.                                                         | No new tracking, progress entries, payments, element additions, or link changes allowed. |
-| ACTIVE    | COMPLETED | Strategy Owner, Module Admin    | None.                                                         | All data frozen in this strategy context. Element statuses are not changed.              |
+| ACTIVE    | SUSPENDED | Strategy Owner, Module Admin    | None.                                                         | No new tracking, progress entries, element additions, or link changes allowed. Existing payment activity remains allowed. |
+| ACTIVE    | COMPLETED | Strategy Owner, Module Admin    | None.                                                         | Strategy planning and structure become frozen in this context. Element statuses are not changed.              |
 | ACTIVE    | ARCHIVED  | Module Admin                    | None.                                                         | Permanently archived. Read-only historical access. Terminal state.                       |
 | SUSPENDED | ACTIVE    | Strategy Owner, Module Admin    | None.                                                         | All element operations resume per each element's own status rules.                       |
 | SUSPENDED | ARCHIVED  | Module Admin                    | None.                                                         | Terminal state.                                                                          |
@@ -378,13 +378,13 @@ DRAFT ──────→ ACTIVE ──────→ SUSPENDED ────�
 | --------------- | ------------------------------------------------------------------------------------- |
 | **DRAFT**       | Add/remove elements and links. Edit element data. Cannot record progress or payments. |
 | **ACTIVE**      | All operations allowed per each element's own status rules.                           |
-| **SUSPENDED**   | Read-only. No new progress entries or payments. No new element or link additions.     |
-| **COMPLETED**   | Read-only. No changes to any element within this strategy context.                    |
+| **SUSPENDED**   | Read-only for planning and structure. No new progress entries or link changes. Existing payment activity remains allowed.     |
+| **COMPLETED**   | Read-only for strategy structure and planning. Historical access only.                    |
 | **ARCHIVED**    | Read-only historical access. No changes.                                              |
 
 ---
 
-### 7.4 Data Flow Summary by Capability
+### 6.4 Data Flow Summary by Capability
 
 #### Budgetable Elements
 
@@ -446,7 +446,7 @@ DRAFT ──────→ ACTIVE ──────→ SUSPENDED ────�
 
 ---
 
-### 7.5 Status Propagation to Parent Calculations
+### 6.5 Status Propagation to Parent Calculations
 
 When an element's status changes, all parent elements in every strategy that contains it recalculate their derived metrics, propagating all the way to the root.
 
@@ -580,6 +580,12 @@ Vision alignment data is read-only in Vision module reports and can only be edit
 **BR-25** A strategy cannot be activated if it has no type level configuration or no elements.
 
 **BR-26** A strategy's COMPLETED or ARCHIVED transition does not change the status of the elements within it.
+
+**BR-26A** Because element workflow status is global, only global roles may move an element into DEPRECATED.
+
+**BR-26B** COMPLETED means execution is closed, not necessarily that 100% of the intended outcome was achieved.
+
+**BR-26C** When a strategy is SUSPENDED, payment activity may continue, but progress updates, structure changes, and planning changes are blocked.
 
 ### Budget Rules
 
@@ -928,7 +934,7 @@ User stories are organized by epic. Each story includes a brief description and 
 *As a Strategy Owner or Module Admin, I want to temporarily suspend a strategy so that no new data is recorded during a review or audit period.*
 
 - Suspension makes all data within the strategy read-only
-- No new progress entries, payments, element additions, or link changes are allowed while suspended
+- No new progress entries, element additions, or link changes are allowed while suspended, but payment activity may continue
 - Strategy can be resumed back to Active
 
 ---
@@ -1010,9 +1016,10 @@ User stories are organized by epic. Each story includes a brief description and 
 
 - At least one progress log entry must exist if the element type is Trackable
 - An alert is shown if consumed budget is less than allocated budget (not a blocker)
-- All fields become read-only after completion
+- Core element definition and planning fields become read-only after completion
 - End date is set to today if not already provided
 - For Budgetable elements, a 30-day grace period allows final payment reconciliation
+- Existing open risks may still be resolved, transferred, or accepted after completion
 - The element's final progress permanently contributes to parent calculations
 - Team members and parent owners are notified
 
@@ -1039,7 +1046,7 @@ User stories are organized by epic. Each story includes a brief description and 
 ---
 
 **US-17 — Deprecate an Element**  
-*As an Element Owner, Module Admin, or Strategy Owner of a containing strategy, I want to permanently archive an element so that it is no longer usable.*
+*As an Element Owner or Module Admin, I want to permanently archive an element so that it is no longer usable.*
 
 - Element must be in DRAFT, COMPLETED, or DEACTIVATED status — ACTIVE and ON_HOLD elements cannot be deprecated directly
 - Deprecated elements are hidden from all default views; visible only in archive/history when explicitly filtered
@@ -1297,9 +1304,8 @@ No additional hard integrations are planned for Phase 1. Future integration cand
 
 | ID    | Question                                                                                                                                                                                | Impact Area              | Owner | Status |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----- | ------ |
-| OQ-02 | Does access granted through an element-type access request expire after a set period, or is it permanent until manually revoked?                                                        | Permissions              | TBD   | Open   |
-| OQ-03 | When a strategy is suspended, should in-progress payments already submitted be allowed to complete, or frozen immediately?                                                              | Budget / Strategy Status | TBD   | Open   |
-| OQ-06 | When an element is reactivated after a deactivation gap, how is the gap reflected in expected progress calculation? Is the gap excluded from the denominator or treated as 0% progress? | Progress Tracking        | TBD   | Open   |
+| OQ-01 | Does access granted through an element-type access request expire after a set period, or is it permanent until manually revoked?                                                        | Permissions              | TBD   | Open   |
+| OQ-03 | When an element is reactivated after a deactivation gap, how is the gap reflected in expected progress calculation? Is the gap excluded from the denominator or treated as 0% progress? | Progress Tracking        | TBD   | Open   |
 
 ---
 
