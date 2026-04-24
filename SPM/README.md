@@ -605,7 +605,7 @@ Vision alignment data is read-only in Vision module reports and can only be edit
 
 **BR-36** For leaf elements (no active children in the strategy), Calculated Progress is not applicable. Only Own Progress is shown.
 
-**BR-37** For parent elements, both values exist. If the difference exceeds the configured discrepancy threshold (default 5%), an alert is shown to prompt the element owner to review.
+**BR-37** For parent elements, both values exist. If the difference exceeds the strategy's configured discrepancy threshold (default 5%), an alert is shown to prompt the element owner to review.
 
 **BR-38** Draft, Deactivated, and Deprecated children are excluded from parent Calculated Progress.
 
@@ -731,7 +731,7 @@ This section describes how key metrics are computed. Implementation details are 
 - **Calculated Progress**: derived from the weighted average of the element's active children's progress within a given strategy. This is the authoritative value propagated upward to parents.
 - Children in DRAFT, DEACTIVATED, or DEPRECATED status are excluded from the calculation. Children in ON_HOLD or COMPLETED contribute their frozen last value.
 - When a child has multiple parents in the same strategy, its progress is first split by its allocation percentage before being weighted under each parent. This ensures the child's progress is never counted in full under multiple parents simultaneously.
-- If Own Progress and Calculated Progress differ by more than the configured discrepancy threshold (default 5%), the element owner is alerted to review.
+- If Own Progress and Calculated Progress differ by more than the strategy's configured discrepancy threshold (default 5%), the element owner is alerted to review.
 
 ### Budget
 
@@ -771,7 +771,7 @@ Authorization evaluates two separate concerns:
 | --------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | **Module Admin**            | SPM module                            | Full administrative access including type configuration and all administrative actions          |
 | **Strategy Owner**          | Single strategy                       | Owns and manages a specific strategy                                                            |
-| **Strategy Editor**         | Single strategy                       | Can edit strategy configuration and manage element links within it                              |
+| **Strategy Editor**         | Single strategy                       | Can edit strategy configuration, create new elements from within the strategy, and manage element links within it |
 | **Strategy Viewer**         | Single strategy                       | Read-only access to strategy and its elements                                                   |
 | **Element Owner**           | Single element                        | Owns and manages a specific element globally across all strategies                              |
 | **Element Editor**          | Single element                        | Can edit a specific element's data globally                                                     |
@@ -788,6 +788,8 @@ Users may request access to a specific SPM element type within a scope (a strate
 2. Request is routed to the Module Admin or the Strategy Owner of the target strategy
 3. Approver grants or denies; user is notified
 4. If approved, the role is applied for all elements of that type within the requested scope
+
+Notifications for access requests and approval outcomes support both in-app and email delivery. Each user can configure their own notification channel preferences.
 
 **Rules:**
 
@@ -815,7 +817,7 @@ If a user holds strategy-scoped editor permission on a parent element, they inhe
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Browse element library (name, type, status) | Any module user                                                                                       |
 | View element full detail                    | Element Viewer, Editor, Owner — OR — inherited from any containing strategy membership                |
-| Create a new element                        | Any module user                                                                                       |
+| Create a new element                        | Any module user, including a Strategy Editor working inside a strategy                                |
 | Edit element global fields                  | Element Editor, Element Owner                                                                         |
 | Change element status                       | Per transition table in Section 6.1                                                                   |
 | Add / remove team member from element       | Element Owner                                                                                         |
@@ -1107,7 +1109,7 @@ User stories are organized by epic. Each story includes a brief description and 
 *As an Element Owner or any viewer, I want to see when my manually entered progress differs significantly from the system-calculated progress so that I can investigate whether my estimate is accurate.*
 
 - The system displays both the manually entered progress (Own Progress) and the calculated progress derived from children
-- A discrepancy indicator is shown when the difference exceeds the configured threshold (default 5%)
+- A discrepancy indicator is shown when the difference exceeds the strategy's configured threshold (default 5%)
 - The discrepancy alert does not block any action — it prompts the owner to review
 
 ---
@@ -1194,6 +1196,7 @@ User stories are organized by epic. Each story includes a brief description and 
 - Importer must have an active share grant or be granted import access by the source owner
 - Importing grants strategy-scoped usage rights only — the importer cannot edit the element's global fields (name, description, owner)
 - The element appears in the strategy alongside owned elements; its global identity remains unchanged
+- A Strategy Editor may also create a brand-new element directly from within the strategy; once created, it becomes a normal library element that can later be shared and imported by other strategies
 
 ---
 
@@ -1203,6 +1206,8 @@ User stories are organized by epic. Each story includes a brief description and 
 - Revoking sharing blocks all future imports
 - Elements already imported into other strategies remain usable and readable by those teams
 - Source ownership and global edit rights remain with the original owner's team
+- Revoking sharing automatically triggers a review notification to every strategy that already imported the element so those teams can assess impact before future source changes cause downstream breakage
+- Review notifications support both in-app and email delivery and follow each recipient user's notification preferences
 
 ---
 
@@ -1292,16 +1297,9 @@ No additional hard integrations are planned for Phase 1. Future integration cand
 
 | ID    | Question                                                                                                                                                                                | Impact Area              | Owner | Status |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----- | ------ |
-| OQ-01 | Should bulk element activation (US-40) skip non-qualifying elements silently or pause and require user confirmation per failed item?                                                    | Element Lifecycle        | TBD   | Open   |
 | OQ-02 | Does access granted through an element-type access request expire after a set period, or is it permanent until manually revoked?                                                        | Permissions              | TBD   | Open   |
 | OQ-03 | When a strategy is suspended, should in-progress payments already submitted be allowed to complete, or frozen immediately?                                                              | Budget / Strategy Status | TBD   | Open   |
-| OQ-04 | Is there a formal approval gate (separate from activation) required before a strategy can go live — e.g., a sign-off step?                                                              | Strategy Lifecycle       | TBD   | Open   |
-| OQ-05 | What notification channels are supported — in-app only, email, or both? Are notifications configurable per user or org-wide?                                                            | Notifications            | TBD   | Open   |
 | OQ-06 | When an element is reactivated after a deactivation gap, how is the gap reflected in expected progress calculation? Is the gap excluded from the denominator or treated as 0% progress? | Progress Tracking        | TBD   | Open   |
-| OQ-07 | Can a Strategy Editor create new elements from within a strategy, or can they only link existing elements from the library?                                                             | Strategy Building        | TBD   | Open   |
-| OQ-08 | Is there a maximum number of elements per strategy, or per organization?                                                                                                                | Limits & Scale           | TBD   | Open   |
-| OQ-09 | Should revoked element sharing automatically trigger a review notification to all strategies that have already imported that element?                                                   | Sharing & Permissions    | TBD   | Open   |
-| OQ-10 | For the discrepancy threshold (default 5%), is this configurable per strategy, per element type, or only at the organization level?                                                     | Progress Tracking        | TBD   | Open   |
 
 ---
 
