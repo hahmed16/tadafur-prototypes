@@ -140,6 +140,8 @@ Organizations configure up to 4 standard types (e.g., Perspective, Goal, Program
 - **From scratch**: strategy owners/editors can change all strategy-level type settings including capabilities, root eligibility, parent rules, and edge weighting methods
 - **From template**: template-defined type settings are pre-applied during creation and not editable there; the strategy may diverge after instantiation
 
+Each strategy also stores an effective **Requires Activation Approval** setting. When enabled, the strategy must pass through `PENDING_APPROVAL` before it can become `ACTIVE`. When disabled, the strategy may activate directly from `DRAFT`.
+
 ### Strategy Templates
 
 Each template includes:
@@ -149,11 +151,14 @@ Each template includes:
 - Root eligibility, allowed parent type combinations
 - Default and pair-level edge weight methods
 - Strict hierarchy setting, discrepancy threshold
+- Default `Requires Activation Approval` setting
 - Optional recommended navigation profile
 
 ### Type Level Configuration
 
 Each strategy defines which element types it uses, their allowed parent combinations, and the effective defaults per type. **This configuration is the authoritative build specification for the strategy.** Links outside the configured hierarchy are flagged visually but are not hard-blocked.
+
+The strategy also stores the effective activation-governance rule copied from its template or chosen during creation. This value may only be changed while the strategy is still in `DRAFT`.
 
 ### Default Weight Input Type
 
@@ -343,6 +348,7 @@ DRAFT ──────→ ACTIVE ──────→ ON_HOLD ─────
 | Status        | Meaning                                                                                       |
 | ------------- | --------------------------------------------------------------------------------------------- |
 | **DRAFT**     | Being configured. Elements can be added and linked. Progress and payments cannot be recorded. |
+| **PENDING_APPROVAL** | Configuration is complete and submitted for activation approval. No structural changes or tracking are allowed while awaiting the decision. |
 | **ACTIVE**    | Live. All tracking, calculations, and reporting operational.                                  |
 | **SUSPENDED** | Temporarily paused. No new tracking or structural changes. Existing data is read-only in this strategy context except permitted payment activity. |
 | **COMPLETED** | Period ended. Strategy planning and structure are frozen in this context. Historical access only.                        |
@@ -361,9 +367,14 @@ DRAFT ──────→ ACTIVE ──────→ SUSPENDED ────�
 
 #### Strategy Status Transition Table
 
+Note: the effective strategy lifecycle now has two activation paths. Strategies with `Requires Activation Approval = No` use `DRAFT -> ACTIVE`. Strategies with `Requires Activation Approval = Yes` use `DRAFT -> PENDING_APPROVAL -> ACTIVE`.
+
 | From      | To        | Who Can Trigger                 | Pre-Conditions                                                | Post-Conditions                                                                          |
 | --------- | --------- | ------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| DRAFT     | ACTIVE    | Strategy Owner, Strategy Editor | At least one element linked. Type level configuration is set. | All tracking, calculations, and reporting become operational.                            |
+| DRAFT     | ACTIVE    | Strategy Owner, Strategy Editor | `Requires Activation Approval` is disabled. At least one element linked. Type level configuration is set. | All tracking, calculations, and reporting become operational.                            |
+| DRAFT     | PENDING_APPROVAL | Strategy Owner, Strategy Editor | `Requires Activation Approval` is enabled. At least one element linked. Type level configuration is set. | Strategy becomes locked for approval review. No progress, payments, or structural changes allowed while pending. |
+| PENDING_APPROVAL | ACTIVE | Module Admin                    | Strategy is in `PENDING_APPROVAL`.                            | Approval recorded. All tracking, calculations, and reporting become operational.         |
+| PENDING_APPROVAL | DRAFT  | Module Admin                    | Strategy is in `PENDING_APPROVAL`.                            | Rejected or returned for changes. Strategy becomes editable again in `DRAFT`.            |
 | ACTIVE    | SUSPENDED | Strategy Owner, Module Admin    | None.                                                         | No new tracking, progress entries, element additions, or link changes allowed. Existing payment activity remains allowed. |
 | ACTIVE    | COMPLETED | Strategy Owner, Module Admin    | None.                                                         | Strategy planning and structure become frozen in this context. Element statuses are not changed.              |
 | ACTIVE    | ARCHIVED  | Module Admin                    | None.                                                         | Permanently archived. Read-only historical access. Terminal state.                       |
@@ -377,6 +388,7 @@ DRAFT ──────→ ACTIVE ──────→ SUSPENDED ────�
 | Strategy Status | Element Operations Allowed                                                            |
 | --------------- | ------------------------------------------------------------------------------------- |
 | **DRAFT**       | Add/remove elements and links. Edit element data. Cannot record progress or payments. |
+| **PENDING_APPROVAL** | Read-only for configuration review. No progress, payments, approvals of element changes, or structural edits. |
 | **ACTIVE**      | All operations allowed per each element's own status rules.                           |
 | **SUSPENDED**   | Read-only for planning and structure. No new progress entries or link changes. Existing payment activity remains allowed.     |
 | **COMPLETED**   | Read-only for strategy structure and planning. Historical access only.                    |
@@ -579,6 +591,12 @@ Vision alignment data is read-only in Vision module reports and can only be edit
 
 **BR-25** A strategy cannot be activated if it has no type level configuration or no elements.
 
+**BR-25A** If a strategy's effective `Requires Activation Approval` setting is enabled, it cannot transition directly from `DRAFT` to `ACTIVE`; it must go through `PENDING_APPROVAL`.
+
+**BR-25B** Approval of a strategy in `PENDING_APPROVAL` may only be performed by a Module Admin.
+
+**BR-25C** Rejecting a strategy from `PENDING_APPROVAL` returns it to `DRAFT` so the strategy owner/editor can make changes and resubmit.
+
 **BR-26** A strategy's COMPLETED or ARCHIVED transition does not change the status of the elements within it.
 
 **BR-26A** Because element workflow status is global, only global roles may move an element into DEPRECATED.
@@ -683,7 +701,11 @@ Vision alignment data is read-only in Vision module reports and can only be edit
 
 **VR-25** Before deprecating an element: element must be in DRAFT, COMPLETED, or DEACTIVATED status. ACTIVE or ON_HOLD elements cannot be deprecated directly.
 
-**VR-26** A strategy cannot transition from DRAFT to ACTIVE without at least one element and a type level configuration.
+**VR-26** A strategy cannot transition from `DRAFT` to `ACTIVE` without at least one element and a type level configuration.
+
+**VR-26A** A strategy cannot transition from `DRAFT` to `PENDING_APPROVAL` without at least one element and a type level configuration.
+
+**VR-26B** A strategy with `Requires Activation Approval = Yes` cannot transition directly from `DRAFT` to `ACTIVE`.
 
 ### Budget Validation
 
@@ -840,6 +862,7 @@ If a user holds strategy-scoped editor permission on a parent element, they inhe
 | Create a strategy                           | Any module user                                                                                       |
 | Edit strategy configuration                 | Strategy Owner, Strategy Editor                                                                       |
 | Transition strategy status                  | Per transition table in Section 6.3                                                                   |
+| Approve / reject strategy activation        | Module Admin, for strategies in `PENDING_APPROVAL`                                                    |
 | Link KPI to element                         | Strategy Editor or Strategy Owner — with strategy-scoped access for that element                      |
 | Link risk to element                        | Strategy Editor or Strategy Owner — with strategy-scoped access for that element                      |
 | Edit imported element global fields         | Source Element Editor / Element Owner only — not the importing strategy team                          |
@@ -895,6 +918,7 @@ User stories are organized by epic. Each story includes a brief description and 
 *As a Module Admin, I want to create strategy templates so that new strategies can start with a pre-configured structure.*
 
 - Admin can define element types, allowed parent-child combinations, default capabilities, and weight methods in a template
+- Admin can define whether strategies created from the template require activation approval before going live
 - Template can be named, described, and categorized
 - Template is reusable across multiple strategies
 - Template does not contain live elements — only configuration rules
@@ -916,6 +940,7 @@ User stories are organized by epic. Each story includes a brief description and 
 *As any module user, I want to create a new strategy so that I can define and track a strategic plan.*
 
 - User can create a strategy from scratch or from an existing template
+- Strategy stores an effective `Requires Activation Approval` setting, copied from the template or chosen during creation
 - Strategy requires a name and at least one element type selected before it can be activated
 - Creator becomes the strategy owner by default
 
@@ -925,8 +950,20 @@ User stories are organized by epic. Each story includes a brief description and 
 *As a Strategy Owner or Editor, I want to activate my strategy so that tracking, progress recording, and calculations become operational.*
 
 - Strategy must have at least one element linked and a type-level configuration set before activation
+- If `Requires Activation Approval` is disabled, the strategy can activate directly from `DRAFT`
+- If `Requires Activation Approval` is enabled, the strategy must first be submitted to `PENDING_APPROVAL` and can only be activated by a Module Admin
 - Once activated, tracking of elements within it begins according to each element's own status
 - System notifies strategy team members upon activation
+
+---
+
+**US-05A â€” Approve or Reject Strategy Activation**  
+*As a Module Admin, I want to approve or reject pending strategy activations so that governance can be applied only where required.*
+
+- Only strategies with `Requires Activation Approval = Yes` can enter `PENDING_APPROVAL`
+- Module Admin can approve and move the strategy to `ACTIVE`
+- Module Admin can reject and return the strategy to `DRAFT`
+- Approval and rejection actions are audited with approver and timestamp
 
 ---
 
@@ -1318,6 +1355,7 @@ No additional hard integrations are planned for Phase 1. Future integration cand
 | **Capability**               | A feature flag on an element type that unlocks additional fields and behaviors — such as budget tracking (Budgetable) or progress logging (Trackable).                                                         |
 | **Strategy**                 | A strategic plan that references SPM Elements and defines how they are connected and structured in a specific context. A strategy owns its edges but not its elements.                                         |
 | **Strategy Template**        | A reusable configuration blueprint for creating strategies with pre-defined element types, hierarchy rules, and capability defaults. Does not contain live elements.                                           |
+| **PENDING_APPROVAL**         | A strategy status used only when activation approval is required. The strategy is awaiting a Module Admin decision before it can become Active.                                                                  |
 | **Edge / Link**              | A directed, weighted connection between two elements within a strategy. Represents that a child element contributes to a parent element. Each edge belongs to one strategy.                                    |
 | **Node**                     | An element as it appears within a specific strategy. Each element appears as exactly one node per strategy, even if it has multiple parents.                                                                   |
 | **Root Element**             | An element with no parent edges in a given strategy. It sits at the top of the strategy map.                                                                                                                   |
@@ -1332,7 +1370,7 @@ No additional hard integrations are planned for Phase 1. Future integration cand
 | **Soft Delete**              | A deletion that marks a record as removed without physically removing it from the database. The record is hidden from views and excluded from calculations but can be restored.                                |
 | **Orphan Element**           | An element that exists in the organization's element library but is not linked to any strategy. It has no operational impact until linked.                                                                     |
 | **Module Admin**             | A user with full administrative access to the SPM module, including type configuration, templates, and override of any element or strategy action.                                                             |
-| **Strategy Owner**           | A user who owns a specific strategy. Has full management rights over that strategy including activation, suspension, and completion.                                                                           |
+| **Strategy Owner**           | A user who owns a specific strategy. Has full management rights over that strategy including preparation, submission for activation, suspension, and completion.                                                |
 | **Element Owner**            | A user who owns a specific element globally. Has full management rights over that element across all strategies it participates in.                                                                            |
 | **Vision Alignment**         | Optional metadata on an SPM Element linking it to a Vision Priority, Vision Goal, or Vision Indicator from the Vision module. Does not create a structural graph dependency.                                   |
 | **Type Level Configuration** | The per-strategy configuration that defines which element types participate in the strategy, their allowed parent-child combinations, and the effective capability toggles for each type within that strategy. |
